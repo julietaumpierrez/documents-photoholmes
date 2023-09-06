@@ -3,13 +3,16 @@
 venv
 .env
 
+# packaging
+*.egg-info/
+
 # caches
-__pycache__
+__pycache__/
 
 # datasets & extra development folders
 /data/
 /datasets/
 /extra/
 
-# %%
+# IDE config
 .vscode/
