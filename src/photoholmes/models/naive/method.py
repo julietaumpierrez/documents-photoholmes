@@ -3,15 +3,15 @@ import skimage as ski
 
 from photoholmes.models.base import Method
 
-class Naive():
+class Naive(Method):
     '''A random method to test the program structure
     '''
-    def __init__(self):
-        pass
+    def __init__(self,):
+        super().__init__()
     
-    def predict_img(self, image:np.ndarray) -> np.ndarray:
+    def predict(self, image:np.ndarray) -> np.ndarray:
         '''Predicts masks from a list of images.
         '''
         shape = image.shape[:2] if image.ndim>2 else image.shape
-        return np.random.normal(size=shape)>0
+        return np.random.normal(0.5, 2, size=shape)
     
