@@ -1,4 +1,5 @@
 numpy
 matplotlib
 opencv-python
-
+pyyaml
+pytest
