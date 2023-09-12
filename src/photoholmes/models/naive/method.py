@@ -1,5 +1,4 @@
 import numpy as np
-import skimage as ski
 
 from photoholmes.models.base import Method
 

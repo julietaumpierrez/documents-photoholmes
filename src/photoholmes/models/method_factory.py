@@ -1,6 +1,5 @@
 from enum import Enum, unique
 
-from .base import Method
 from .naive.method import Naive
 
 @unique
@@ -13,7 +12,7 @@ def string_to_type(method_name:str) -> MethodType:
 
 class MethodFactory:
     @staticmethod
-    def create(method_name:str, config:dict = None) -> Method:
+    def create(method_name:str, config:dict = None):
         '''Instantiates method corresponding to the name passed, from config
         '''
         method_type = string_to_type(method_name)

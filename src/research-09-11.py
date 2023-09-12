@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from photoholmes.utils import image
 from photoholmes.models.method_factory import MethodFactory
+from photoholmes.metrics import metric_mapping
 
 get_ipython().run_line_magic("load_ext", "autoreload")  # noqa
 get_ipython().run_line_magic("autoreload", "2")  # noqa
@@ -24,14 +25,18 @@ image.plot_multiple_images(images=images, titles=os.listdir(IMAGES_PATH), ncols=
 # %%
 image_choice = 1
 method_name = "naive"
+metric_name = "iou"
 
 method = MethodFactory.create(method_name)
 name = f'Im_{image_choice}'
 im = cv.imread(IMAGES_PATH+name+'.jpg')
-mask = cv.imread(MASK_PATH+name+'.png')
+mask = image.read_mask(MASK_PATH+name+'.png')
 
 heatmap = method.predict(im)
 predicted_mask = method.predict_mask(heatmap)
+
+metric = metric_mapping(metric_name)
+print(f'{metric_name} value:', metric(pred=predicted_mask, true=mask))
 
 #%%
 fig, ax = plt.subplots(1,4)

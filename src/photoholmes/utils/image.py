@@ -34,6 +34,13 @@ def plot_multiple_images(
         print("Figure saved at:", save_path)
     plt.show()
 
+def read_mask(mask_path):
+    '''Returns mask as a boolean image, from a mask path
+    '''
+    mask = cv.imread(mask_path)
+    mask = cv.cvtColor(mask, cv.COLOR_BGR2GRAY)
+    return mask > mask.max()/2
+
 
 @dataclass
 class ImFile:
