@@ -1,4 +1,5 @@
 # %%
+
 # FIXME: Está acá poque funciona pero estaría bueno que funcione dentro de research
 import os
 from IPython import get_ipython
@@ -6,7 +7,7 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 
 from photoholmes.utils import image
-from photoholmes.models import Naive
+from photoholmes.models.method_factory import MethodFactory
 
 get_ipython().run_line_magic("load_ext", "autoreload")  # noqa
 get_ipython().run_line_magic("autoreload", "2")  # noqa
@@ -22,14 +23,15 @@ image.plot_multiple_images(images=images, titles=os.listdir(IMAGES_PATH), ncols=
 
 # %%
 image_choice = 1
-method = Naive.from_config()
+method_name = "naive"
 
+method = MethodFactory.create(method_name)
 name = f'Im_{image_choice}'
 im = cv.imread(IMAGES_PATH+name+'.jpg')
 mask = cv.imread(MASK_PATH+name+'.png')
 
 heatmap = method.predict(im)
-predicted_mask = method.predict_mask(im)
+predicted_mask = method.predict_mask(heatmap)
 
 #%%
 fig, ax = plt.subplots(1,4)

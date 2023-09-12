@@ -30,12 +30,12 @@ class Method(ABC):
         """Predicts heatmap from an image."""
         pass
 
-    def predict_mask(self, image):
-        """Default strategy for mask prediction from the 'predict' (heatmap predicting) method.
-        This method can be overriden for smarter post-processing algorythms,
+    def predict_mask(self, heatmap):
+        '''Default strategy for mask prediction from the 'predict' (heatmap predicting) method.
+        This method can be overriden for smarter post-processing algorythms, 
             but should always use 'self.theshold' for metric evaluation purposes.
-        """
-        return self.predict(image) > self.theshold
+        '''
+        return heatmap > self.theshold
 
     @property
     def name(self):

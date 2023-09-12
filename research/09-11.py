@@ -5,7 +5,7 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 
 from photoholmes.utils import image
-from photoholmes.models import Naive
+from photoholmes.models.method_factory import MethodFactory
 
 import os
 os.chdir('..')
@@ -21,15 +21,15 @@ image.plot_multiple_images(images=images, titles=os.listdir(IMAGES_PATH), ncols=
 
 # %%
 image_choice = 1
-method = Naive()
+method_name = "naive"
 
+method = MethodFactory.create(method_name)
 name = f'Im_{image_choice}'
 im = cv.imread(IMAGES_PATH+name+'.jpg')
 mask = cv.imread(MASK_PATH+name+'.png')
 
-method = Naive()
 heatmap = method.predict(im)
-predicted_mask = method.predict_mask(im)
+predicted_mask = method.predict_mask(heatmap)
 
 #%%
 fig, ax = plt.subplots(1,4)
