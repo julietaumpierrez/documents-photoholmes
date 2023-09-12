@@ -6,8 +6,9 @@ from photoholmes.models.base import Method
 class Naive(Method):
     '''A random method to test the program structure
     '''
-    def __init__(self,):
-        super().__init__()
+    DEFAULT_CONFIG_PATH = 'photoholmes/models/naive/config.yaml'
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
     
     def predict(self, image:np.ndarray) -> np.ndarray:
         '''Predicts masks from a list of images.

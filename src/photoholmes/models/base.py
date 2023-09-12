@@ -1,19 +1,28 @@
 from abc import ABC, abstractclassmethod
 import numpy as np
 
+from photoholmes.utils.generic import load_yaml
+
 class Method(ABC):
     '''Abstract class as a base for the methods
     '''
+    DEFAULT_CONFIG_PATH = 'photoholmes/models/'
     @abstractclassmethod
-    def __init__(self, heatmap_threshold:float = 0.5) -> None:
+    def __init__(self, **kwargs) -> None:
         '''Initialization. 
         he heatmap theshold value sets the default parameter for converting predicted heatmaps to masks in the "predict_mask" method.
         '''
-        self.theshold = heatmap_threshold
+        if "threshold" in kwargs:
+            self.theshold = kwargs["threshold"]
 
     @classmethod
-    def from_config(cls, config):
-        return cls()
+    def from_config(cls, config:dict = None):
+        '''Initializes model from a read config. 
+        By default, it takes 'config.yaml' in the model folder
+        '''
+        if config is None:
+            config = load_yaml(cls.DEFAULT_CONFIG_PATH)
+        return cls(**config["default_kwargs"])
 
     @abstractclassmethod
     def predict(self, image):
