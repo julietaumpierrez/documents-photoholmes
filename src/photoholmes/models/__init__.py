@@ -1,5 +1,3 @@
 from .naive.method import Naive
 
-__all__ = [
-    "Naive"
-]
+__all__ = ["Naive"]

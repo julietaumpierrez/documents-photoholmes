@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 from photoholmes.utils import image
 from photoholmes.models import Naive
 
+import os
+os.chdir('..')
+
 DATA_DIR = 'benchmarking/test_images/'
 
 IMAGES_PATH = DATA_DIR + 'images/'
