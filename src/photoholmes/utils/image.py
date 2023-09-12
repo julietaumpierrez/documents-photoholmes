@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 import cv2 as cv
 import matplotlib.pyplot as plt
@@ -90,8 +90,8 @@ class Data:
         return [imfile.img for imfile in self.imfiles]
 
     @property
-    def masks(self) -> list[np.ndarray]:
-        return [imfile.mask for imfile in self.imfiles]  # type: ignore #Unfixable type problem for older python
+    def masks(self) -> list[Union[np.ndarray, None]]:
+        return [imfile.mask for imfile in self.imfiles]
 
     @property
     def names(self) -> list[str]:
