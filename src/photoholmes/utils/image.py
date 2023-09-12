@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from typing import Optional
 
 import cv2 as cv
 import matplotlib.pyplot as plt
@@ -9,14 +10,14 @@ IMG_FOLDER_PATH = "test_images/images/"
 
 
 def plot_multiple_images(
-    images, titles=None, ncols=4, title: str = None, save_path=None
+    images, titles=None, ncols=4, title: Optional[str] = None, save_path=None
 ):
     """D"""
     N = len(images)
     nrows = np.ceil(N / ncols).astype(int)
     fig, ax = plt.subplots(nrows, ncols)
     if titles is None:
-        titles = [None * len(images)]
+        titles = [None] * len(images)
     if nrows > 1:
         for n, img in enumerate(images):
             i = n // ncols
@@ -27,34 +28,35 @@ def plot_multiple_images(
         for n, img in enumerate(images):
             ax[n].imshow(img)
             ax[n].set_title(titles[n])
-    plt.suptitle(title)
+    if title is not None:
+        plt.suptitle(title)
     plt.tight_layout()
     if save_path is not None:
         plt.savefig(save_path)
         print("Figure saved at:", save_path)
     plt.show()
 
+
 def read_mask(mask_path):
-    '''Returns mask as a boolean image, from a mask path
-    '''
+    """Returns mask as a boolean image, from a mask path"""
     mask = cv.imread(mask_path)
     mask = cv.cvtColor(mask, cv.COLOR_BGR2GRAY)
-    return mask > mask.max()/2
+    return mask > mask.max() / 2
 
 
 @dataclass
 class ImFile:
     name: str
-    img: str
-    mask: str = None
+    img: np.ndarray
+    mask: Optional[np.ndarray] = None
 
     @classmethod
-    def from_path(cls, image_path: str, mask_path: str = None):
+    def from_path(cls, image_path: str, mask_path: Optional[str] = None):
         """Initializes image from a given image_path, and optionally a mask path containing forgery ground truth."""
         name = image_path.split("/")[-1]
         img = cv.imread(image_path)
         img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-        mask = cv.imread(mask_path) if mask_path is not None else None
+        mask = mask = cv.imread(mask_path) if mask_path is not None else None
         return cls(name, img, mask)
 
     @property
@@ -79,7 +81,7 @@ class ImFile:
 
 
 class Data:
-    def __init__(self, imfiles: list[ImFile], name: str = None) -> None:
+    def __init__(self, imfiles: list[ImFile], name: Optional[str] = None) -> None:
         self.imfiles = imfiles
         self.name = name
 
@@ -89,10 +91,10 @@ class Data:
 
     @property
     def masks(self) -> list[np.ndarray]:
-        return [imfile.mask for imfile in self.imfiles]
+        return [imfile.mask for imfile in self.imfiles]  # type: ignore #Unfixable type problem for older python
 
     @property
-    def names(self) -> list[np.ndarray]:
+    def names(self) -> list[str]:
         return [imfile.name for imfile in self.imfiles]
 
     @property
@@ -106,7 +108,7 @@ class Data:
         return len(self.imfiles)
 
     @classmethod
-    def from_path(cls, img_folder_path: str, mask_folder_path: str = None):
+    def from_path(cls, img_folder_path: str, mask_folder_path: Optional[str] = None):
         """Initializes image Database from a folder path, and optionally masks from mask folder path"""
         name = cls._folder_name(img_folder_path)
         img_names = os.listdir(img_folder_path)
@@ -137,7 +139,7 @@ class Data:
     def _folder_name(path: str) -> str:
         return path.split("/")[-2]
 
-    def show(self, ncols=4, title: str = None, save_path=None):
+    def show(self, ncols=4, title: Optional[str] = None, save_path=None):
         """Displays the dataset"""
         plot_multiple_images(
             self.images, self.names, ncols=ncols, title=title, save_path=save_path

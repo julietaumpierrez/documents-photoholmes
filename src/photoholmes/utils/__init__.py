@@ -1,1 +1,1 @@
-import photoholmes.utils.image
+from . import image
