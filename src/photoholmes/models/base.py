@@ -4,7 +4,7 @@ import numpy as np
 
 from photoholmes.utils.generic import load_yaml
 
-class Method(ABC):
+class BaseMethod(ABC):
     '''Abstract class as a base for the methods
     '''
     DEFAULT_CONFIG_PATH = 'photoholmes/models/'

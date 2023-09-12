@@ -1,9 +1,9 @@
 import numpy as np
 
-from photoholmes.models.base import Method
+from photoholmes.models.base import BaseMethod
 
 
-class Naive(Method):
+class Naive(BaseMethod):
     '''A random method to test the program structure
     '''
     DEFAULT_CONFIG_PATH = 'photoholmes/models/naive/config.yaml'
