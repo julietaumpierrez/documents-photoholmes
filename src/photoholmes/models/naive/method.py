@@ -1,0 +1,17 @@
+import numpy as np
+
+from photoholmes.models.base import BaseMethod
+
+
+class Naive(BaseMethod):
+    '''A random method to test the program structure
+    '''
+    DEFAULT_CONFIG_PATH = 'photoholmes/models/naive/config.yaml'
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    def predict(self, image:np.ndarray) -> np.ndarray:
+        '''Predicts masks from a list of images.
+        '''
+        shape = image.shape[:2] if image.ndim>2 else image.shape
+        return np.random.normal(0.5, 2, size=shape)

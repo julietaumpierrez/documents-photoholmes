@@ -14,5 +14,5 @@ __pycache__/
 /datasets/
 /extra/
 
-# IDE config
-.vscode/
+#Private
+private

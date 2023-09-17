@@ -1,3 +1,22 @@
 # PhotoHolmes
 
 Acá va a haber un proyecto de fin de grado. Todavía no esta, pero va a estarlo.
+
+Leer STATUS.md antes de ponerse a laburar.
+## Development setup
+
+To start developing, clone this repository with:
+```
+git clone git@gitlab.fing.edu.uy:photoholmes/photoholmes.git photoholmes
+```
+
+Create a virtual enviroment, either with conda (boo) or with pip (yay). Activate
+the enviroment and install the library and required packages with:
+```
+pip install -r requirements.txt
+pip intsall -r requirements-dev.txt
+pip install -e .
+```
+
+TODO: add the requirements.txt to the setup so we can skip the first pip install.
+
