@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 
 class BaseMethod(ABC):
@@ -15,7 +15,7 @@ class BaseMethod(ABC):
 
     @classmethod
     @abstractmethod
-    def from_config(cls, config: Optional[str | Dict[str, str]]):
+    def from_config(cls, config: Optional[Union[str, Dict[str, str]]]):
         """Initializes model from a read config.
         By default, it takes 'config.yaml' in the model folder
         """
