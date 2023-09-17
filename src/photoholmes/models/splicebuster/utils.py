@@ -1,6 +1,7 @@
 from typing import List
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 UNIQUE_TUPLES: List[tuple] = [
     (0, 0, 0, 0),
@@ -75,3 +76,15 @@ def encode_matrix(m: np.ndarray, code: np.ndarray, axis: int = 0) -> np.ndarray:
         raise ValueError("axis must be 0 (horizontal) or 1 (vertical)")
 
     return coded_matrix
+
+
+def mahalanobis_distance(X: ArrayLike, m: ArrayLike, C: ArrayLike):
+    X = np.array(X)
+    C = np.array(C)
+    m = np.array(m)
+
+    X_ = np.empty(X.shape[0])
+    for i in range(X_.shape[0]):
+        x = X[i].reshape(1, -1)
+        X_[i] = np.sqrt((x - m) @ np.linalg.inv(C) @ (x - m).T)
+    return X_

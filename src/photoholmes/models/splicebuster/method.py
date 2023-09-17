@@ -1,11 +1,16 @@
-from typing import Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+from tqdm.auto import tqdm
 
 from photoholmes.models.base import BaseMethod
 from photoholmes.models.splicebuster.utils import (UNIQUE_TUPLES,
-                                                   encode_matrix, qround,
+                                                   encode_matrix,
+                                                   mahalanobis_distance,
+                                                   qround,
                                                    third_order_residual)
+from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
+from photoholmes.utils.generic import load_yaml
 
 
 class Splicebuster(BaseMethod):
@@ -67,8 +72,12 @@ class Splicebuster(BaseMethod):
         return coh / np.sum(coh), cov / np.sum(cov)
 
     def predict(self, image: np.ndarray) -> np.ndarray:
-        features = list()
+        """Run splicebuster on an image."""
+        features: List[np.ndarray] = list()
         coords = list()
+        pbar = tqdm(
+            total=(image.shape[0] // self.stride) * (image.shape[1] // self.stride)
+        )
         for i in range(0, image.shape[0], self.stride):
             for j in range(0, image.shape[1], self.stride):
                 x = image[i : i + self.block_size, j : j + self.block_size]
@@ -80,11 +89,29 @@ class Splicebuster(BaseMethod):
 
                 features.append(np.concatenate((Hhh + Hvv, Hhv + Hvh)))
                 coords.append((i, j))
+                pbar.update(1)
+        pbar.close()
 
-        # FIXME add PCA & gmm
-        labels = list()
-        heatmap = np.zeros(image.shape)
-        for k, (i, j) in coords:
-            heatmap[i : i + self.stride, j : j + self.stride] = labels[k]
+        gm = GaussianMixture(2)
+        mus, covs = gm.fit(features)
+
+        labels = mahalanobis_distance(features, mus[1], covs[1]) / mahalanobis_distance(
+            features, mus[0], covs[0]
+        )
+        labels_comp = 1 / labels
+
+        heatmap = np.zeros((2, *image.shape))
+        for k, (i, j) in enumerate(coords):
+            heatmap[0][i : i + self.stride, j : j + self.stride] = labels[k]
+            heatmap[1][i : i + self.stride, j : j + self.stride] = labels_comp[k]
 
         return heatmap
+
+    @classmethod
+    def from_config(cls, config: Optional[str | Dict[str, Any]]):
+        if isinstance(config, str):
+            config = load_yaml(config)
+        if config is None:
+            config = {}
+
+        return cls(**config)
