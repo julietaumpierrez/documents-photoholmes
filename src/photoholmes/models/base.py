@@ -6,15 +6,12 @@ class BaseMethod(ABC):
     """Abstract class as a base for the methods"""
 
     @abstractmethod
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, threshold: float = 0.5) -> None:
         """Initialization.
         he heatmap theshold value sets the default parameter for converting
         predicted heatmaps to masks in the "predict_mask" method.
         """
-        if "threshold" in kwargs:
-            self.threshold = kwargs["threshold"]
-        else:
-            raise Warning("No 'threshold' set in config['default_kwargs'].")
+        self.threshold = threshold
 
     @classmethod
     @abstractmethod
