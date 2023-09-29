@@ -1,35 +1,57 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-UNIQUE_TUPLES: List[tuple] = [
-    (0, 0, 0, 0),
-    (0, 0, 0, 1),
-    (0, 0, 0, 2),
-    (0, 0, 1, 0),
-    (0, 0, 1, 1),
-    (0, 0, 1, 2),
-    (0, 0, 2, 0),
-    (0, 0, 2, 1),
-    (0, 0, 2, 2),
-    (0, 1, 0, 1),
-    (0, 1, 0, 2),
-    (0, 1, 1, 0),
-    (0, 1, 1, 1),
-    (0, 1, 1, 2),
-    (0, 1, 2, 0),
-    (0, 1, 2, 1),
-    (0, 2, 0, 1),
-    (0, 2, 0, 2),
-    (0, 2, 1, 1),
-    (0, 2, 2, 0),
-    (0, 2, 2, 1),
-    (1, 0, 0, 1),
-    (1, 0, 1, 1),
-    (1, 0, 2, 1),
-    (1, 1, 1, 1),
-]
+
+def baseN_to_base10(t: Tuple, N: int) -> int:
+    tN = sum([N**i * x for i, x in enumerate(t)])
+    return tN
+
+
+def get_tuples(T: int) -> List[np.ndarray]:
+    tuples: List[np.ndarray] = list()
+
+    n_values = 2 * T + 1
+    max_value = 2 * T
+
+    coded_tuples = list()
+    for x0 in range(n_values):
+        for x1 in range(n_values):
+            for x2 in range(n_values):
+                for x3 in range(n_values):
+                    x = baseN_to_base10((x0, x1, x2, x3), n_values)
+                    x_c = baseN_to_base10(
+                        (
+                            max_value - x0,
+                            max_value - x1,
+                            max_value - x2,
+                            max_value - x3,
+                        ),
+                        n_values,
+                    )
+                    x_r = baseN_to_base10((x3, x2, x1, x0), n_values)
+                    x_cr = baseN_to_base10(
+                        (
+                            max_value - x3,
+                            max_value - x2,
+                            max_value - x1,
+                            max_value - x0,
+                        ),
+                        n_values,
+                    )
+
+                    if (
+                        x in coded_tuples
+                        or x_c in coded_tuples
+                        or x_r in coded_tuples
+                        or x_cr in coded_tuples
+                    ):
+                        continue
+                    else:
+                        tuples.append(np.array((x0, x1, x2, x3)))
+                        coded_tuples.append(x)
+    return tuples
 
 
 def third_order_residual(x: np.ndarray, axis: int = 0) -> np.ndarray:

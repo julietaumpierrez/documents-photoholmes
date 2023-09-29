@@ -4,8 +4,7 @@ import numpy as np
 from tqdm.auto import tqdm
 
 from photoholmes.models.base import BaseMethod
-from photoholmes.models.splicebuster.utils import (UNIQUE_TUPLES,
-                                                   encode_matrix,
+from photoholmes.models.splicebuster.utils import (encode_matrix, get_tuples,
                                                    mahalanobis_distance,
                                                    qround,
                                                    third_order_residual)
@@ -22,6 +21,8 @@ class Splicebuster(BaseMethod):
         self.stride = stride
         self.q = q
         self.T = T
+
+        self.unique_tuples = get_tuples(self.T)
 
     def _quantize(self, x: np.ndarray) -> np.ndarray:
         """
@@ -41,13 +42,11 @@ class Splicebuster(BaseMethod):
 
         code = (2 * self.T + 1) ** np.arange(4)
 
-        coh = np.zeros(25)
-        cov = np.zeros(25)
+        coh, cov = np.zeros((2, len(self.unique_tuples)))
         coded_matrix_h = encode_matrix(x, code)
         coded_matrix_v = encode_matrix(x, code, axis=1)
 
-        for i, tup in enumerate(UNIQUE_TUPLES):
-            tup = np.array(tup)
+        for i, tup in enumerate(self.unique_tuples):
             coded_tup = np.dot(tup, code)
             coded_tup_simm = np.dot(tup[::-1], code)
             coded_comp_tup = np.dot(2 * self.T - tup, code)
