@@ -4,10 +4,13 @@ import numpy as np
 from tqdm.auto import tqdm
 
 from photoholmes.models.base import BaseMethod
-from photoholmes.models.splicebuster.utils import (encode_matrix, get_tuples,
-                                                   mahalanobis_distance,
-                                                   qround,
-                                                   third_order_residual)
+from photoholmes.models.splicebuster.utils import (
+    encode_matrix,
+    get_tuples,
+    mahalanobis_distance,
+    qround,
+    third_order_residual,
+)
 from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
 from photoholmes.utils.generic import load_yaml
 
@@ -105,12 +108,3 @@ class Splicebuster(BaseMethod):
             heatmap[1][i : i + self.stride, j : j + self.stride] = labels_comp[k]
 
         return heatmap
-
-    @classmethod
-    def from_config(cls, config: Optional[str | Dict[str, Any]]):
-        if isinstance(config, str):
-            config = load_yaml(config)
-        if config is None:
-            config = {}
-
-        return cls(**config)
