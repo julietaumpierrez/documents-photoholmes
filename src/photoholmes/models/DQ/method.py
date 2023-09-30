@@ -98,7 +98,7 @@ class DQ(BaseMethod):
         if config is None:
             config = {}
 
-        return cls(**config)
+        return cls(**config)  # type: ignore
 
     def _detect_period(self, histogram):
         p_H = histogram_period(histogram)

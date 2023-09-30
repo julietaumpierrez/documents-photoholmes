@@ -26,4 +26,4 @@ class Naive(BaseMethod):
         if config is None:
             config = {}
 
-        return cls(**config)
+        return cls(**config)  # type: ignore
