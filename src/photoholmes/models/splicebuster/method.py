@@ -1,18 +1,11 @@
-from typing import Any, Dict, List, Optional, Tuple
-
 import numpy as np
-from tqdm.auto import tqdm
 
 from photoholmes.models.base import BaseMethod
-from photoholmes.models.splicebuster.utils import (
-    encode_matrix,
-    get_tuples,
-    mahalanobis_distance,
-    qround,
-    third_order_residual,
-)
+from photoholmes.models.splicebuster.utils import (encode_matrix,
+                                                   mahalanobis_distance,
+                                                   quantize,
+                                                   third_order_residual)
 from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
-from photoholmes.utils.generic import load_yaml
 
 
 class Splicebuster(BaseMethod):
@@ -25,86 +18,84 @@ class Splicebuster(BaseMethod):
         self.q = q
         self.T = T
 
-        self.unique_tuples = get_tuples(self.T)
+    def compute_features(self, image: np.ndarray) -> np.ndarray:
+        H, W = image.shape
 
-    def _quantize(self, x: np.ndarray) -> np.ndarray:
-        """
-        Uniform quantization used in the paper.
-        """
-        if isinstance(x, np.ndarray):
-            return np.clip(qround(x / self.q) + self.T, 0, 2 * self.T)
+        qh_res = quantize(third_order_residual(image), self.T, self.q)
+        qv_res = quantize(third_order_residual(image, axis=1), self.T, self.q)
 
-    def _fast_cooccurrance_histograms(
-        self, x: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Calculate coocurrance histograms efficiently.
-        """
-        if not isinstance(x, np.ndarray):
-            raise TypeError(f"argument 'x' must be of type np.ndarray, not {type(x)}")
+        qhh = encode_matrix(qh_res)
+        qhv = encode_matrix(qh_res, axis=1)
+        qvh = encode_matrix(qv_res)
+        qvv = encode_matrix(qv_res, axis=1)
 
-        code = (2 * self.T + 1) ** np.arange(4)
+        x_range = range(0, H - self.stride + 1, self.stride)
+        y_range = range(0, W - self.stride + 1, self.stride)
 
-        coh, cov = np.zeros((2, len(self.unique_tuples)))
-        coded_matrix_h = encode_matrix(x, code)
-        coded_matrix_v = encode_matrix(x, code, axis=1)
+        n_bins = 1 + np.max((qhh, qhv, qvh, qvv))
+        feat_dim = 2 * n_bins
+        features = np.zeros((len(x_range), len(y_range), feat_dim))
 
-        for i, tup in enumerate(self.unique_tuples):
-            coded_tup = np.dot(tup, code)
-            coded_tup_simm = np.dot(tup[::-1], code)
-            coded_comp_tup = np.dot(2 * self.T - tup, code)
-            coded_comp_tup_simm = np.dot((2 * self.T - tup)[::-1], code)
-            coh[i] = (
-                (
-                    (coded_matrix_h == coded_tup)
-                    + (coded_matrix_h == coded_tup_simm)
-                    + (coded_matrix_h == coded_comp_tup)
-                    + (coded_matrix_h == coded_comp_tup_simm)
-                )
-            ).sum()
-            cov[i] = (
-                (
-                    (coded_matrix_v == coded_tup)
-                    + (coded_matrix_v == coded_tup_simm)
-                    + (coded_matrix_v == coded_comp_tup)
-                    + (coded_matrix_v == coded_comp_tup_simm)
-                )
-            ).sum()
+        for x_i, i in enumerate(x_range):
+            for x_j, j in enumerate(y_range):
+                Hhh = np.histogram(
+                    qhh[i : i + self.stride, j : j + self.stride], bins=n_bins
+                )[0].astype(float)
+                Hvv = np.histogram(
+                    qhv[i : i + self.stride, j : j + self.stride], bins=n_bins
+                )[0].astype(float)
+                Hhv = np.histogram(
+                    qvh[i : i + self.stride, j : j + self.stride], bins=n_bins
+                )[0].astype(float)
+                Hvh = np.histogram(
+                    qvv[i : i + self.stride, j : j + self.stride], bins=n_bins
+                )[0].astype(float)
 
-        return coh / np.sum(coh), cov / np.sum(cov)
+                features[x_i, x_j] = np.concatenate((Hhh + Hvv, Hhv + Hvh)) / 2
+
+        strides_x_block = self.block_size // self.stride
+        block_features = np.zeros(
+            (
+                features.shape[0] - strides_x_block,
+                features.shape[1] - strides_x_block,
+                feat_dim,
+            )
+        )
+        for i in range(block_features.shape[0]):
+            for j in range(block_features.shape[1]):
+                block_features[i, j] = features[
+                    i : i + strides_x_block, j : j + strides_x_block
+                ].sum(axis=(0, 1))
+                block_features[i, j] /= np.sum(block_features[i, j])
+
+        return block_features
 
     def predict(self, image: np.ndarray) -> np.ndarray:
         """Run splicebuster on an image."""
-        features: List[np.ndarray] = list()
-        coords = list()
-        pbar = tqdm(
-            total=(image.shape[0] // self.stride) * (image.shape[1] // self.stride)
-        )
-        for i in range(0, image.shape[0], self.stride):
-            for j in range(0, image.shape[1], self.stride):
-                x = image[i : i + self.block_size, j : j + self.block_size]
-                qhres = self._quantize(third_order_residual(x))
-                qvres = self._quantize(third_order_residual(x, axis=1))
+        print("Computing features")
+        features = self.compute_features(image)
+        flat_features = features.reshape(-1, features.shape[-1])
+        print(flat_features.shape)
 
-                Hhh, Hhv = self._fast_cooccurrance_histograms(qhres)
-                Hvh, Hvv = self._fast_cooccurrance_histograms(qvres)
+        print("Fitting gaussian mixture")
+        gmm = GaussianMixture()
+        mus, covs = gmm.fit(flat_features)
 
-                features.append(np.concatenate((Hhh + Hvv, Hhv + Hvh)))
-                coords.append((i, j))
-                pbar.update(1)
-        pbar.close()
-
-        gm = GaussianMixture(2)
-        mus, covs = gm.fit(features)
-
-        labels = mahalanobis_distance(features, mus[1], covs[1]) / mahalanobis_distance(
-            features, mus[0], covs[0]
-        )
+        print("Calculating labels")
+        labels = mahalanobis_distance(
+            flat_features, mus[1], covs[1]
+        ) / mahalanobis_distance(flat_features, mus[0], covs[0])
         labels_comp = 1 / labels
+        labels = labels if labels.sum() < labels_comp.sum() else labels_comp
 
-        heatmap = np.zeros((2, *image.shape))
-        for k, (i, j) in enumerate(coords):
-            heatmap[0][i : i + self.stride, j : j + self.stride] = labels[k]
-            heatmap[1][i : i + self.stride, j : j + self.stride] = labels_comp[k]
+        heatmap = np.empty(
+            (image.shape[0] - self.block_size, image.shape[1] - self.block_size)
+        )
+        n_label = 0
+        for i in range(0, image.shape[0] - self.block_size, self.stride):
+            for j in range(0, image.shape[1] - self.block_size, self.stride):
+                heatmap[i : i + self.stride, j : j + self.stride] = labels[n_label]
+                n_label += 1
 
+        heatmap = heatmap / np.max(labels)
         return heatmap
