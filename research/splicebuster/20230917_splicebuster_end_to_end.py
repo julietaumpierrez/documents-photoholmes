@@ -3,9 +3,9 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image
+from PIL import Image  # type: ignore
 
-from photoholmes.models.splicebuster.method import Splicebuster
+from photoholmes.models.splicebuster.method import Splicebuster  # type: ignore
 
 if "research" in os.path.abspath("."):
     os.chdir("../../")

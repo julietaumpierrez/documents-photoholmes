@@ -1,7 +1,7 @@
 # %%
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.mixture import GaussianMixture
+from sklearn.mixture import GaussianMixture  # type: ignore
 
 from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
 

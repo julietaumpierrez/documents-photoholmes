@@ -5,8 +5,8 @@ import os
 import cv2 as cv
 import matplotlib.pyplot as plt
 
-from photoholmes.models.method_factory import MethodFactory
-from photoholmes.utils import image
+from photoholmes.models.method_factory import MethodFactory  # type: ignore
+from photoholmes.utils import image  # type: ignore
 
 os.chdir("..")
 
