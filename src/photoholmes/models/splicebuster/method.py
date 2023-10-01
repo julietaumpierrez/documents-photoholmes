@@ -1,3 +1,4 @@
+# derived from https://www.grip.unina.it/download/prog/Splicebuster/
 import numpy as np
 
 from photoholmes.models.base import BaseMethod
@@ -72,16 +73,12 @@ class Splicebuster(BaseMethod):
 
     def predict(self, image: np.ndarray) -> np.ndarray:
         """Run splicebuster on an image."""
-        print("Computing features")
         features = self.compute_features(image)
         flat_features = features.reshape(-1, features.shape[-1])
-        print(flat_features.shape)
 
-        print("Fitting gaussian mixture")
         gmm = GaussianMixture()
         mus, covs = gmm.fit(flat_features)
 
-        print("Calculating labels")
         labels = mahalanobis_distance(
             flat_features, mus[1], covs[1]
         ) / mahalanobis_distance(flat_features, mus[0], covs[0])
