@@ -1,12 +1,7 @@
-from typing import List, Tuple, Union
+from typing import Union
 
 import numpy as np
 from numpy.typing import ArrayLike
-
-
-def baseN_to_base10(t: Tuple, N: int) -> int:
-    tN = sum([N**i * x for i, x in enumerate(t)])
-    return tN
 
 
 def third_order_residual(x: np.ndarray, axis: int = 0) -> np.ndarray:
