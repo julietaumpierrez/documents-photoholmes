@@ -3,5 +3,4 @@ matplotlib
 opencv-python
 pyyaml
 pytest
-scipy
 jpegio
