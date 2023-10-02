@@ -164,24 +164,26 @@ for i in range(block_features.shape[0]):
             i : i + strides_x_block, j : j + strides_x_block
         ].sum(axis=(0, 1))
         block_features[i, j] /= np.sum(block_features[i, j])
+        block_features[i, j] = np.sqrt(block_features[i, j])
 flat_features = block_features.reshape(-1, block_features.shape[-1])
 # block_features = [f for f in block_features]
 # %%
 from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
+from photoholmes.utils.pca import PCA
 
 gmm = GaussianMixture()
+pca = PCA(n_components=25)
 
 # %%
-mus, covs = gmm.fit(flat_features)
+pca_features = pca.fit_transform(flat_features)
+# %%
+mus, covs = gmm.fit(pca_features)
 # %%
 from photoholmes.models.splicebuster.utils import mahalanobis_distance
 
 # %%
-x_cent = flat_features - mus[0]
-x_cent[0] @ np.linalg.inv(covs[0]) @ x_cent[0].T
-# %%
-labels = mahalanobis_distance(block_features, mus[1], covs[1]) / mahalanobis_distance(
-    block_features, mus[0], covs[0]
+labels = mahalanobis_distance(pca_features, mus[1], covs[1]) / mahalanobis_distance(
+    pca_features, mus[0], covs[0]
 )
 labels_comp = 1 / labels
 # %%
@@ -198,9 +200,9 @@ for i in range(0, features.shape[0] - strides_x_block):
         k += 1
 # %%
 plt.figure()
-plt.imshow(heatmap[0], cmap="gray")
+plt.imshow(heatmap[0])
 plt.figure()
-plt.imshow(heatmap[1], cmap="gray")
+plt.imshow(heatmap[1])
 # %%
 pred = heatmap[heatmap.sum(axis=-1).sum(axis=-1).argmin()]
 pred /= pred.max()
@@ -217,5 +219,9 @@ for i in range(0, np_image.shape[0] - BLOCK_SIZE, STRIDE):
     for j in range(0, np_image.shape[1] - BLOCK_SIZE, STRIDE):
         heatmap[i : i + STRIDE, j : j + STRIDE] = t_labels[n_label]
         n_label += 1
+heatmap /= np.max(heatmap)
+
+# %%
+plt.imshow(heatmap > 0.4)
 
 # %%

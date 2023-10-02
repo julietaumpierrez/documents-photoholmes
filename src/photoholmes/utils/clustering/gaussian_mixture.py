@@ -16,7 +16,7 @@ class GaussianMixture:
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Predicts masks from a list of images."""
 
-        self.gm.fit(features)
+        self.gm.fit(features)  # type: ignore
         mus = self.gm.means_
         covs = self.gm.covariances_
-        return mus, covs
+        return np.array(mus), np.array(covs)

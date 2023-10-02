@@ -7,17 +7,25 @@ from photoholmes.models.splicebuster.utils import (encode_matrix,
                                                    quantize,
                                                    third_order_residual)
 from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
+from photoholmes.utils.pca import PCA
 
 
 class Splicebuster(BaseMethod):
     def __init__(
-        self, block_size: int = 128, stride: int = 8, q: int = 2, T: int = 1, **kwargs
+        self,
+        block_size: int = 128,
+        stride: int = 8,
+        q: int = 2,
+        T: int = 1,
+        pca_dim: int = 25,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.block_size = block_size
         self.stride = stride
         self.q = q
         self.T = T
+        self.pca_dim = pca_dim
 
     def compute_features(self, image: np.ndarray) -> np.ndarray:
         H, W = image.shape
@@ -75,6 +83,9 @@ class Splicebuster(BaseMethod):
         """Run splicebuster on an image."""
         features = self.compute_features(image)
         flat_features = features.reshape(-1, features.shape[-1])
+
+        pca = PCA(n_components=self.pca_dim)
+        flat_features = pca.fit_transform(flat_features)
 
         gmm = GaussianMixture()
         mus, covs = gmm.fit(flat_features)

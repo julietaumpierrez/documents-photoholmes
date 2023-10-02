@@ -17,12 +17,12 @@ image = Image.open("data/img00.png").convert("L")
 np_image = np.array(image)
 
 # %%
-sp = Splicebuster(stride=8)
+sp = Splicebuster(stride=8, pca_dim=25)
 
 # %%
 heatmap = sp.predict(np_image)
 # %%
-plt.imshow(heatmap)
+plt.imshow(heatmap > 0.5)
 plt.figure()
 
 # %%
