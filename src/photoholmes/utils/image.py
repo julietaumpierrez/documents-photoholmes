@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from tempfile import NamedTemporaryFile
 from typing import Optional, Union
 
 import cv2 as cv
@@ -7,7 +8,6 @@ import jpegio
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL.Image import open
-from scipy.fftpack import dctn
 
 IMG_FOLDER_PATH = "test_images/images/"
 
@@ -50,12 +50,15 @@ def read_mask(mask_path):
 def read_as_jpeg(image_path: str) -> np.ndarray:
     """Reads image from path and returns DCT coefficient matrix for each channel.
     If image is in jpeg format, it decodes the DCT stream and returns it.
-    Otherwise, the DCT stream is calculated."""
+    Otherwise, the image is saved into a temporary jpeg file and then the DCT stream is decoded.
+    """
     extension = (image_path[-4:]).lower()
     if extension == ".jpg" or extension == ".jpeg":
         return _read_jpeg(image_path)
     else:
-        return _calculate_DCT(image_path)
+        temp = NamedTemporaryFile(suffix=".jpg")
+        open(image_path).convert("RGB").save(temp.name, quality=100, subsampling=0)
+        return _read_jpeg(temp.name)
 
 
 def _read_jpeg(image_path: str) -> np.ndarray:
@@ -100,31 +103,6 @@ def _read_jpeg(image_path: str) -> np.ndarray:
         DCT_coef[i] = channel_coefficients
 
     return DCT_coef
-
-
-def _calculate_DCT(image_path: str) -> np.ndarray:
-    """Computes the DCT coefficients of a given image."""
-    image = np.array(open(image_path).convert("YCbCr"))
-
-    r, c, nc = image.shape
-    image_blocks = non_overlapping_blocks(image)
-
-    dct_coeffs_blocks = dctn(image_blocks, type=2, norm="ortho", axes=(-2, -1))
-
-    dct_coeffs = np.array(
-        [
-            [
-                [
-                    dct_coeffs_blocks[i // 8, j // 8, i % 8, j % 8, channel]
-                    for j in range(c)
-                ]
-                for i in range(r)
-            ]
-            for channel in range(nc)
-        ]
-    ).round()
-
-    return dct_coeffs
 
 
 def non_overlapping_blocks(
