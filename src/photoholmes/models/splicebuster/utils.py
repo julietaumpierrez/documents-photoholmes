@@ -9,6 +9,13 @@ from scipy.ndimage import binary_dilation, binary_opening
 def third_order_residual(x: NDArray, axis: int = 0) -> NDArray:
     """
     Calculates the third order residual as specified in the paper.
+    Params:
+    - x: input image. Dims (H, W)
+    - axis: axis along which to calculate the residual. 0 for horizontal,
+            1 for vertical
+
+    Returns:
+    - residual: third order residual. Dims (H - 4, W - 4)
     """
     x = x.astype(np.float32)
     if axis == 0:
@@ -37,26 +44,26 @@ def quantize(x: NDArray, T: int = 1, q: Union[int, float] = 2) -> NDArray[np.int
 
 
 def encode_matrix(
-    X: NDArray[np.int8], T: int = 1, k: int = 4, axis=0
+    X: NDArray[np.int8], T: int = 1, c: int = 4, axis: int = 0
 ) -> NDArray[np.int16]:
-    coded_shape = (X.shape[0] - k + 1, X.shape[1] - k + 1)
+    coded_shape = (X.shape[0] - c + 1, X.shape[1] - c + 1)
 
     encoded_matrix = np.zeros((2, *coded_shape))
     base = 2 * T + 1
-    max_value = (2 * T + 1) ** k - 1
+    max_value = (2 * T + 1) ** c - 1
 
     if axis == 0:
-        for i, b in enumerate(range(k)):
-            encoded_matrix[0] += base**b * X[: -k + 1, i : coded_shape[1] + i]
+        for i, b in enumerate(range(c)):
+            encoded_matrix[0] += base**b * X[: -c + 1, i : coded_shape[1] + i]
             encoded_matrix[1] += (
-                base ** (k - 1 - b) * X[: -k + 1, i : coded_shape[1] + i]
+                base ** (c - 1 - b) * X[: -c + 1, i : coded_shape[1] + i]
             )
 
     elif axis == 1:
-        for i, b in enumerate(range(k)):
-            encoded_matrix[0] += base**b * X[i : coded_shape[0] + i, : -k + 1]
+        for i, b in enumerate(range(c)):
+            encoded_matrix[0] += base**b * X[i : coded_shape[0] + i, : -c + 1]
             encoded_matrix[1] += (
-                base ** (k - 1 - b) * X[i : coded_shape[0] + i, : -k + 1]
+                base ** (c - 1 - b) * X[i : coded_shape[0] + i, : -c + 1]
             )
 
     reduced = np.minimum(encoded_matrix[0], encoded_matrix[1])
