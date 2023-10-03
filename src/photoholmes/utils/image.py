@@ -47,24 +47,25 @@ def read_mask(mask_path):
     return mask > mask.max() / 2
 
 
-def read_as_jpeg(image_path: str) -> np.ndarray:
+def read_DCT(image_path: str) -> np.ndarray:
     """Reads image from path and returns DCT coefficient matrix for each channel.
     If image is in jpeg format, it decodes the DCT stream and returns it.
     Otherwise, the image is saved into a temporary jpeg file and then the DCT stream is decoded.
     """
     extension = (image_path[-4:]).lower()
     if extension == ".jpg" or extension == ".jpeg":
-        return _read_jpeg(image_path)
+        return _DCT_from_jpeg(image_path)
     else:
         temp = NamedTemporaryFile(suffix=".jpg")
         open(image_path).convert("RGB").save(temp.name, quality=100, subsampling=0)
-        return _read_jpeg(temp.name)
+        return _DCT_from_jpeg(temp.name)
 
 
-def _read_jpeg(image_path: str) -> np.ndarray:
+def _DCT_from_jpeg(image_path: str) -> np.ndarray:
     """
     :param im_path: JPEG image path
     :return: DCT_coef (Y,Cb,Cr)
+    Code derived from https://github.com/mjkwon2021/CAT-Net.git.
     """
     extension = (image_path[-4:]).lower()
     assert extension == ".jpg" or extension == ".jpeg"
