@@ -103,7 +103,7 @@ def _DCT_from_jpeg(image_path: str) -> np.ndarray:
 
         DCT_coef[i] = channel_coefficients
 
-    return DCT_coef
+    return DCT_coef.astype(int)
 
 
 def non_overlapping_blocks(
