@@ -2,10 +2,12 @@
 import numpy as np
 
 from photoholmes.models.base import BaseMethod
-from photoholmes.models.splicebuster.utils import (encode_matrix,
-                                                   mahalanobis_distance,
-                                                   quantize,
-                                                   third_order_residual)
+from photoholmes.models.splicebuster.utils import (
+    encode_matrix,
+    mahalanobis_distance,
+    quantize,
+    third_order_residual,
+)
 from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
 from photoholmes.utils.pca import PCA
 
@@ -20,6 +22,15 @@ class Splicebuster(BaseMethod):
         pca_dim: int = 25,
         **kwargs,
     ):
+        """
+        Splicebuster implementation.
+        Params:
+        - block_size: size of the blocks used for feature extraction.
+        - stride: stride used for feature extraction.
+        - q: quantization level.
+        - T: Truncation level.
+        - pca_dim: number of dimensions to keep after PCA. If 0, PCA is not used.
+        """
         super().__init__(**kwargs)
         self.block_size = block_size
         self.stride = stride
@@ -77,6 +88,9 @@ class Splicebuster(BaseMethod):
                 ].sum(axis=(0, 1))
                 block_features[i, j] /= np.sum(block_features[i, j])
 
+        if self.pca_dim > 0:
+            block_features = np.sqrt(block_features)
+
         return block_features
 
     def predict(self, image: np.ndarray) -> np.ndarray:
@@ -84,8 +98,9 @@ class Splicebuster(BaseMethod):
         features = self.compute_features(image)
         flat_features = features.reshape(-1, features.shape[-1])
 
-        pca = PCA(n_components=self.pca_dim)
-        flat_features = pca.fit_transform(flat_features)
+        if self.pca_dim > 0:
+            pca = PCA(n_components=self.pca_dim)
+            flat_features = pca.fit_transform(flat_features)
 
         gmm = GaussianMixture()
         mus, covs = gmm.fit(flat_features)
