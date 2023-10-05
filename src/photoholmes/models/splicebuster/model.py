@@ -1,15 +1,21 @@
 # derived from https://www.grip.unina.it/download/prog/Splicebuster/
+from typing import Literal, Tuple, Union
+
 import numpy as np
+from numpy.typing import NDArray
 
 from photoholmes.models.base import BaseMethod
-from photoholmes.models.splicebuster.utils import (
+from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
+from photoholmes.utils.pca import PCA
+
+from .config import WeightConfig
+from .utils import (
     encode_matrix,
+    get_saturated_region_mask,
     mahalanobis_distance,
     quantize,
     third_order_residual,
 )
-from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
-from photoholmes.utils.pca import PCA
 
 
 class Splicebuster(BaseMethod):
@@ -20,6 +26,7 @@ class Splicebuster(BaseMethod):
         q: int = 2,
         T: int = 1,
         pca_dim: int = 25,
+        weights: Union[WeightConfig, Literal["original"], None] = None,
         **kwargs,
     ):
         """
@@ -30,6 +37,10 @@ class Splicebuster(BaseMethod):
         - q: quantization level.
         - T: Truncation level.
         - pca_dim: number of dimensions to keep after PCA. If 0, PCA is not used.
+        - weight_params: provides parameters for weighted feature computation.Options:
+            - None: do not use weights.
+            - "original": use parameters from the original implementation.
+            - WeightConfig object: use custom parameters.
         """
         super().__init__(**kwargs)
         self.block_size = block_size
@@ -37,10 +48,18 @@ class Splicebuster(BaseMethod):
         self.q = q
         self.T = T
         self.pca_dim = pca_dim
+        if weights == "original":
+            self.weight_params = WeightConfig()
+        else:
+            self.weight_params = weights
 
-    def compute_features(self, image: np.ndarray) -> np.ndarray:
-        H, W = image.shape
-
+    def filter_and_encode(
+        self, image: NDArray
+    ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
+        """
+        Apply third order residual filtering, quantization, and
+        encode the result as base 3 integers for fast coocurrance counting.
+        """
         qh_res = quantize(third_order_residual(image), self.T, self.q)
         qv_res = quantize(third_order_residual(image, axis=1), self.T, self.q)
 
@@ -49,11 +68,72 @@ class Splicebuster(BaseMethod):
         qvh = encode_matrix(qv_res)
         qvv = encode_matrix(qv_res, axis=1)
 
+        return qhh, qhv, qvh, qvv
+
+    def compute_weighted_histograms(
+        self,
+        mask: NDArray,
+        qhh: NDArray[np.int16],
+        qhv: NDArray[np.int16],
+        qvh: NDArray[np.int16],
+        qvv: NDArray[np.int16],
+    ) -> Tuple[NDArray, int]:
+        """
+        Efficiently compute weighted histogram for stride x stride blocks.
+        """
+        H, W = qhh.shape
         x_range = range(0, H - self.stride + 1, self.stride)
         y_range = range(0, W - self.stride + 1, self.stride)
 
         n_bins = 1 + np.max((qhh, qhv, qvh, qvv))
-        feat_dim = 2 * n_bins
+        feat_dim = int(2 * n_bins)
+        features = np.zeros((len(x_range), len(y_range), feat_dim))
+
+        for x_i, i in enumerate(x_range):
+            for x_j, j in enumerate(y_range):
+                block_weights = mask[i : i + self.stride, j : j + self.stride]
+
+                Hhh = np.histogram(
+                    qhh[i : i + self.stride, j : j + self.stride],
+                    bins=n_bins,
+                    weights=block_weights,
+                )[0].astype(float)
+                Hvv = np.histogram(
+                    qhv[i : i + self.stride, j : j + self.stride],
+                    bins=n_bins,
+                    weights=block_weights,
+                )[0].astype(float)
+                Hhv = np.histogram(
+                    qvh[i : i + self.stride, j : j + self.stride],
+                    bins=n_bins,
+                    weights=block_weights,
+                )[0].astype(float)
+                Hvh = np.histogram(
+                    qvh[i : i + self.stride, j : j + self.stride],
+                    bins=n_bins,
+                    weights=block_weights,
+                )[0].astype(float)
+
+                features[x_i, x_j] = np.concatenate((Hhh + Hvv, Hhv + Hvh)) / 2
+
+        return features, feat_dim
+
+    def compute_histograms(
+        self,
+        qhh: NDArray[np.int16],
+        qhv: NDArray[np.int16],
+        qvh: NDArray[np.int16],
+        qvv: NDArray[np.int16],
+    ) -> Tuple[NDArray, int]:
+        """
+        Efficiently compute histograms for stride x stride blocks.
+        """
+        H, W = qhh.shape
+        x_range = range(0, H - self.stride + 1, self.stride)
+        y_range = range(0, W - self.stride + 1, self.stride)
+
+        n_bins = 1 + np.max((qhh, qhv, qvh, qvv))
+        feat_dim = int(2 * n_bins)
         features = np.zeros((len(x_range), len(y_range), feat_dim))
 
         for x_i, i in enumerate(x_range):
@@ -72,6 +152,25 @@ class Splicebuster(BaseMethod):
                 )[0].astype(float)
 
                 features[x_i, x_j] = np.concatenate((Hhh + Hvv, Hhv + Hvh)) / 2
+        return features, feat_dim
+
+    def compute_features(self, image: NDArray) -> NDArray:
+        qhh, qhv, qvh, qvv = self.filter_and_encode(image)
+
+        if self.weight_params is not None:
+            mask = get_saturated_region_mask(
+                image,
+                self.weight_params.low_th,
+                self.weight_params.high_th,
+                self.weight_params.opening_kernel_radius,
+                self.weight_params.dilation_kernel_size,
+            )
+            mask = mask[2:-5, 2:-5]
+            features, feat_dim = self.compute_weighted_histograms(
+                mask, qhh, qhv, qvh, qvv
+            )
+        else:
+            features, feat_dim = self.compute_histograms(qhh, qhv, qvh, qvv)
 
         strides_x_block = self.block_size // self.stride
         block_features = np.zeros(
@@ -86,15 +185,21 @@ class Splicebuster(BaseMethod):
                 block_features[i, j] = features[
                     i : i + strides_x_block, j : j + strides_x_block
                 ].sum(axis=(0, 1))
-                block_features[i, j] /= np.sum(block_features[i, j])
+                block_features[i, j] /= max(np.sum(block_features[i, j]), 1e-20)
 
         if self.pca_dim > 0:
             block_features = np.sqrt(block_features)
 
         return block_features
 
-    def predict(self, image: np.ndarray) -> np.ndarray:
-        """Run splicebuster on an image."""
+    def predict(self, image: NDArray) -> NDArray:
+        """Run splicebuster on an image.
+        Params:
+            image: normalized image
+        Retunrs:
+            heatmap: splicebuster output
+        """
+
         features = self.compute_features(image)
         flat_features = features.reshape(-1, features.shape[-1])
 
@@ -114,11 +219,7 @@ class Splicebuster(BaseMethod):
         heatmap = np.empty(
             (image.shape[0] - self.block_size, image.shape[1] - self.block_size)
         )
-        n_label = 0
-        for i in range(0, image.shape[0] - self.block_size, self.stride):
-            for j in range(0, image.shape[1] - self.block_size, self.stride):
-                heatmap[i : i + self.stride, j : j + self.stride] = labels[n_label]
-                n_label += 1
+        heatmap = labels.reshape(features.shape[:2])
 
         heatmap = heatmap / np.max(labels)
         return heatmap
