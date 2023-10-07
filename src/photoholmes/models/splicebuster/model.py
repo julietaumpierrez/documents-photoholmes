@@ -9,13 +9,8 @@ from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
 from photoholmes.utils.pca import PCA
 
 from .config import WeightConfig
-from .utils import (
-    encode_matrix,
-    get_saturated_region_mask,
-    mahalanobis_distance,
-    quantize,
-    third_order_residual,
-)
+from .utils import (encode_matrix, get_saturated_region_mask,
+                    mahalanobis_distance, quantize, third_order_residual)
 
 
 class Splicebuster(BaseMethod):
@@ -196,7 +191,7 @@ class Splicebuster(BaseMethod):
         """Run splicebuster on an image.
         Params:
             image: normalized image
-        Retunrs:
+        Returns:
             heatmap: splicebuster output
         """
 
