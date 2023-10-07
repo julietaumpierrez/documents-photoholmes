@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 from sklearn.decomposition import PCA
 
-from photoholmes.models.splicebuster.method import Splicebuster
+from photoholmes.models.splicebuster.model import Splicebuster
 from photoholmes.utils.PCA.pca import PCA as PCA_class
 
 if "research" in os.path.abspath("."):

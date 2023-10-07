@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image  # type: ignore
 
+from photoholmes.models.splicebuster.config import WeightConfig
 from photoholmes.models.splicebuster.model import Splicebuster  # type: ignore
 
 if "research" in os.path.abspath("."):
@@ -14,11 +15,12 @@ if "research" in os.path.abspath("."):
     get_ipython().run_line_magic("autoreload", "2")
 # %%
 image = Image.open("data/img00.png").convert("L")
-np_image = np.array(image)
+np_image = np.array(image) / 255
 
 # %%
-sp = Splicebuster(stride=8, pca_dim=25)
-
+weight = WeightConfig()
+# weight = None
+sp = Splicebuster(stride=8, pca_dim=25, weights=weight)
 # %%
 heatmap = sp.predict(np_image)
 # %%
