@@ -1,10 +1,7 @@
-from typing import Dict, Optional
-
 import numpy as np
 
 from photoholmes.models.base import BaseMethod
 from photoholmes.models.DQ.utils import fft_period, histogram_period
-from photoholmes.utils.generic import load_yaml
 
 ZIGZAG = [
     (0, 0),
@@ -82,13 +79,11 @@ class DQ(BaseMethod):
     def predict(self, dct_coefficients: np.ndarray) -> np.ndarray:
         M, N = dct_coefficients.shape[1:]
         BPPM = np.zeros((M // 8, N // 8))
-        print(ZIGZAG[: self.number_frecs])
-
         for channel in range(dct_coefficients.shape[0]):
             BPPM += self._calculate_BPPM_channel(
                 dct_coefficients[channel], ZIGZAG[: self.number_frecs]
-            ).sum(axis=0)
-        return BPPM / BPPM.max()
+            )
+        return BPPM / len(dct_coefficients)
 
     def _detect_period(self, histogram):
         p_H = histogram_period(histogram)
@@ -111,37 +106,31 @@ class DQ(BaseMethod):
 
         return Pu_f
 
-    def _calculate_BPPM_f(self, DCT_coefficients, f, hist, p):
-        DCT_coefficients_f = DCT_coefficients[f[0] :: 8, f[1] :: 8]
-        Pu = self._calculate_Pu(DCT_coefficients_f, hist, p)
-        Pt = 1 / p
-        BPPM_f = Pt / (Pu + Pt)
-        saturated = (DCT_coefficients_f == DCT_coefficients_f.min()) | (
-            DCT_coefficients_f == DCT_coefficients_f.max()
-        )
-        BPPM_f[saturated] = 0
+    def _calculate_BPPM_f(self, DCT_coefficients_f):
+        hmax = np.max(DCT_coefficients_f)
+        hmin = np.min(DCT_coefficients_f)
+        if hmax - hmin:
+            hist, _ = np.histogram(
+                DCT_coefficients_f, bins=hmax - hmin, range=(hmin, hmax)
+            )
+            p = self._detect_period(hist[1:-1])
+            if p != 1:
+                Pu = self._calculate_Pu(DCT_coefficients_f, hist, p)
+                Pt = 1 / p
+                BPPM_f = Pt / (Pu + Pt)
+                saturated = (DCT_coefficients_f == DCT_coefficients_f.min()) | (
+                    DCT_coefficients_f == DCT_coefficients_f.max()
+                )
+                BPPM_f[saturated] = 0
 
-        return BPPM_f
+                return BPPM_f
+        return np.zeros_like(DCT_coefficients_f)
 
     def _calculate_BPPM_channel(self, DCT_coefs, fs):
         M, N = DCT_coefs.shape
         BPPM = np.zeros((len(fs), M // 8, N // 8))
         for i in range(len(fs)):
-            DCT_coefs_f = DCT_coefs[fs[i][0] :: 8, fs[i][1] :: 8]
-            saturados = (DCT_coefs_f == DCT_coefs_f.min()) | (
-                DCT_coefs_f == DCT_coefs_f.max()
-            )
-            hmax = np.max(DCT_coefs_f)
-            hmin = np.min(DCT_coefs_f)
-            if hmax - hmin:
-                hist, _ = np.histogram(
-                    DCT_coefs_f, bins=hmax - hmin, range=(hmin, hmax)
-                )
-                p = self._detect_period(hist[1:-1])
+            DCT_coefficients_f = DCT_coefs[fs[i][0] :: 8, fs[i][1] :: 8]
+            BPPM[i] = self._calculate_BPPM_f(DCT_coefficients_f)
 
-                if p != 1:
-                    Pu = self._calculate_Pu(DCT_coefs_f, hist, p)
-                    Pt = 1 / p
-                    BPPM[i] = Pt / (Pu + Pt)
-                    BPPM[i][saturados] = 0
-        return BPPM
+        return BPPM.sum(axis=0) / self.number_frecs

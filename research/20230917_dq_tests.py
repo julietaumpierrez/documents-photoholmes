@@ -33,6 +33,7 @@ coefficients[2].shape
 
 method = DQ.from_config(config_yaml)
 
+
 largest_shape = (4608, 3456)
 coefficients[0] = np.resize(coefficients[0], largest_shape)
 coefficients[1] = np.resize(coefficients[1], largest_shape)
