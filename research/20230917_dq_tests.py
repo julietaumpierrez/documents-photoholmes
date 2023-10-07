@@ -5,7 +5,6 @@ get_ipython().run_line_magic("autoreload", "2")  # type: ignore # noqa
 # FIXME: No corre acá, solo adentro de src.
 import os
 
-import cv2 as cv
 import jpegio as jio
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,14 +12,14 @@ import numpy as np
 # import matplotlib.pyplot as plt
 from photoholmes.models.DQ.method import DQ
 
-DATA_DIR = "/home/pento/workspace/fing/photoholmes/benchmarking/test_images/"
-config_yaml = (
-    "/home/pento/workspace/fing/photoholmes/src/photoholmes/models/DQ/config.yaml"
-)
+# %%
+os.chdir("..")
 
-img_path = (
-    "/home/pento/workspace/fing/photoholmes/benchmarking/test_images/images/Im_1.jpg"
-)
+# %%
+DATA_DIR = "benchmarking/test_images/"
+config_yaml = "src/photoholmes/models/DQ/config.yaml"
+
+img_path = "benchmarking/test_images/images/Im_1.jpg"
 
 # %%
 jpeg_struct_mod = jio.read(img_path)

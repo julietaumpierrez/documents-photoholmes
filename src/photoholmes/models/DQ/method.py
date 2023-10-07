@@ -3,7 +3,7 @@ from typing import Dict, Optional
 import numpy as np
 
 from photoholmes.models.base import BaseMethod
-from photoholmes.models.DQ.utils.utils import fft_period, histogram_period
+from photoholmes.models.DQ.utils import fft_period, histogram_period
 from photoholmes.utils.generic import load_yaml
 
 ZIGZAG = [
@@ -75,7 +75,7 @@ ZIGZAG = [
 
 
 class DQ(BaseMethod):
-    def __init__(self, number_frecs=5, **kwargs):
+    def __init__(self, number_frecs=10, **kwargs):
         super().__init__(**kwargs)
         self.number_frecs = number_frecs
 
@@ -89,16 +89,6 @@ class DQ(BaseMethod):
                 dct_coefficients[channel], ZIGZAG[: self.number_frecs]
             ).sum(axis=0)
         return BPPM / BPPM.max()
-
-    @classmethod
-    def from_config(cls, config: Optional[str | Dict[str, str]] = "config.yaml"):
-        if isinstance(config, str):
-            config = load_yaml(config)
-
-        if config is None:
-            config = {}
-
-        return cls(**config)  # type: ignore
 
     def _detect_period(self, histogram):
         p_H = histogram_period(histogram)
