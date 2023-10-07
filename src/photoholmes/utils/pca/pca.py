@@ -1,6 +1,6 @@
 from typing import List, Union
 
-import numpy as np
+from numpy.typing import NDArray
 from sklearn.decomposition import PCA as sklearn_pca
 
 
@@ -11,16 +11,14 @@ class PCA:
         self.n_components = n_components
         self.pca = sklearn_pca(n_components=n_components, whiten=whiten)
 
-    def fit(self, features: Union[np.ndarray, List[np.ndarray]]):
-        self.pca.fit(features)  # type: ignore
+    def fit(self, features: Union[NDArray, List[NDArray]]):
+        self.pca.fit(features)
 
-    def transform(self, features: Union[np.ndarray, List[np.ndarray]]) -> np.ndarray:
-        return self.pca.transform(features)  # type: ignore
+    def transform(self, features: Union[NDArray, List[NDArray]]) -> NDArray:
+        return self.pca.transform(features)
 
-    def fit_transform(
-        self, features: Union[np.ndarray, List[np.ndarray]]
-    ) -> np.ndarray:
-        return self.pca.fit_transform(features)  # type: ignore
+    def fit_transform(self, features: Union[NDArray, List[NDArray]]) -> NDArray:
+        return self.pca.fit_transform(features)
 
     def get_covariance(self):
         return self.pca.get_covariance()
