@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import numpy as np
 
@@ -17,13 +17,3 @@ class Naive(BaseMethod):
         """Predicts masks from a list of images."""
         shape = image.shape[:2] if image.ndim > 2 else image.shape
         return np.random.normal(0.5, self.sigma, size=shape)
-
-    @classmethod
-    def from_config(cls, config: Optional[str | Dict[str, str]]):
-        if isinstance(config, str):
-            config = load_yaml(config)
-
-        if config is None:
-            config = {}
-
-        return cls(**config)  # type: ignore

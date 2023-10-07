@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional
+
+from photoholmes.utils.generic import load_yaml
 
 
 class BaseMethod(ABC):
@@ -12,13 +14,6 @@ class BaseMethod(ABC):
         predicted heatmaps to masks in the "predict_mask" method.
         """
         self.threshold = threshold
-
-    @classmethod
-    @abstractmethod
-    def from_config(cls, config: Optional[Union[str, Dict[str, str]]]):
-        """Initializes model from a read config.
-        By default, it takes 'config.yaml' in the model folder
-        """
 
     @abstractmethod
     def predict(self, image):
@@ -35,3 +30,20 @@ class BaseMethod(ABC):
     def name(self):
         class_name = str(type(self)).split(".")[-1]
         return class_name[:-2]
+
+    @classmethod
+    def from_config(cls, config: Optional[str | Dict[str, Any]]):
+        """
+        Instantiate the model from configuration dictionary or yaml.
+
+        Params:
+            config: path to the yaml configuration or a dictionary with
+                    the parameters for the model.
+        """
+        if isinstance(config, str):
+            config = load_yaml(config)
+
+        if config is None:
+            config = {}
+
+        return cls(**config)

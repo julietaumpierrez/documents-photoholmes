@@ -12,25 +12,41 @@ from PIL.Image import open
 IMG_FOLDER_PATH = "test_images/images/"
 
 
-def plot_multiple_images(
+def plot(image, title=None, save_path=None):
+    """Function for easily plotting an image."""
+    plt.figure()
+    plt.imshow(image)
+    if title is not None:
+        plt.title(title)
+    plt.axis(False)
+    if save_path is not None:
+        plt.savefig(save_path)
+        print("Figure saved at:", save_path)
+    plt.show()
+
+
+def plot_multiple(
     images, titles=None, ncols=4, title: Optional[str] = None, save_path=None
 ):
-    """D"""
+    """Function for easily plotting one or multiple images"""
     N = len(images)
     nrows = np.ceil(N / ncols).astype(int)
-    fig, ax = plt.subplots(nrows, ncols)
     if titles is None:
         titles = [None] * len(images)
     if nrows > 1:
+        fig, ax = plt.subplots(nrows, ncols)
         for n, img in enumerate(images):
             i = n // ncols
             j = n % ncols
             ax[i, j].imshow(img)
             ax[i, j].set_title(titles[n])
+            ax[i, j].set_axis_off()
     else:
+        fig, ax = plt.subplots(1, N)
         for n, img in enumerate(images):
             ax[n].imshow(img)
             ax[n].set_title(titles[n])
+            ax[n].set_axis_off()
     if title is not None:
         plt.suptitle(title)
     plt.tight_layout()
@@ -221,7 +237,7 @@ class Data:
 
     def show(self, ncols=4, title: Optional[str] = None, save_path=None):
         """Displays the dataset"""
-        plot_multiple_images(
+        plot_multiple(
             self.images, self.names, ncols=ncols, title=title, save_path=save_path
         )
 
