@@ -1,5 +1,4 @@
 # %%
-# FIXME: No corre acá, solo adentro de src.
 import os
 
 import cv2 as cv
