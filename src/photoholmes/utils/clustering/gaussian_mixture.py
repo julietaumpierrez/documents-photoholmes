@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 from sklearn.mixture import GaussianMixture as sklearn_gmm
@@ -11,10 +11,12 @@ class GaussianMixture:
         self.n_components = n_components
         self.gm = sklearn_gmm(n_components=n_components)
 
-    def fit(self, features: List[np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
+    def fit(
+        self, features: Union[List[np.ndarray], np.ndarray]
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Predicts masks from a list of images."""
 
-        self.gm.fit(features)
+        self.gm.fit(features)  # type: ignore
         mus = self.gm.means_
         covs = self.gm.covariances_
-        return mus, covs
+        return np.array(mus), np.array(covs)

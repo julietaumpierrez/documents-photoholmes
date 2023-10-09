@@ -1,7 +1,9 @@
+from typing import Any, Dict
+
 import yaml
 
 
-def load_yaml(yaml_path: str) -> dict:
+def load_yaml(yaml_path: str) -> Dict[str, Any]:
     with open(yaml_path, "r") as file:
         data = yaml.safe_load(file)
     return data

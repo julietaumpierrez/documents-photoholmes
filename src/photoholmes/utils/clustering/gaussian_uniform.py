@@ -1,8 +1,10 @@
 # Code derived from https://github.com/grip-unina/noiseprint and CODIGO MARINA
+# FIXME: add license a Marina and Co.
 from typing import Literal, Tuple, Union
 
 import numpy as np
 import scipy as sp
+from numpy.typing import NDArray
 
 
 class GaussianUniformEM:
@@ -16,6 +18,15 @@ class GaussianUniformEM:
         max_iter: int = 100,
         n_init: int = 30,
     ) -> None:
+        """
+        Gaussian Uniform Expectation Maximization algorithm.
+        Params:
+        - p_outlier_init: initial probability of being falsified
+        - outlier_nlogl:  log-likelihood of being falsified
+        - tol: tolerance used in a single run of the expectation step
+        - max_iter: maximum number of iterations in a single run of the expectation step
+        - n_init: number of iterations of EM to run
+        """
         self.p_outlier_init = p_outlier_init
         self.outlier_nlogl = outlier_nlogl
         self.pi = 1 - p_outlier_init
@@ -23,7 +34,10 @@ class GaussianUniformEM:
         self.tol = tol
         self.n_init = n_init
 
-    def fit(self, X: np.ndarray) -> None:
+    def fit(self, X: NDArray) -> Tuple[NDArray, NDArray, NDArray]:
+        """
+        Fit the model to the data.
+        """
         best_loss = np.inf
         save = None, None, None
         for i in range(self.n_init):
@@ -32,8 +46,13 @@ class GaussianUniformEM:
                 best_loss = loss
                 save = self.mean, self.covariance_matrix, self.pi
         self.mean, self.covariance_matrix, self.pi = save
+        return save
 
-    def _fit_once(self, X: np.ndarray) -> float:
+    def _fit_once(self, X: NDArray) -> float:
+        """
+        Run a single iteration of the EM algorithm max_iter times or til the
+        difference in losses is smaller than tol.
+        """
         n_samples, n_features = X.shape
         init_index = np.random.randint(0, n_samples - 1)
         self.mean = X[init_index]
@@ -42,7 +61,7 @@ class GaussianUniformEM:
         self.covariance_matrix = np.diag(variance)
         self.pi = 1 - self.p_outlier_init
         loss_old = np.inf
-        loss = 0  # initialize loss to a default value
+        loss = 0
         for i in range(self.max_iter):
             gammas, loss, _ = self._e_step(X)
             loss_diff = loss - loss_old
@@ -52,7 +71,10 @@ class GaussianUniformEM:
             self._m_step(X, gammas)
         return loss
 
-    def _m_step(self, X: np.ndarray, gammas: np.ndarray) -> None:
+    def _m_step(self, X: NDArray, gammas: NDArray) -> None:
+        """
+        Maximization step.
+        """
         n_samples, n_features = X.shape
         self.pi = np.mean(gammas)
         self.mean = gammas.dot(X) / (n_samples * self.pi)
@@ -61,7 +83,10 @@ class GaussianUniformEM:
             self.covariance_matrix
         ) * np.eye(n_features)
 
-    def _cholesky(self, max_attempts: int = 5) -> np.ndarray:
+    def _cholesky(self, max_attempts: int = 5) -> NDArray:
+        """
+        Compute the Cholesky decomposition of the covariance matrix.
+        """
         try:
             L = np.linalg.cholesky(self.covariance_matrix)
         except (
@@ -80,7 +105,10 @@ class GaussianUniformEM:
                 raise np.linalg.LinAlgError
         return L
 
-    def _get_nlogl(self, X: np.ndarray) -> Tuple[float, np.ndarray]:
+    def _get_nlogl(self, X: NDArray) -> Tuple[float, NDArray]:
+        """
+        Get log likelihood of pristine class.
+        """
         n_samples, n_features = X.shape
         L = self._cholesky()  # covariance_matrix = L@L.T
         D = np.diag(L)
@@ -94,7 +122,10 @@ class GaussianUniformEM:
 
         return nlogl, mahalanobis
 
-    def _e_step(self, X: np.ndarray) -> Tuple[np.ndarray, float, np.ndarray]:
+    def _e_step(self, X: NDArray) -> Tuple[NDArray, float, NDArray]:
+        """
+        Run the expectation step.
+        """
         nlogl, mahal = self._get_nlogl(X)
         log_gammas_inlier = np.log(self.pi) - nlogl
         log_gammas_outlier = np.log(1 - self.pi) - self.outlier_nlogl
@@ -112,6 +143,9 @@ class GaussianUniformEM:
         # gammas = sp.special.softmax(log_gammas, axis=1)
         return gammas[:, 0], loss, mahal
 
-    def predict(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, X: NDArray) -> Tuple[NDArray, NDArray]:
+        """
+        Predict the class of the samples.
+        """
         gammas, _, mahal = self._e_step(X)
         return mahal, gammas
