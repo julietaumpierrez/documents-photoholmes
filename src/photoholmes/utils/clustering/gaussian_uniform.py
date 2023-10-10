@@ -148,4 +148,4 @@ class GaussianUniformEM:
         Predict the class of the samples.
         """
         gammas, _, mahal = self._e_step(X)
-        return mahal, gammas
+        return gammas, mahal

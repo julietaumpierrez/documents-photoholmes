@@ -6,11 +6,17 @@ from numpy.typing import NDArray
 
 from photoholmes.models.base import BaseMethod
 from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
+from photoholmes.utils.clustering.gaussian_uniform import GaussianUniformEM
 from photoholmes.utils.pca import PCA
 
 from .config import WeightConfig
-from .utils import (encode_matrix, get_saturated_region_mask,
-                    mahalanobis_distance, quantize, third_order_residual)
+from .utils import (
+    encode_matrix,
+    get_saturated_region_mask,
+    mahalanobis_distance,
+    quantize,
+    third_order_residual,
+)
 
 
 class Splicebuster(BaseMethod):
@@ -21,6 +27,7 @@ class Splicebuster(BaseMethod):
         q: int = 2,
         T: int = 1,
         pca_dim: int = 25,
+        mixture: Literal["uniform", "gaussian"] = "uniform",
         weights: Union[WeightConfig, Literal["original"], None] = None,
         **kwargs,
     ):
@@ -43,6 +50,7 @@ class Splicebuster(BaseMethod):
         self.q = q
         self.T = T
         self.pca_dim = pca_dim
+        self.mixture = mixture
         if weights == "original":
             self.weight_params = WeightConfig()
         else:
@@ -202,14 +210,25 @@ class Splicebuster(BaseMethod):
             pca = PCA(n_components=self.pca_dim)
             flat_features = pca.fit_transform(flat_features)
 
-        gmm = GaussianMixture()
-        mus, covs = gmm.fit(flat_features)
-
-        labels = mahalanobis_distance(
-            flat_features, mus[1], covs[1]
-        ) / mahalanobis_distance(flat_features, mus[0], covs[0])
-        labels_comp = 1 / labels
-        labels = labels if labels.sum() < labels_comp.sum() else labels_comp
+        if self.mixture == "gaussian":
+            mixt = GaussianMixture()
+            mus, covs = mixt.fit(flat_features)
+            labels = mahalanobis_distance(
+                flat_features, mus[1], covs[1]
+            ) / mahalanobis_distance(flat_features, mus[0], covs[0])
+            labels_comp = 1 / labels
+            labels = labels if labels.sum() < labels_comp.sum() else labels_comp
+        elif self.mixture == "uniform":
+            mixt = GaussianUniformEM()
+            mus, covs, _ = mixt.fit(flat_features)
+            _, labels = mixt.predict(flat_features)
+        else:
+            raise ValueError(
+                (
+                    f"mixture {self.mixture} is not a valid mixture model. "
+                    'Please select either "uniform" or "gaussian"'
+                )
+            )
 
         heatmap = np.empty(
             (image.shape[0] - self.block_size, image.shape[1] - self.block_size)
