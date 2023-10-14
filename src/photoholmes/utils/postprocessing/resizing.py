@@ -14,6 +14,16 @@ def upscale_mask(
     ] = "linear",
     fill_value: Union[int, float] = 0,
 ) -> NDArray:
+    """Upscale a mask to a target size.
+    Params:
+        coords: coordinates of the mask values
+        mask: mask to upscale
+        target_size: target size
+        method: interpolation method
+        fill_value: value to fill outside the mask
+    Returns:
+        upscaled mask
+    """
     X, Y = target_size
     interpolator = RegularGridInterpolator(
         coords, mask, method=method, bounds_error=False, fill_value=fill_value
