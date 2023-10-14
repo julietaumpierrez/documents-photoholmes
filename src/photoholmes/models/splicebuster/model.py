@@ -1,5 +1,5 @@
 # derived from https://www.grip.unina.it/download/prog/Splicebuster/
-from typing import Literal, Tuple, Union
+from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 from photoholmes.models.base import BaseMethod
 from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
 from photoholmes.utils.clustering.gaussian_uniform import GaussianUniformEM
+from photoholmes.utils.generic import load_yaml
 from photoholmes.utils.pca import PCA
 
 from .config import WeightConfig
@@ -163,8 +164,8 @@ class Splicebuster(BaseMethod):
         if self.weight_params is not None:
             mask = get_saturated_region_mask(
                 image,
-                self.weight_params.low_th,
-                self.weight_params.high_th,
+                self.weight_params.low_th / 255,
+                self.weight_params.high_th / 255,
                 self.weight_params.opening_kernel_radius,
                 self.weight_params.dilation_kernel_size,
             )
@@ -237,3 +238,23 @@ class Splicebuster(BaseMethod):
 
         heatmap = heatmap / np.max(labels)
         return heatmap
+
+    @classmethod
+    def from_config(cls, config: Optional[str | Dict[str, Any]]):
+        """
+        Instantiate the model from configuration dictionary or yaml.
+
+        Params:
+            config: path to the yaml configuration or a dictionary with
+                    the parameters for the model.
+        """
+        if isinstance(config, str):
+            config = load_yaml(config)
+
+        if config is None:
+            config = {}
+
+        if "weights" in config:
+            config["weights"] = WeightConfig(**config["weights"])
+
+        return cls(**config)
