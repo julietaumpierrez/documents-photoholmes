@@ -46,7 +46,7 @@ def quantize(x: NDArray, T: int = 1, q: Union[int, float] = 2) -> NDArray[np.int
 def encode_matrix(
     X: NDArray[np.int8], T: int = 1, c: int = 4, axis: int = 0
 ) -> NDArray[np.int16]:
-    coded_shape = (X.shape[0] - c + 1, X.shape[1] - c + 1)
+    coded_shape = (X.shape[0] - c, X.shape[1] - c)
 
     encoded_matrix = np.zeros((2, *coded_shape))
     base = 2 * T + 1
@@ -54,17 +54,13 @@ def encode_matrix(
 
     if axis == 0:
         for i, b in enumerate(range(c)):
-            encoded_matrix[0] += base**b * X[: -c + 1, i : coded_shape[1] + i]
-            encoded_matrix[1] += (
-                base ** (c - 1 - b) * X[: -c + 1, i : coded_shape[1] + i]
-            )
+            encoded_matrix[0] += base**b * X[:-c, i : coded_shape[1] + i]
+            encoded_matrix[1] += base ** (c - 1 - b) * X[:-c, i : coded_shape[1] + i]
 
     elif axis == 1:
         for i, b in enumerate(range(c)):
-            encoded_matrix[0] += base**b * X[i : coded_shape[0] + i, : -c + 1]
-            encoded_matrix[1] += (
-                base ** (c - 1 - b) * X[i : coded_shape[0] + i, : -c + 1]
-            )
+            encoded_matrix[0] += base**b * X[i : coded_shape[0] + i, :-c]
+            encoded_matrix[1] += base ** (c - 1 - b) * X[i : coded_shape[0] + i, :-c]
 
     reduced = np.minimum(encoded_matrix[0], encoded_matrix[1])
     reduced = np.minimum(reduced, max_value - encoded_matrix[0])

@@ -67,20 +67,20 @@ class Splicebuster(BaseMethod):
         qh_res = quantize(third_order_residual(image), self.T, self.q)
         qv_res = quantize(third_order_residual(image, axis=1), self.T, self.q)
 
-        qhh = encode_matrix(qh_res)
-        qhv = encode_matrix(qh_res, axis=1)
-        qvh = encode_matrix(qv_res)
-        qvv = encode_matrix(qv_res, axis=1)
+        qhh = encode_matrix(qh_res, T=self.T)
+        qhv = encode_matrix(qh_res, T=self.T, axis=1)
+        qvh = encode_matrix(qv_res, T=self.T)
+        qvv = encode_matrix(qv_res, T=self.T, axis=1)
 
         return qhh, qhv, qvh, qvv
 
     def compute_weighted_histograms(
         self,
         mask: NDArray,
-        qhh: NDArray[np.int16],
-        qhv: NDArray[np.int16],
-        qvh: NDArray[np.int16],
-        qvv: NDArray[np.int16],
+        qhh: NDArray[np.int64],
+        qhv: NDArray[np.int64],
+        qvh: NDArray[np.int64],
+        qvv: NDArray[np.int64],
     ) -> Tuple[NDArray, int]:
         """
         Efficiently compute weighted histogram for stride x stride blocks.
@@ -90,6 +90,7 @@ class Splicebuster(BaseMethod):
         y_range = range(0, W - self.stride + 1, self.stride)
 
         n_bins = 1 + np.max((qhh, qhv, qvh, qvv))
+        bins = np.arange(0, n_bins + 1)
         feat_dim = int(2 * n_bins)
         features = np.zeros((len(x_range), len(y_range), feat_dim))
 
@@ -99,22 +100,22 @@ class Splicebuster(BaseMethod):
 
                 Hhh = np.histogram(
                     qhh[i : i + self.stride, j : j + self.stride],
-                    bins=n_bins,
+                    bins=bins,
                     weights=block_weights,
                 )[0].astype(float)
                 Hvv = np.histogram(
                     qhv[i : i + self.stride, j : j + self.stride],
-                    bins=n_bins,
+                    bins=bins,
                     weights=block_weights,
                 )[0].astype(float)
                 Hhv = np.histogram(
                     qvh[i : i + self.stride, j : j + self.stride],
-                    bins=n_bins,
+                    bins=bins,
                     weights=block_weights,
                 )[0].astype(float)
                 Hvh = np.histogram(
                     qvh[i : i + self.stride, j : j + self.stride],
-                    bins=n_bins,
+                    bins=bins,
                     weights=block_weights,
                 )[0].astype(float)
 
@@ -137,22 +138,23 @@ class Splicebuster(BaseMethod):
         y_range = range(0, W - self.stride + 1, self.stride)
 
         n_bins = 1 + np.max((qhh, qhv, qvh, qvv))
+        bins = np.arange(0, n_bins + 1)
         feat_dim = int(2 * n_bins)
         features = np.zeros((len(x_range), len(y_range), feat_dim))
 
         for x_i, i in enumerate(x_range):
             for x_j, j in enumerate(y_range):
                 Hhh = np.histogram(
-                    qhh[i : i + self.stride, j : j + self.stride], bins=n_bins
+                    qhh[i : i + self.stride, j : j + self.stride], bins=bins
                 )[0].astype(float)
                 Hvv = np.histogram(
-                    qhv[i : i + self.stride, j : j + self.stride], bins=n_bins
+                    qhv[i : i + self.stride, j : j + self.stride], bins=bins
                 )[0].astype(float)
                 Hhv = np.histogram(
-                    qvh[i : i + self.stride, j : j + self.stride], bins=n_bins
+                    qvh[i : i + self.stride, j : j + self.stride], bins=bins
                 )[0].astype(float)
                 Hvh = np.histogram(
-                    qvv[i : i + self.stride, j : j + self.stride], bins=n_bins
+                    qvv[i : i + self.stride, j : j + self.stride], bins=bins
                 )[0].astype(float)
 
                 features[x_i, x_j] = np.concatenate((Hhh + Hvv, Hhv + Hvh)) / 2
