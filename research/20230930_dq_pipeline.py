@@ -16,7 +16,7 @@ MASK_PATH = DATA_DIR + "masks/"
 
 # %%
 images = [cv.imread(IMAGES_PATH + path) for path in os.listdir(IMAGES_PATH)]
-image.plot_multiple_images(images=images, titles=os.listdir(IMAGES_PATH), ncols=2)
+image.plot_multiple(images=images, titles=os.listdir(IMAGES_PATH), ncols=2)
 
 # %%
 image_choice = 1
@@ -27,24 +27,16 @@ name = f"Im_{image_choice}"
 im = cv.imread(IMAGES_PATH + name + ".jpg")
 mask = cv.imread(MASK_PATH + name + ".png")
 
+image.plot(im, name)
+
+# %%
+
 heatmap = method.predict(im)
 predicted_mask = method.predict_mask(heatmap)
 
 # %%
-fig, ax = plt.subplots(1, 4)
-ax[0].imshow(im)
-ax[0].set_title("Imagen")
-ax[0].set_axis_off()
-ax[1].imshow(heatmap)
-ax[1].set_title("Heatmap")
-ax[1].set_axis_off()
-ax[2].imshow(predicted_mask)
-ax[2].set_title("Predicted Mask")
-ax[2].set_axis_off()
-ax[3].imshow(mask)
-ax[3].set_title("GT Mask")
-ax[3].set_axis_off()
-plt.tight_layout()
-plt.show()
+imgs_to_plot = [im, heatmap, predicted_mask, mask]
+titles = ["Imagen", "Heatmap", "Predicted Mask", "GT Mask"]
+image.plot_multiple(imgs_to_plot, titles)
 
 # %%
