@@ -9,7 +9,7 @@ from PIL.Image import open
 from photoholmes.models.method_factory import MethodFactory
 from photoholmes.utils import image
 
-# os.chdir("..")
+os.chdir("..")
 
 DATA_DIR = "benchmarking/test_images/"
 
@@ -31,15 +31,13 @@ method = MethodFactory.create(method_name)
 
 im_path = IMAGES_PATH + im_names[im_selection]
 img = np.asarray(open(im_path)).copy()
-image.plot_multiple_images([img], ncols=2)
+image.plot_multiple([img], ncols=2)
 
 # %%
-dct_coefs = image.read_DCT(im_path)
+dct_coefs, _ = image.read_jpeg_data(im_path, num_channels=1)
 heatmap = method.predict(dct_coefs)
 mask_pred = method.predict_mask(heatmap)
 
-image.plot_multiple_images(
-    [img, heatmap, mask_pred], ["Imagen", "BPPM", "Máscara"], ncols=3
-)
+image.plot_multiple([img, heatmap, mask_pred], ["Imagen", "BPPM", "Máscara"], ncols=3)
 
 # %%

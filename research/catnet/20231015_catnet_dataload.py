@@ -1,14 +1,14 @@
 # %%
 import os
+import random
 from dataclasses import dataclass
 from re import I
 from typing import Dict, List
 
 import jpegio
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from cv2 import dct
-from matplotlib.pyplot import sca
 from numpy.typing import NDArray
 from PIL import Image
 
@@ -24,6 +24,12 @@ NUM_CHANNELS = 1
 # image_path = "data/IMD2020/1a07yi/c8swtoq_0.jpg"
 image_path = "data/example_input.jpg"
 img = Image.open(image_path)
+# %%
+from extra.catnet.dataset import TestDataset
+
+dataset = TestDataset(
+    crop_size=None, grid_crop=True, blocks=["RGB", "DCTvol", "qtable"], DCT_channels=1
+)
 
 # %%
 jpeg_img = jpegio.read(image_path)
@@ -124,13 +130,18 @@ class JPEGImage:
 
 
 # %%
-img = JPEGImage.load(image_path)
+img = JPEGImage.load(image_path, n_dct_channels=1)
+
+# %%
+dataset.DCT_channels = 1
+dct, qtables = dataset._get_jpeg_info(image_path)
+dataset.DCT_channels = 1
+# %%
+print([(dct[i] == img.dct_coeffs[i]).all() for i in range(len(img.dct_coeffs))])
+assert all([(dct[i] == img.dct_coeffs[i]).all() for i in range(len(img.dct_coeffs))])
 
 
 # %%
-import random
-
-
 def get_binary_volume(x: torch.Tensor, T: int = 20) -> torch.Tensor:
     x_vol = torch.zeros(size=(T + 1, x.shape[1], x.shape[2]))
     x_vol[0] += (x == 0).float().squeeze()
@@ -143,7 +154,7 @@ def get_binary_volume(x: torch.Tensor, T: int = 20) -> torch.Tensor:
     return x_vol
 
 
-def prepare_for_catnet(jpeg_img: JPEGImage, n_dct_channles: int = 1):
+def prepare_catnet(jpeg_img: JPEGImage, n_dct_channles: int = 1):
     img = torch.tensor(jpeg_img.image).permute(2, 0, 1)
     dct_coeffs = jpeg_img.dct_coeffs
 
@@ -176,6 +187,8 @@ def prepare_for_catnet(jpeg_img: JPEGImage, n_dct_channles: int = 1):
             s_r : s_r + crop_size[0], s_c : s_c + crop_size[1]
         ]
     dct_coeffs = torch.tensor(dct_coeffs, dtype=torch.float)
+
+    img = (img - 127.5) / 127.5
     dct_vols = get_binary_volume(dct_coeffs, T=20)
 
     qtables = np.array(jpeg_img.qtable[:n_dct_channles])
@@ -184,9 +197,13 @@ def prepare_for_catnet(jpeg_img: JPEGImage, n_dct_channles: int = 1):
 
 
 # %%j
-x, qtable = prepare_for_catnet(img)
+x_ph, qtable_ph = prepare_catnet(img)
 
+# %%
+x, mask, qtable = dataset._create_tensor(image_path, None)
 
+# %%
+assert (x[:3] == x_ph[:3]).all()
 # %%
 import yaml
 
@@ -215,4 +232,27 @@ labels.shape
 # %%
 plt.imshow(labels.numpy())
 
+from PIL import Image
+
 # %%
+from photoholmes.models.catnet.preprocessing import catnet_preprocessing
+from photoholmes.utils.image import read_jpeg_data
+
+# %%
+dct_ph, qtable = read_jpeg_data(image_path, num_channels=1)
+img = np.array(Image.open(image_path))
+# %%
+assert (dct_ph == dct).all()
+# %%
+x_ph, qtable_ph = catnet_preprocessing(img, dct, qtable, n_dct_channles=1)
+
+# %%
+assert (x_ph == x).all()
+# %%
+with torch.no_grad():
+    out = model(x[None, :], qtable[None, :])
+
+# %%
+pred = out.squeeze(0)
+labels = torch.nn.functional.softmax(pred, dim=0)[1]
+plt.imshow(labels)
