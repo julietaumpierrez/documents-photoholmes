@@ -2,7 +2,6 @@
 import os
 import random
 from dataclasses import dataclass
-from re import I
 from typing import Dict, List
 
 import jpegio
@@ -203,7 +202,7 @@ x_ph, qtable_ph = prepare_catnet(img)
 x, mask, qtable = dataset._create_tensor(image_path, None)
 
 # %%
-assert (x[:3] == x_ph[:3]).all()
+assert (x == x_ph).all()
 # %%
 import yaml
 
@@ -239,20 +238,26 @@ from photoholmes.models.catnet.preprocessing import catnet_preprocessing
 from photoholmes.utils.image import read_jpeg_data
 
 # %%
-dct_ph, qtable = read_jpeg_data(image_path, num_channels=1)
-img = np.array(Image.open(image_path))
+dct_ph2, qtable_ph2 = read_jpeg_data(image_path, num_channels=1)
+img_2 = np.array(Image.open(image_path))
 # %%
-assert (dct_ph == dct).all()
+assert (dct_ph2 == dct).all()
 # %%
-x_ph, qtable_ph = catnet_preprocessing(img, dct, qtable, n_dct_channles=1)
-
+x_ph2, t_qtable_ph2 = catnet_preprocessing(img_2, dct_ph2, qtable_ph2, n_dct_channels=1)
 # %%
-assert (x_ph == x).all()
+assert (x_ph2 == x).all()
+assert (t_qtable_ph2 == qtable).all()
 # %%
 with torch.no_grad():
-    out = model(x[None, :], qtable[None, :])
+    out = model(x_ph2[None, :], t_qtable_ph2[None, :])
 
 # %%
 pred = out.squeeze(0)
 labels = torch.nn.functional.softmax(pred, dim=0)[1]
 plt.imshow(labels)
+
+# %%
+img = jpegio.read(image_path)
+# %%
+qtable = img.quant_tables[0]
+# %%

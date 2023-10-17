@@ -13,18 +13,21 @@ from __future__ import absolute_import, division, print_function
 
 import logging
 import os
+from typing import Union
 
 import torch
 import torch._utils
 import torch.nn as nn
 import torch.nn.functional as F
 
+from photoholmes.models.catnet.config import CatnetConfig
+
 BatchNorm2d = nn.BatchNorm2d
 BN_MOMENTUM = 0.01
 logger = logging.getLogger(__name__)
 
 
-def conv3x3(in_planes, out_planes, stride=1):
+def conv3x3(in_planes: int, out_planes: int, stride: int = 1):
     """3x3 convolution with padding"""
     return nn.Conv2d(
         in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False
@@ -34,13 +37,20 @@ def conv3x3(in_planes, out_planes, stride=1):
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None):
+    def __init__(
+        self,
+        inplanes: int,
+        planes: int,
+        stride: int = 1,
+        bn_momentum: float = 0.01,
+        downsample=None,
+    ):
         super(BasicBlock, self).__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
-        self.bn1 = BatchNorm2d(planes, momentum=BN_MOMENTUM)
+        self.bn1 = BatchNorm2d(planes, momentum=bn_momentum)
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(planes, planes)
-        self.bn2 = BatchNorm2d(planes, momentum=BN_MOMENTUM)
+        self.bn2 = BatchNorm2d(planes, momentum=bn_momentum)
         self.downsample = downsample
         self.stride = stride
 
@@ -66,18 +76,25 @@ class BasicBlock(nn.Module):
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None):
+    def __init__(
+        self,
+        inplanes: int,
+        planes: int,
+        stride: int = 1,
+        bn_momentum: float = 0.01,
+        downsample=None,
+    ):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
-        self.bn1 = BatchNorm2d(planes, momentum=BN_MOMENTUM)
+        self.bn1 = BatchNorm2d(planes, momentum=bn_momentum)
         self.conv2 = nn.Conv2d(
             planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
         )
-        self.bn2 = BatchNorm2d(planes, momentum=BN_MOMENTUM)
+        self.bn2 = BatchNorm2d(planes, momentum=bn_momentum)
         self.conv3 = nn.Conv2d(
             planes, planes * self.expansion, kernel_size=1, bias=False
         )
-        self.bn3 = BatchNorm2d(planes * self.expansion, momentum=BN_MOMENTUM)
+        self.bn3 = BatchNorm2d(planes * self.expansion, momentum=bn_momentum)
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
@@ -109,11 +126,12 @@ class HighResolutionModule(nn.Module):
     def __init__(
         self,
         num_branches,
-        blocks,
+        blocks: Union[BasicBlock, Bottleneck],
         num_blocks,
         num_inchannels,
         num_channels,
         fuse_method,
+        bn_momentum: float = 0.01,
         multi_scale_output=True,
     ):
         super(HighResolutionModule, self).__init__()
@@ -124,6 +142,7 @@ class HighResolutionModule(nn.Module):
         self.num_inchannels = num_inchannels
         self.fuse_method = fuse_method
         self.num_branches = num_branches
+        self.bn_momentum = bn_momentum
 
         self.multi_scale_output = multi_scale_output
 
@@ -173,7 +192,8 @@ class HighResolutionModule(nn.Module):
                     bias=False,
                 ),
                 BatchNorm2d(
-                    num_channels[branch_index] * block.expansion, momentum=BN_MOMENTUM
+                    num_channels[branch_index] * block.expansion,
+                    momentum=self.bn_momentum,
                 ),
             )
 
@@ -183,13 +203,18 @@ class HighResolutionModule(nn.Module):
                 self.num_inchannels[branch_index],
                 num_channels[branch_index],
                 stride,
-                downsample,
+                downsample=downsample,
+                bn_momentum=self.bn_momentum,
             )
         )
         self.num_inchannels[branch_index] = num_channels[branch_index] * block.expansion
         for i in range(1, num_blocks[branch_index]):
             layers.append(
-                block(self.num_inchannels[branch_index], num_channels[branch_index])
+                block(
+                    self.num_inchannels[branch_index],
+                    num_channels[branch_index],
+                    bn_momentum=self.bn_momentum,
+                )
             )
 
         return nn.Sequential(*layers)
@@ -223,7 +248,7 @@ class HighResolutionModule(nn.Module):
                                 0,
                                 bias=False,
                             ),
-                            BatchNorm2d(num_inchannels[i], momentum=BN_MOMENTUM),
+                            BatchNorm2d(num_inchannels[i], momentum=self.bn_momentum),
                         )
                     )
                 elif j == i:
@@ -244,7 +269,8 @@ class HighResolutionModule(nn.Module):
                                         bias=False,
                                     ),
                                     BatchNorm2d(
-                                        num_outchannels_conv3x3, momentum=BN_MOMENTUM
+                                        num_outchannels_conv3x3,
+                                        momentum=self.bn_momentum,
                                     ),
                                 )
                             )
@@ -261,7 +287,8 @@ class HighResolutionModule(nn.Module):
                                         bias=False,
                                     ),
                                     BatchNorm2d(
-                                        num_outchannels_conv3x3, momentum=BN_MOMENTUM
+                                        num_outchannels_conv3x3,
+                                        momentum=self.bn_momentum,
                                     ),
                                     nn.ReLU(inplace=True),
                                 )
@@ -306,25 +333,31 @@ blocks_dict = {"BASIC": BasicBlock, "BOTTLENECK": Bottleneck}
 
 
 class CAT_Net(nn.Module):
-    def __init__(self, config, num_classes: int, **kwargs):
-        extra = config
+    def __init__(self, config: CatnetConfig, num_classes: int, **kwargs):
         super().__init__()
 
+        # self.bn_momentum = config["BN_MOMENTUM"]
+        self.bn_momentum = 0.01
         # RGB branch
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False)
-        self.bn1 = BatchNorm2d(64, momentum=BN_MOMENTUM)
+        self.bn1 = BatchNorm2d(64, momentum=self.bn_momentum)
         self.conv2 = nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1, bias=False)
-        self.bn2 = BatchNorm2d(64, momentum=BN_MOMENTUM)
+        self.bn2 = BatchNorm2d(64, momentum=self.bn_momentum)
         self.relu = nn.ReLU(inplace=True)
 
-        self.stage1_cfg = extra["STAGE1"]
+        self.stage1_cfg = config["STAGE1"]
         num_channels = self.stage1_cfg["NUM_CHANNELS"][0]
         block = blocks_dict[self.stage1_cfg["BLOCK"]]
         num_blocks = self.stage1_cfg["NUM_BLOCKS"][0]
-        self.layer1 = self._make_layer(block, 64, num_channels, num_blocks)
+        self.layer1 = self._make_layer(
+            block,
+            64,
+            num_channels,
+            num_blocks,
+        )
         stage1_out_channel = block.expansion * num_channels
 
-        self.stage2_cfg = extra["STAGE2"]
+        self.stage2_cfg = config["STAGE2"]
         num_channels = self.stage2_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.stage2_cfg["BLOCK"]]
         num_channels = [
@@ -337,7 +370,7 @@ class CAT_Net(nn.Module):
             self.stage2_cfg, num_channels
         )
 
-        self.stage3_cfg = extra["STAGE3"]
+        self.stage3_cfg = config["STAGE3"]
         num_channels = self.stage3_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.stage3_cfg["BLOCK"]]
         num_channels = [
@@ -348,7 +381,7 @@ class CAT_Net(nn.Module):
             self.stage3_cfg, num_channels
         )
 
-        self.stage4_cfg = extra["STAGE4"]
+        self.stage4_cfg = config["STAGE4"]
         num_channels = self.stage4_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.stage4_cfg["BLOCK"]]
         num_channels = [
@@ -388,7 +421,7 @@ class CAT_Net(nn.Module):
             BasicBlock, inplanes=4 * 64 * 2, planes=96, blocks=4, stride=1
         )
 
-        self.dc_stage3_cfg = extra["DC_STAGE3"]
+        self.dc_stage3_cfg = config["DC_STAGE3"]
         num_channels = self.dc_stage3_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.dc_stage3_cfg["BLOCK"]]
         num_channels = [
@@ -399,7 +432,7 @@ class CAT_Net(nn.Module):
             self.dc_stage3_cfg, num_channels
         )
 
-        self.dc_stage4_cfg = extra["DC_STAGE4"]
+        self.dc_stage4_cfg = config["DC_STAGE4"]
         num_channels = self.dc_stage4_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.dc_stage4_cfg["BLOCK"]]
         num_channels = [
@@ -415,7 +448,7 @@ class CAT_Net(nn.Module):
         DC_final_stage_channels.insert(0, 0)  # to match # branches
 
         # stage 5
-        self.stage5_cfg = extra["STAGE5"]
+        self.stage5_cfg = config["STAGE5"]
         num_channels = self.stage5_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.stage5_cfg["BLOCK"]]
         num_channels = [
@@ -438,14 +471,14 @@ class CAT_Net(nn.Module):
                 stride=1,
                 padding=0,
             ),
-            BatchNorm2d(last_inp_channels, momentum=BN_MOMENTUM),
+            BatchNorm2d(last_inp_channels, momentum=self.bn_momentum),
             nn.ReLU(inplace=True),
             nn.Conv2d(
                 in_channels=last_inp_channels,
                 out_channels=num_classes,
-                kernel_size=extra["FINAL_CONV_KERNEL"],
+                kernel_size=config["FINAL_CONV_KERNEL"],
                 stride=1,
-                padding=1 if extra["FINAL_CONV_KERNEL"] == 3 else 0,
+                padding=1 if config["FINAL_CONV_KERNEL"] == 3 else 0,
             ),
         )
 
@@ -468,7 +501,7 @@ class CAT_Net(nn.Module):
                                 bias=False,
                             ),
                             BatchNorm2d(
-                                num_channels_cur_layer[i], momentum=BN_MOMENTUM
+                                num_channels_cur_layer[i], momentum=self.bn_momentum
                             ),
                             nn.ReLU(inplace=True),
                         )
@@ -487,7 +520,7 @@ class CAT_Net(nn.Module):
                     conv3x3s.append(
                         nn.Sequential(
                             nn.Conv2d(inchannels, outchannels, 3, 2, 1, bias=False),
-                            BatchNorm2d(outchannels, momentum=BN_MOMENTUM),
+                            BatchNorm2d(outchannels, momentum=self.bn_momentum),
                             nn.ReLU(inplace=True),
                         )
                     )
@@ -506,14 +539,22 @@ class CAT_Net(nn.Module):
                     stride=stride,
                     bias=False,
                 ),
-                BatchNorm2d(planes * block.expansion, momentum=BN_MOMENTUM),
+                BatchNorm2d(planes * block.expansion, momentum=self.bn_momentum),
             )
 
         layers = []
-        layers.append(block(inplanes, planes, stride, downsample))
+        layers.append(
+            block(
+                inplanes,
+                planes,
+                stride,
+                downsample=downsample,
+                bn_momentum=self.bn_momentum,
+            )
+        )
         inplanes = planes * block.expansion
         for i in range(1, blocks):
-            layers.append(block(inplanes, planes))
+            layers.append(block(inplanes, planes, bn_momentum=self.bn_momentum))
 
         return nn.Sequential(*layers)
 
@@ -540,7 +581,8 @@ class CAT_Net(nn.Module):
                     num_inchannels,
                     num_channels,
                     fuse_method,
-                    reset_multi_scale_output,
+                    bn_momentum=self.bn_momentum,
+                    multi_scale_output=reset_multi_scale_output,
                 )
             )
             num_inchannels = modules[-1].get_num_inchannels()
@@ -690,10 +732,3 @@ class CAT_Net(nn.Module):
             self.load_state_dict(model_dict)
         else:
             logger.warning("=> Cannot load pretrained DCT")
-
-
-def get_seg_model(cfg, **kwargs):
-    model = CAT_Net(cfg, **kwargs)
-    model.init_weights(cfg.MODEL.PRETRAINED_RGB, cfg.MODEL.PRETRAINED_DCT)
-
-    return model

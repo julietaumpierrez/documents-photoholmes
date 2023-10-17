@@ -22,7 +22,7 @@ def catnet_preprocessing(
     img: NDArray,
     dct_coeffs: NDArray,
     qtables: Union[List[NDArray], NDArray],
-    n_dct_channles: int = 1,
+    n_dct_channels: int = 1,
 ):
     t_img = torch.tensor(img).permute(2, 0, 1)
 
@@ -34,13 +34,13 @@ def catnet_preprocessing(
         temp[: t_img.shape[0], : t_img.shape[1], :] = t_img
         max_h = max(
             crop_size[0],
-            max([dct_coeffs[c].shape[0] for c in range(n_dct_channles)]),
+            max([dct_coeffs[c].shape[0] for c in range(n_dct_channels)]),
         )
         max_w = max(
             crop_size[1],
-            max([dct_coeffs[c].shape[1] for c in range(n_dct_channles)]),
+            max([dct_coeffs[c].shape[1] for c in range(n_dct_channels)]),
         )
-        for i in range(n_dct_channles):
+        for i in range(n_dct_channels):
             temp = np.full((max_h, max_w), 0.0)  # pad with 0
             temp[: dct_coeffs[i].shape[0], : dct_coeffs[i].shape[1]] = dct_coeffs[i][
                 :, :
@@ -50,7 +50,7 @@ def catnet_preprocessing(
     s_r = (randint(0, max(h - crop_size[0], 0)) // 8) * 8
     s_c = (randint(0, max(h - crop_size[1], 0)) // 8) * 8
     t_img = t_img[s_r : s_r + crop_size[0], s_c : s_c + crop_size[1], :]
-    for i in range(n_dct_channles):
+    for i in range(n_dct_channels):
         dct_coeffs[i] = dct_coeffs[i][
             s_r : s_r + crop_size[0], s_c : s_c + crop_size[1]
         ]
@@ -59,8 +59,8 @@ def catnet_preprocessing(
     t_img = (t_img - 127.5) / 127.5
     t_dct_vols = get_binary_volume(t_dct_coeffs, T=20)
 
-    qtables = np.array(qtables[:n_dct_channles])
+    qtables = np.array(qtables[:n_dct_channels], dtype=np.int16)
 
     return torch.concatenate((t_img, t_dct_vols)), torch.tensor(
-        qtables, dtype=torch.float
+        qtables, dtype=torch.int16
     )

@@ -81,13 +81,15 @@ def read_jpeg_data(
     """
     extension = (image_path[-4:]).lower()
     if extension == ".jpg" or extension == ".jpeg":
-        jpeg = jpegio.read(str(image_path))
+        jpeg = jpegio.read(image_path)
     else:
         temp = NamedTemporaryFile(suffix=".jpg")
         open(image_path).convert("RGB").save(temp.name, quality=100, subsampling=0)
         jpeg = jpegio.read(temp.name)
+        temp.close()
 
-    return _DCT_from_jpeg(jpeg, num_channels), _qtables_from_jpeg(jpeg, num_channels)
+    qtables = _qtables_from_jpeg(jpeg, num_channels)
+    return _DCT_from_jpeg(jpeg, num_channels), qtables
 
 
 def _qtables_from_jpeg(
@@ -95,7 +97,7 @@ def _qtables_from_jpeg(
 ) -> List[NDArray]:
     if num_channels is None:
         num_channels = len(jpeg.quant_tables)
-    return [jpeg.quant_tables[i] for i in range(num_channels)]
+    return [jpeg.quant_tables[i].copy() for i in range(num_channels)]
 
 
 def _DCT_from_jpeg(
