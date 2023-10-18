@@ -14,15 +14,14 @@ from __future__ import absolute_import, division, print_function
 import logging
 import os
 from pathlib import Path
-from typing import Literal, Optional, Type, Union
+from typing import Literal, Optional, Union
 
 import torch
 import torch._utils
 import torch.nn as nn
 import torch.nn.functional as F
 
-from photoholmes.models import catnet
-from photoholmes.models.base import BaseMethod
+from photoholmes.models.base import BaseTorchMethod
 from photoholmes.models.catnet.config import CatnetConfig, pretrained_config
 
 BatchNorm2d = nn.BatchNorm2d
@@ -443,7 +442,7 @@ def make_stage(layer_config, num_inchannels, bn_momentum, multi_scale_output=Tru
     return nn.Sequential(*modules), num_inchannels
 
 
-class CatNet(BaseMethod, nn.Module):
+class CatNet(BaseTorchMethod):
     def __init__(
         self,
         arch_config: Union[CatnetConfig, Literal["pretrained"]],
@@ -451,8 +450,7 @@ class CatNet(BaseMethod, nn.Module):
         weights: Optional[Union[str, Path, dict]] = None,
         **kwargs,
     ):
-        BaseMethod.__init__(self, **kwargs)
-        nn.Module.__init__(self)
+        super().__init__(**kwargs)
 
         if arch_config == "pretrained":
             arch_config = pretrained_config
