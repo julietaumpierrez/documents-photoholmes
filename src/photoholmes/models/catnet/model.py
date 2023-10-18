@@ -14,7 +14,7 @@ from __future__ import absolute_import, division, print_function
 import logging
 import os
 from pathlib import Path
-from typing import Literal, Type, Union
+from typing import Literal, Optional, Type, Union
 
 import torch
 import torch._utils
@@ -448,6 +448,7 @@ class CatNet(BaseMethod, nn.Module):
         self,
         arch_config: Union[CatnetConfig, Literal["pretrained"]],
         num_classes: int = 2,
+        weights: Optional[Union[str, Path, dict]] = None,
         **kwargs,
     ):
         BaseMethod.__init__(self, **kwargs)
@@ -456,8 +457,16 @@ class CatNet(BaseMethod, nn.Module):
         if arch_config == "pretrained":
             arch_config = pretrained_config
 
-        # self.bn_momentum = config["BN_MOMENTUM"]
-        self.bn_momentum = 0.01
+        if "BN_MOMENTUM" not in arch_config.keys():
+            self.bn_momentum = 0.01
+        else:
+            self.bn_momentum = arch_config["BN_MOMENTUM"]
+
+        self.load_model(arch_config, num_classes)
+        if weights is not None:
+            self.load_weigths(weights)
+
+    def load_model(self, arch_config, num_classes):
         # RGB branch
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False)
         self.bn1 = BatchNorm2d(64, momentum=self.bn_momentum)
