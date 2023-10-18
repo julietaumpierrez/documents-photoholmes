@@ -206,10 +206,10 @@ assert (x == x_ph).all()
 # %%
 import yaml
 
-from photoholmes.models.catnet.model import CAT_Net
+from photoholmes.models.catnet.model import CATNet
 
 config = yaml.load(open("weights/catnet.yaml", "r"), Loader=yaml.FullLoader)
-model = CAT_Net(config["MODEL"]["EXTRA"], num_classes=config["DATASET"]["NUM_CLASSES"])
+model = CATNet(config["MODEL"]["EXTRA"], num_classes=config["DATASET"]["NUM_CLASSES"])
 weights = torch.load("weights/CAT_full_v2.pth.tar", map_location="cpu")
 model.load_state_dict(weights["state_dict"])
 model.eval()

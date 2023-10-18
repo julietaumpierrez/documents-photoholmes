@@ -5,7 +5,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-from photoholmes.models.catnet.model import CAT_Net
+from photoholmes.models.catnet.model import CATNet
 
 if "research" in os.path.abspath("."):
     os.chdir("../../")
@@ -23,7 +23,7 @@ config = yaml.load(open("weights/catnet.yaml", "r"), Loader=yaml.FullLoader)
 from dataclasses import dataclass
 
 # %
-model = CAT_Net(config["MODEL"]["EXTRA"], num_classes=config["DATASET"]["NUM_CLASSES"])
+model = CATNet(config["MODEL"]["EXTRA"], num_classes=config["DATASET"]["NUM_CLASSES"])
 
 # %%
 model.load_state_dict(weights["state_dict"])

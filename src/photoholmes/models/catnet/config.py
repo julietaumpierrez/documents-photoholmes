@@ -22,7 +22,7 @@ class CatnetConfig(TypedDict):
     BN_MOMENTUM: float
 
 
-pretrain_config: CatnetConfig = {
+pretrained_config: CatnetConfig = {
     "FINAL_CONV_KERNEL": 1,
     "STAGE1": {
         "NUM_MODULES": 1,

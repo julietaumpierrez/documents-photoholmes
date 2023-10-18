@@ -13,14 +13,17 @@ from __future__ import absolute_import, division, print_function
 
 import logging
 import os
-from typing import Union
+from pathlib import Path
+from typing import Literal, Type, Union
 
 import torch
 import torch._utils
 import torch.nn as nn
 import torch.nn.functional as F
 
-from photoholmes.models.catnet.config import CatnetConfig
+from photoholmes.models import catnet
+from photoholmes.models.base import BaseMethod
+from photoholmes.models.catnet.config import CatnetConfig, pretrained_config
 
 BatchNorm2d = nn.BatchNorm2d
 BN_MOMENTUM = 0.01
@@ -332,9 +335,126 @@ class HighResolutionModule(nn.Module):
 blocks_dict = {"BASIC": BasicBlock, "BOTTLENECK": Bottleneck}
 
 
-class CAT_Net(nn.Module):
-    def __init__(self, config: CatnetConfig, num_classes: int, **kwargs):
-        super().__init__()
+def make_transition_layer(num_channels_pre_layer, num_channels_cur_layer, bn_momentum):
+    num_branches_cur = len(num_channels_cur_layer)
+    num_branches_pre = len(num_channels_pre_layer)
+
+    transition_layers = []
+    for i in range(num_branches_cur):
+        if i < num_branches_pre:
+            if num_channels_cur_layer[i] != num_channels_pre_layer[i]:
+                transition_layers.append(
+                    nn.Sequential(
+                        nn.Conv2d(
+                            num_channels_pre_layer[i],
+                            num_channels_cur_layer[i],
+                            3,
+                            1,
+                            1,
+                            bias=False,
+                        ),
+                        BatchNorm2d(num_channels_cur_layer[i], momentum=bn_momentum),
+                        nn.ReLU(inplace=True),
+                    )
+                )
+            else:
+                transition_layers.append(None)
+        else:
+            conv3x3s = []
+            for j in range(i + 1 - num_branches_pre):
+                inchannels = num_channels_pre_layer[-1]
+                outchannels = (
+                    num_channels_cur_layer[i]
+                    if j == i - num_branches_pre
+                    else inchannels
+                )
+                conv3x3s.append(
+                    nn.Sequential(
+                        nn.Conv2d(inchannels, outchannels, 3, 2, 1, bias=False),
+                        BatchNorm2d(outchannels, momentum=bn_momentum),
+                        nn.ReLU(inplace=True),
+                    )
+                )
+            transition_layers.append(nn.Sequential(*conv3x3s))
+
+    return nn.ModuleList(transition_layers)
+
+
+def make_layer(block, inplanes, planes, blocks, bn_momentum, stride=1):
+    downsample = None
+    if stride != 1 or inplanes != planes * block.expansion:
+        downsample = nn.Sequential(
+            nn.Conv2d(
+                inplanes,
+                planes * block.expansion,
+                kernel_size=1,
+                stride=stride,
+                bias=False,
+            ),
+            BatchNorm2d(planes * block.expansion, momentum=bn_momentum),
+        )
+
+    layers = []
+    layers.append(
+        block(
+            inplanes,
+            planes,
+            stride,
+            downsample=downsample,
+            bn_momentum=bn_momentum,
+        )
+    )
+    inplanes = planes * block.expansion
+    for i in range(1, blocks):
+        layers.append(block(inplanes, planes, bn_momentum=bn_momentum))
+
+    return nn.Sequential(*layers)
+
+
+def make_stage(layer_config, num_inchannels, bn_momentum, multi_scale_output=True):
+    num_modules = layer_config["NUM_MODULES"]
+    num_branches = layer_config["NUM_BRANCHES"]
+    num_blocks = layer_config["NUM_BLOCKS"]
+    num_channels = layer_config["NUM_CHANNELS"]
+    block = blocks_dict[layer_config["BLOCK"]]
+    fuse_method = layer_config["FUSE_METHOD"]
+
+    modules = []
+    for i in range(num_modules):
+        # multi_scale_output is only used last module
+        if not multi_scale_output and i == num_modules - 1:
+            reset_multi_scale_output = False
+        else:
+            reset_multi_scale_output = True
+        modules.append(
+            HighResolutionModule(
+                num_branches,
+                block,
+                num_blocks,
+                num_inchannels,
+                num_channels,
+                fuse_method,
+                bn_momentum=bn_momentum,
+                multi_scale_output=reset_multi_scale_output,
+            )
+        )
+        num_inchannels = modules[-1].get_num_inchannels()
+
+    return nn.Sequential(*modules), num_inchannels
+
+
+class CatNet(BaseMethod, nn.Module):
+    def __init__(
+        self,
+        arch_config: Union[CatnetConfig, Literal["pretrained"]],
+        num_classes: int = 2,
+        **kwargs,
+    ):
+        BaseMethod.__init__(self, **kwargs)
+        nn.Module.__init__(self)
+
+        if arch_config == "pretrained":
+            arch_config = pretrained_config
 
         # self.bn_momentum = config["BN_MOMENTUM"]
         self.bn_momentum = 0.01
@@ -345,51 +465,55 @@ class CAT_Net(nn.Module):
         self.bn2 = BatchNorm2d(64, momentum=self.bn_momentum)
         self.relu = nn.ReLU(inplace=True)
 
-        self.stage1_cfg = config["STAGE1"]
+        self.stage1_cfg = arch_config["STAGE1"]
         num_channels = self.stage1_cfg["NUM_CHANNELS"][0]
         block = blocks_dict[self.stage1_cfg["BLOCK"]]
         num_blocks = self.stage1_cfg["NUM_BLOCKS"][0]
-        self.layer1 = self._make_layer(
-            block,
-            64,
-            num_channels,
-            num_blocks,
+        self.layer1 = make_layer(
+            block, 64, num_channels, num_blocks, bn_momentum=self.bn_momentum
         )
         stage1_out_channel = block.expansion * num_channels
 
-        self.stage2_cfg = config["STAGE2"]
+        self.stage2_cfg = arch_config["STAGE2"]
         num_channels = self.stage2_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.stage2_cfg["BLOCK"]]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
-        self.transition1 = self._make_transition_layer(
-            [stage1_out_channel], num_channels
+        self.transition1 = make_transition_layer(
+            [stage1_out_channel], num_channels, self.bn_momentum
         )
-        self.stage2, pre_stage_channels = self._make_stage(
-            self.stage2_cfg, num_channels
+        self.stage2, pre_stage_channels = make_stage(
+            self.stage2_cfg, num_channels, bn_momentum=self.bn_momentum
         )
 
-        self.stage3_cfg = config["STAGE3"]
+        self.stage3_cfg = arch_config["STAGE3"]
         num_channels = self.stage3_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.stage3_cfg["BLOCK"]]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
-        self.transition2 = self._make_transition_layer(pre_stage_channels, num_channels)
-        self.stage3, pre_stage_channels = self._make_stage(
-            self.stage3_cfg, num_channels
+        self.transition2 = make_transition_layer(
+            pre_stage_channels, num_channels, self.bn_momentum
+        )
+        self.stage3, pre_stage_channels = make_stage(
+            self.stage3_cfg, num_channels, self.bn_momentum
         )
 
-        self.stage4_cfg = config["STAGE4"]
+        self.stage4_cfg = arch_config["STAGE4"]
         num_channels = self.stage4_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.stage4_cfg["BLOCK"]]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
-        self.transition3 = self._make_transition_layer(pre_stage_channels, num_channels)
-        self.stage4, RGB_final_channels = self._make_stage(
-            self.stage4_cfg, num_channels, multi_scale_output=True
+        self.transition3 = make_transition_layer(
+            pre_stage_channels, num_channels, self.bn_momentum
+        )
+        self.stage4, RGB_final_channels = make_stage(
+            self.stage4_cfg,
+            num_channels,
+            bn_momentum=self.bn_momentum,
+            multi_scale_output=True,
         )
 
         # DCT coefficient branch
@@ -417,49 +541,60 @@ class CAT_Net(nn.Module):
             nn.BatchNorm2d(4, momentum=BN_MOMENTUM),
             nn.ReLU(inplace=True),
         )
-        self.dc_layer2 = self._make_layer(
-            BasicBlock, inplanes=4 * 64 * 2, planes=96, blocks=4, stride=1
+        self.dc_layer2 = make_layer(
+            BasicBlock,
+            inplanes=4 * 64 * 2,
+            planes=96,
+            blocks=4,
+            bn_momentum=self.bn_momentum,
+            stride=1,
         )
 
-        self.dc_stage3_cfg = config["DC_STAGE3"]
+        self.dc_stage3_cfg = arch_config["DC_STAGE3"]
         num_channels = self.dc_stage3_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.dc_stage3_cfg["BLOCK"]]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
-        self.dc_transition2 = self._make_transition_layer([96], num_channels)
-        self.dc_stage3, pre_stage_channels = self._make_stage(
-            self.dc_stage3_cfg, num_channels
+        self.dc_transition2 = make_transition_layer(
+            [96], num_channels, self.bn_momentum
+        )
+        self.dc_stage3, pre_stage_channels = make_stage(
+            self.dc_stage3_cfg, num_channels, bn_momentum=self.bn_momentum
         )
 
-        self.dc_stage4_cfg = config["DC_STAGE4"]
+        self.dc_stage4_cfg = arch_config["DC_STAGE4"]
         num_channels = self.dc_stage4_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.dc_stage4_cfg["BLOCK"]]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
-        self.dc_transition3 = self._make_transition_layer(
-            pre_stage_channels, num_channels
+        self.dc_transition3 = make_transition_layer(
+            pre_stage_channels, num_channels, self.bn_momentum
         )
-        self.dc_stage4, DC_final_stage_channels = self._make_stage(
-            self.dc_stage4_cfg, num_channels, multi_scale_output=True
+        self.dc_stage4, DC_final_stage_channels = make_stage(
+            self.dc_stage4_cfg,
+            num_channels,
+            bn_momentum=self.bn_momentum,
+            multi_scale_output=True,
         )
 
         DC_final_stage_channels.insert(0, 0)  # to match # branches
 
         # stage 5
-        self.stage5_cfg = config["STAGE5"]
+        self.stage5_cfg = arch_config["STAGE5"]
         num_channels = self.stage5_cfg["NUM_CHANNELS"]
         block = blocks_dict[self.stage5_cfg["BLOCK"]]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
-        self.transition4 = self._make_transition_layer(
+        self.transition4 = make_transition_layer(
             [i + j for (i, j) in zip(RGB_final_channels, DC_final_stage_channels)],
             num_channels,
+            self.bn_momentum,
         )
-        self.stage5, pre_stage_channels = self._make_stage(
-            self.stage5_cfg, num_channels
+        self.stage5, pre_stage_channels = make_stage(
+            self.stage5_cfg, num_channels, bn_momentum=self.bn_momentum
         )
 
         last_inp_channels = sum(pre_stage_channels)
@@ -476,118 +611,11 @@ class CAT_Net(nn.Module):
             nn.Conv2d(
                 in_channels=last_inp_channels,
                 out_channels=num_classes,
-                kernel_size=config["FINAL_CONV_KERNEL"],
+                kernel_size=arch_config["FINAL_CONV_KERNEL"],
                 stride=1,
-                padding=1 if config["FINAL_CONV_KERNEL"] == 3 else 0,
+                padding=1 if arch_config["FINAL_CONV_KERNEL"] == 3 else 0,
             ),
         )
-
-    def _make_transition_layer(self, num_channels_pre_layer, num_channels_cur_layer):
-        num_branches_cur = len(num_channels_cur_layer)
-        num_branches_pre = len(num_channels_pre_layer)
-
-        transition_layers = []
-        for i in range(num_branches_cur):
-            if i < num_branches_pre:
-                if num_channels_cur_layer[i] != num_channels_pre_layer[i]:
-                    transition_layers.append(
-                        nn.Sequential(
-                            nn.Conv2d(
-                                num_channels_pre_layer[i],
-                                num_channels_cur_layer[i],
-                                3,
-                                1,
-                                1,
-                                bias=False,
-                            ),
-                            BatchNorm2d(
-                                num_channels_cur_layer[i], momentum=self.bn_momentum
-                            ),
-                            nn.ReLU(inplace=True),
-                        )
-                    )
-                else:
-                    transition_layers.append(None)
-            else:
-                conv3x3s = []
-                for j in range(i + 1 - num_branches_pre):
-                    inchannels = num_channels_pre_layer[-1]
-                    outchannels = (
-                        num_channels_cur_layer[i]
-                        if j == i - num_branches_pre
-                        else inchannels
-                    )
-                    conv3x3s.append(
-                        nn.Sequential(
-                            nn.Conv2d(inchannels, outchannels, 3, 2, 1, bias=False),
-                            BatchNorm2d(outchannels, momentum=self.bn_momentum),
-                            nn.ReLU(inplace=True),
-                        )
-                    )
-                transition_layers.append(nn.Sequential(*conv3x3s))
-
-        return nn.ModuleList(transition_layers)
-
-    def _make_layer(self, block, inplanes, planes, blocks, stride=1):
-        downsample = None
-        if stride != 1 or inplanes != planes * block.expansion:
-            downsample = nn.Sequential(
-                nn.Conv2d(
-                    inplanes,
-                    planes * block.expansion,
-                    kernel_size=1,
-                    stride=stride,
-                    bias=False,
-                ),
-                BatchNorm2d(planes * block.expansion, momentum=self.bn_momentum),
-            )
-
-        layers = []
-        layers.append(
-            block(
-                inplanes,
-                planes,
-                stride,
-                downsample=downsample,
-                bn_momentum=self.bn_momentum,
-            )
-        )
-        inplanes = planes * block.expansion
-        for i in range(1, blocks):
-            layers.append(block(inplanes, planes, bn_momentum=self.bn_momentum))
-
-        return nn.Sequential(*layers)
-
-    def _make_stage(self, layer_config, num_inchannels, multi_scale_output=True):
-        num_modules = layer_config["NUM_MODULES"]
-        num_branches = layer_config["NUM_BRANCHES"]
-        num_blocks = layer_config["NUM_BLOCKS"]
-        num_channels = layer_config["NUM_CHANNELS"]
-        block = blocks_dict[layer_config["BLOCK"]]
-        fuse_method = layer_config["FUSE_METHOD"]
-
-        modules = []
-        for i in range(num_modules):
-            # multi_scale_output is only used last module
-            if not multi_scale_output and i == num_modules - 1:
-                reset_multi_scale_output = False
-            else:
-                reset_multi_scale_output = True
-            modules.append(
-                HighResolutionModule(
-                    num_branches,
-                    block,
-                    num_blocks,
-                    num_inchannels,
-                    num_channels,
-                    fuse_method,
-                    bn_momentum=self.bn_momentum,
-                    multi_scale_output=reset_multi_scale_output,
-                )
-            )
-            num_inchannels = modules[-1].get_num_inchannels()
-
-        return nn.Sequential(*modules), num_inchannels
 
     def forward(self, x, qtable):
         RGB, DCTcoef = x[:, :3, :, :], x[:, 3:, :, :]
@@ -732,3 +760,21 @@ class CAT_Net(nn.Module):
             self.load_state_dict(model_dict)
         else:
             logger.warning("=> Cannot load pretrained DCT")
+
+    @torch.no_grad()
+    def predict(self, x: torch.Tensor, qtable: torch.Tensor) -> torch.Tensor:
+        pred = self.forward(x, qtable)
+        pred = F.softmax(pred, dim=1)[:, 1]
+        return pred
+
+    def load_weigths(self, weights: Union[str, Path, dict]):
+        if isinstance(weights, (str, Path)):
+            # trick to get current device
+            weights = torch.load(
+                weights, map_location=next(self.parameters())[0].device
+            )
+
+        if isinstance(weights, dict) and "state_dict" in weights.keys():
+            weights = weights["state_dict"]
+
+        self.load_state_dict(weights)  # type: ignore

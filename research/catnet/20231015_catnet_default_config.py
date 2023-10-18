@@ -6,8 +6,8 @@ import numpy as np
 import torch
 from PIL import Image
 
-from photoholmes.models.catnet.config import pretrain_config
-from photoholmes.models.catnet.model import CAT_Net
+from photoholmes.models.catnet.config import pretrained_config
+from photoholmes.models.catnet.model import CatNet
 from photoholmes.models.catnet.preprocessing import catnet_preprocessing
 from photoholmes.utils.image import read_jpeg_data
 
@@ -24,7 +24,7 @@ config = yaml.load(open("weights/catnet.yaml", "r"), Loader=yaml.FullLoader)
 config = config["MODEL"]["EXTRA"]
 
 # %%
-model = CAT_Net(pretrain_config, 2)
+model = CatNet(pretrained_config, 2)
 # %%
 weights = torch.load("weights/CAT_full_v2.pth.tar", map_location="cpu")
 model.load_state_dict(weights["state_dict"])
@@ -49,10 +49,15 @@ assert (qtable == t_qtable_ph).all()
 # %%
 with torch.no_grad():
     out = model(t_x_ph[None, :], t_qtable_ph[None, :])
-    pred = out.squeeze(0)
-    labels = torch.nn.functional.softmax(pred, dim=0)[1]
+    labels = torch.nn.functional.softmax(out, dim=1)[:, 1]
 
 # %%
-plt.imshow(labels.numpy())
+plt.imshow(labels[0].numpy())
+
+# %%
+mask = model.predict(t_x_ph[None, :], t_qtable_ph[None, :])
+
+# %%
+plt.imshow(mask[0].numpy())
 
 # %%
