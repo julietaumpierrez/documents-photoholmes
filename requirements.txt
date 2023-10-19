@@ -3,5 +3,8 @@ matplotlib
 opencv-python
 pyyaml
 pytest
-jpegio
 scikit-learn
+tqdm
+scipy
+jpegio
+

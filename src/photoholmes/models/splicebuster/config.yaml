@@ -1,0 +1,11 @@
+block_size: 128
+stride: 8
+q: 2
+T: 1
+pca_dim: 25
+mixture: uniform
+weights: 
+  low_th: 6
+  high_th: 252
+  opening_kernel_radius: 3
+  dilation_kernel_size: 9
