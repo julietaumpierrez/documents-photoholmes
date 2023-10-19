@@ -231,9 +231,6 @@ class Splicebuster(BaseMethod):
                 )
             )
 
-        heatmap = np.empty(
-            (image.shape[0] - self.block_size, image.shape[1] - self.block_size)
-        )
         heatmap = labels.reshape(features.shape[:2])
 
         heatmap = heatmap / np.max(labels)
