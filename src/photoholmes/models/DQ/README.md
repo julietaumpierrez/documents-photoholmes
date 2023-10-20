@@ -25,7 +25,7 @@ To use the method, follow the steps below:
     Compute the probability of each block being tampered based on the histograms.
     Generate the block posterior probability map (BPPM).
     Threshold the BPPM to identify tampered regions.
-    Use a trained SVM to decide if the image is tampered.
+    <!-- Use a trained SVM to decide if the image is tampered. -->
 
 ## Results on Benchmarking Dataset
 
