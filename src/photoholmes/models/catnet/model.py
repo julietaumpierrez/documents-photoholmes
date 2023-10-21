@@ -22,7 +22,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from photoholmes.models.base import BaseTorchMethod
-from photoholmes.models.catnet.config import CatnetConfig, pretrained_config
+from photoholmes.models.catnet.config import (
+    CatnetArchConfig,
+    CatnetConfig,
+    pretrained_arch,
+)
+from photoholmes.utils.generic import load_yaml
 
 BatchNorm2d = nn.BatchNorm2d
 BN_MOMENTUM = 0.01
@@ -411,12 +416,12 @@ def make_layer(block, inplanes, planes, blocks, bn_momentum, stride=1):
 
 
 def make_stage(layer_config, num_inchannels, bn_momentum, multi_scale_output=True):
-    num_modules = layer_config["NUM_MODULES"]
-    num_branches = layer_config["NUM_BRANCHES"]
-    num_blocks = layer_config["NUM_BLOCKS"]
-    num_channels = layer_config["NUM_CHANNELS"]
-    block = blocks_dict[layer_config["BLOCK"]]
-    fuse_method = layer_config["FUSE_METHOD"]
+    num_modules = layer_config.num_modules
+    num_branches = layer_config.num_branches
+    num_blocks = layer_config.num_blocks
+    num_channels = layer_config.num_channels
+    block = blocks_dict[layer_config.block]
+    fuse_method = layer_config.fuse_method
 
     modules = []
     for i in range(num_modules):
@@ -445,26 +450,22 @@ def make_stage(layer_config, num_inchannels, bn_momentum, multi_scale_output=Tru
 class CatNet(BaseTorchMethod):
     def __init__(
         self,
-        arch_config: Union[CatnetConfig, Literal["pretrained"]],
-        num_classes: int = 2,
+        arch_config: Union[CatnetArchConfig, Literal["pretrained"]] = "pretrained",
         weights: Optional[Union[str, Path, dict]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
 
         if arch_config == "pretrained":
-            arch_config = pretrained_config
+            arch_config = pretrained_arch
 
-        if "BN_MOMENTUM" not in arch_config.keys():
-            self.bn_momentum = 0.01
-        else:
-            self.bn_momentum = arch_config["BN_MOMENTUM"]
+        self.bn_momentum = arch_config.bn_momentum
 
-        self.load_model(arch_config, num_classes)
+        self.load_model(arch_config)
         if weights is not None:
             self.load_weigths(weights)
 
-    def load_model(self, arch_config, num_classes):
+    def load_model(self, arch_config: CatnetArchConfig):
         # RGB branch
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False)
         self.bn1 = BatchNorm2d(64, momentum=self.bn_momentum)
@@ -472,18 +473,18 @@ class CatNet(BaseTorchMethod):
         self.bn2 = BatchNorm2d(64, momentum=self.bn_momentum)
         self.relu = nn.ReLU(inplace=True)
 
-        self.stage1_cfg = arch_config["STAGE1"]
-        num_channels = self.stage1_cfg["NUM_CHANNELS"][0]
-        block = blocks_dict[self.stage1_cfg["BLOCK"]]
-        num_blocks = self.stage1_cfg["NUM_BLOCKS"][0]
+        self.stage1_cfg = arch_config.stage1
+        num_channels = self.stage1_cfg.num_channels[0]
+        block = blocks_dict[self.stage1_cfg.block]
+        num_blocks = self.stage1_cfg.num_blocks[0]
         self.layer1 = make_layer(
             block, 64, num_channels, num_blocks, bn_momentum=self.bn_momentum
         )
         stage1_out_channel = block.expansion * num_channels
 
-        self.stage2_cfg = arch_config["STAGE2"]
-        num_channels = self.stage2_cfg["NUM_CHANNELS"]
-        block = blocks_dict[self.stage2_cfg["BLOCK"]]
+        self.stage2_cfg = arch_config.stage2
+        num_channels = self.stage2_cfg.num_channels
+        block = blocks_dict[self.stage2_cfg.block]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
@@ -494,9 +495,9 @@ class CatNet(BaseTorchMethod):
             self.stage2_cfg, num_channels, bn_momentum=self.bn_momentum
         )
 
-        self.stage3_cfg = arch_config["STAGE3"]
-        num_channels = self.stage3_cfg["NUM_CHANNELS"]
-        block = blocks_dict[self.stage3_cfg["BLOCK"]]
+        self.stage3_cfg = arch_config.stage3
+        num_channels = self.stage3_cfg.num_channels
+        block = blocks_dict[self.stage3_cfg.block]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
@@ -507,9 +508,9 @@ class CatNet(BaseTorchMethod):
             self.stage3_cfg, num_channels, self.bn_momentum
         )
 
-        self.stage4_cfg = arch_config["STAGE4"]
-        num_channels = self.stage4_cfg["NUM_CHANNELS"]
-        block = blocks_dict[self.stage4_cfg["BLOCK"]]
+        self.stage4_cfg = arch_config.stage4
+        num_channels = self.stage4_cfg.num_channels
+        block = blocks_dict[self.stage4_cfg.block]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
@@ -557,9 +558,9 @@ class CatNet(BaseTorchMethod):
             stride=1,
         )
 
-        self.dc_stage3_cfg = arch_config["DC_STAGE3"]
-        num_channels = self.dc_stage3_cfg["NUM_CHANNELS"]
-        block = blocks_dict[self.dc_stage3_cfg["BLOCK"]]
+        self.dc_stage3_cfg = arch_config.dc_stage3
+        num_channels = self.dc_stage3_cfg.num_channels
+        block = blocks_dict[self.dc_stage3_cfg.block]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
@@ -570,9 +571,9 @@ class CatNet(BaseTorchMethod):
             self.dc_stage3_cfg, num_channels, bn_momentum=self.bn_momentum
         )
 
-        self.dc_stage4_cfg = arch_config["DC_STAGE4"]
-        num_channels = self.dc_stage4_cfg["NUM_CHANNELS"]
-        block = blocks_dict[self.dc_stage4_cfg["BLOCK"]]
+        self.dc_stage4_cfg = arch_config.dc_stage4
+        num_channels = self.dc_stage4_cfg.num_channels
+        block = blocks_dict[self.dc_stage4_cfg.block]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
@@ -589,9 +590,9 @@ class CatNet(BaseTorchMethod):
         DC_final_stage_channels.insert(0, 0)  # to match # branches
 
         # stage 5
-        self.stage5_cfg = arch_config["STAGE5"]
-        num_channels = self.stage5_cfg["NUM_CHANNELS"]
-        block = blocks_dict[self.stage5_cfg["BLOCK"]]
+        self.stage5_cfg = arch_config.stage5
+        num_channels = self.stage5_cfg.num_channels
+        block = blocks_dict[self.stage5_cfg.block]
         num_channels = [
             num_channels[i] * block.expansion for i in range(len(num_channels))
         ]
@@ -617,10 +618,10 @@ class CatNet(BaseTorchMethod):
             nn.ReLU(inplace=True),
             nn.Conv2d(
                 in_channels=last_inp_channels,
-                out_channels=num_classes,
-                kernel_size=arch_config["FINAL_CONV_KERNEL"],
+                out_channels=arch_config.num_classes,
+                kernel_size=arch_config.final_conf_kernel,
                 stride=1,
-                padding=1 if arch_config["FINAL_CONV_KERNEL"] == 3 else 0,
+                padding=1 if arch_config.final_conf_kernel == 3 else 0,
             ),
         )
 
@@ -637,7 +638,7 @@ class CatNet(BaseTorchMethod):
         x = self.layer1(x)
 
         x_list = []
-        for i in range(self.stage2_cfg["NUM_BRANCHES"]):
+        for i in range(self.stage2_cfg.num_branches):
             if self.transition1[i] is not None:
                 x_list.append(self.transition1[i](x))
             else:
@@ -645,7 +646,7 @@ class CatNet(BaseTorchMethod):
         y_list = self.stage2(x_list)
 
         x_list = []
-        for i in range(self.stage3_cfg["NUM_BRANCHES"]):
+        for i in range(self.stage3_cfg.num_branches):
             if self.transition2[i] is not None:
                 x_list.append(self.transition2[i](y_list[-1]))
             else:
@@ -653,7 +654,7 @@ class CatNet(BaseTorchMethod):
         y_list = self.stage3(x_list)
 
         x_list = []
-        for i in range(self.stage4_cfg["NUM_BRANCHES"]):
+        for i in range(self.stage4_cfg.num_branches):
             if self.transition3[i] is not None:
                 x_list.append(self.transition3[i](y_list[-1]))
             else:
@@ -679,7 +680,7 @@ class CatNet(BaseTorchMethod):
         x = self.dc_layer2(x)  # x.shape = torch.Size([1, 96, 64, 64])
 
         x_list = []
-        for i in range(self.dc_stage3_cfg["NUM_BRANCHES"]):
+        for i in range(self.dc_stage3_cfg.num_branches):
             if self.dc_transition2[i] is not None:
                 x_list.append(self.dc_transition2[i](x))
             else:
@@ -687,7 +688,7 @@ class CatNet(BaseTorchMethod):
         y_list = self.dc_stage3(x_list)
 
         x_list = []
-        for i in range(self.dc_stage4_cfg["NUM_BRANCHES"]):
+        for i in range(self.dc_stage4_cfg.num_branches):
             if self.dc_transition3[i] is not None:
                 x_list.append(self.dc_transition3[i](y_list[-1]))
             else:
@@ -697,11 +698,11 @@ class CatNet(BaseTorchMethod):
         # stage 5
         x = [
             torch.cat([RGB_list[i + 1], DC_list[i]], 1)
-            for i in range(self.stage5_cfg["NUM_BRANCHES"] - 1)
+            for i in range(self.stage5_cfg.num_branches - 1)
         ]
         x.insert(0, RGB_list[0])
         x_list = []
-        for i in range(self.stage5_cfg["NUM_BRANCHES"]):
+        for i in range(self.stage5_cfg.num_branches):
             if self.transition4[i] is not None:
                 x_list.append(self.transition4[i](x[i]))
             else:
@@ -785,3 +786,19 @@ class CatNet(BaseTorchMethod):
             weights = weights["state_dict"]
 
         self.load_state_dict(weights)  # type: ignore
+
+    @classmethod
+    def from_config(cls, config: Union[CatnetConfig, dict, str, Path]):
+        if isinstance(config, CatnetConfig):
+            return cls(**config.__dict__)
+
+        if isinstance(config, str) or isinstance(config, Path):
+            config = load_yaml(str(config))
+
+        arch = config.pop("arch", None)
+        if isinstance(arch, dict):
+            arch = CatnetArchConfig.load_from_dict(config["arch"])
+        elif arch == "pretrained":
+            arch = pretrained_arch
+
+        return cls(arch_config=arch, **config)

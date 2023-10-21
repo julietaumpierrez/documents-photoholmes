@@ -8,7 +8,7 @@ import yaml
 from PIL import Image
 
 from photoholmes.models.catnet import CatNet, catnet_preprocessing
-from photoholmes.models.catnet.config import pretrained_config
+from photoholmes.models.catnet.config import pretrained_arch
 from photoholmes.utils.image import read_jpeg_data
 
 if "research" in os.path.abspath("."):
@@ -21,7 +21,7 @@ model = CatNet("pretrained", threshold=0.1)
 model.load_weigths("weights/CAT_full_v2.pth.tar")
 # %%
 weights = torch.load("weights/CAT_full_v2.pth.tar", map_location="cpu")
-model = CatNet(pretrained_config, 2)
+model = CatNet(pretrained_arch, 2)
 model.load_weigths(weights)
 # %%
 config = yaml.load(open("weights/catnet.yaml", "r"), Loader=yaml.FullLoader)["MODEL"][
@@ -31,7 +31,7 @@ model = CatNet(config)
 weights = torch.load("weights/CAT_full_v2.pth.tar", map_location="cpu")
 model.load_state_dict(weights["state_dict"])
 # %%
-model = CatNet(pretrained_config, 2, weights="weights/CAT_full_v2.pth.tar")
+model = CatNet(pretrained_arch, 2, weights="weights/CAT_full_v2.pth.tar")
 
 # %%
 image_path = "data/example_input.jpg"

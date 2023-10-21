@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from photoholmes.models.catnet.config import pretrained_config
+from photoholmes.models.catnet.config import pretrained_arch
 from photoholmes.models.catnet.model import CatNet
 from photoholmes.models.catnet.preprocessing import catnet_preprocessing
 from photoholmes.utils.image import read_jpeg_data
@@ -24,7 +24,7 @@ config = yaml.load(open("weights/catnet.yaml", "r"), Loader=yaml.FullLoader)
 config = config["MODEL"]["EXTRA"]
 
 # %%
-model = CatNet(pretrained_config, 2)
+model = CatNet(pretrained_arch, 2)
 # %%
 weights = torch.load("weights/CAT_full_v2.pth.tar", map_location="cpu")
 model.load_state_dict(weights["state_dict"])
