@@ -8,10 +8,12 @@ from numpy.typing import NDArray
 
 def get_binary_volume(x: torch.Tensor, T: int = 20) -> torch.Tensor:
     x_vol = torch.zeros(size=(T + 1, x.shape[1], x.shape[2]))
+
     x_vol[0] += (x == 0).float().squeeze()
-    for i in range(1, T):
-        x_vol[i] += (x == i).float().squeeze()
-        x_vol[i] += (x == -i).float().squeeze()
+
+    indices = torch.arange(1, T).unsqueeze(1).unsqueeze(2)
+    x_vol[1:T] += ((x == indices) | (x == -indices)).float().squeeze()
+
     x_vol[T] += (x >= T).float().squeeze()
     x_vol[T] += (x <= -T).float().squeeze()
 
