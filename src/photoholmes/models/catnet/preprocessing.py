@@ -50,8 +50,8 @@ def catnet_preprocessing(
             dct_coeffs[i] = temp
 
     s_r = (randint(0, max(h - crop_size[0], 0)) // 8) * 8
-    s_c = (randint(0, max(h - crop_size[1], 0)) // 8) * 8
-    t_img = t_img[s_r : s_r + crop_size[0], s_c : s_c + crop_size[1], :]
+    s_c = (randint(0, max(w - crop_size[1], 0)) // 8) * 8
+    t_img = t_img[:, s_r : s_r + crop_size[0], s_c : s_c + crop_size[1]]
     for i in range(n_dct_channels):
         dct_coeffs[i] = dct_coeffs[i][
             s_r : s_r + crop_size[0], s_c : s_c + crop_size[1]

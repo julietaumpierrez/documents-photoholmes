@@ -45,13 +45,14 @@ from photoholmes.utils.image import read_jpeg_data
 model = CatNet.from_config(
     {"arch": "pretrained", "weights": "weights/CAT_full_v2.pth.tar"}
 )
+model.eval()
 
 
 # %%
 import matplotlib.pyplot as plt
 from PIL import Image
 
-image_path = "data/example_input.jpg"
+image_path = "data/Im_1.jpg"
 img = np.array(Image.open(image_path))
 dct, qtable_ph = read_jpeg_data(image_path, num_channels=1)
 t_x_ph, t_qtable_ph = catnet_preprocessing(img, dct, qtable_ph, n_dct_channels=1)
