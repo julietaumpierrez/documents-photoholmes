@@ -66,7 +66,7 @@ class ClipModel(nn.Module):
 
     def encode_text(self, inputs: Dict[str, Tensor]) -> Tensor:
         if self.avg_word_embs:
-            sequence_output = self.transformer(**inputs)[0]
+            sequence_output = self.transformer(**inputs).last_hidden_state
             embeddings = torch.sum(
                 sequence_output * inputs["attention_mask"].unsqueeze(-1), dim=1
             ) / torch.clamp(
@@ -75,9 +75,7 @@ class ClipModel(nn.Module):
 
             return embeddings
         else:
-            # NOTE original implementation uses embedding 1, this doesn't make
-            # sense given the encoder use.
-            return self.transformer(**inputs)[0]
+            return self.transformer(**inputs).last_hidden_state[:, 0]
 
     def forward(
         self, image: Tensor, attention_mask: Tensor, input_ids: Tensor
