@@ -8,7 +8,7 @@ IM_SHAPE = (1280, 720, 3)
 
 def test_image():
     for method_name in METHODS_LIST:
-        method = MethodFactory.create(method_name)
+        method = MethodFactory.load(method_name)
         image = np.random.normal(125, 100, size=IM_SHAPE)
         heatmap = method.predict(image)
         pred = method.predict_mask(heatmap)

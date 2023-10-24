@@ -2,11 +2,13 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-
 [project]
 name="photoholmes"
 version = "0.0.1"
 requires-python = ">=3.9"
+
+[project.scripts]
+photoholmes="photoholmes.utils.cli:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]

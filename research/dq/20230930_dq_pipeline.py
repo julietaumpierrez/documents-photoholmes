@@ -22,7 +22,7 @@ image.plot_multiple(images=images, titles=os.listdir(IMAGES_PATH), ncols=2)
 image_choice = 1
 method_name = "naive"
 
-method = MethodFactory.create(method_name)
+method = MethodFactory.load(method_name)
 name = f"Im_{image_choice}"
 im = cv.imread(IMAGES_PATH + name + ".jpg")
 mask = cv.imread(MASK_PATH + name + ".png")
