@@ -169,12 +169,12 @@ class ImFile:
     mask: Optional[np.ndarray] = None
 
     @classmethod
-    def from_path(cls, image_path: str, mask_path: Optional[str] = None):
+    def open(cls, image_path: str, mask_path: Optional[str] = None):
         """Initializes image from a given image_path, and optionally a mask path containing forgery ground truth."""
         name = image_path.split("/")[-1]
         img = cv.imread(image_path)
         img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-        mask = mask = cv.imread(mask_path) if mask_path is not None else None
+        mask = cv.imread(mask_path) if mask_path is not None else None
         return cls(name, img, mask)
 
     @property
