@@ -8,6 +8,7 @@ from torchvision.models import resnet50
 
 try:
     from transformers import DistilBertConfig, DistilBertModel
+    from transformers.modeling_outputs import BaseModelOutput
 except ImportError:
     raise ImportError(
         "`transformers` package not found, please run `pip install transformers`"
@@ -45,37 +46,53 @@ def load_text_model(model_name: Literal["distilbert"]) -> nn.Module:
     return model
 
 
+class MeanPooler(nn.Module):
+    """Mean pooling"""
+
+    def forward(self, x: BaseModelOutput, attention_mask: Tensor):
+        masked_output = x.last_hidden_state * attention_mask.unsqueeze(-1)
+        return masked_output.sum(dim=1) / attention_mask.sum(-1, keepdim=True)
+
+
+class ClsPooler(nn.Module):
+    """CLS token pooling"""
+
+    def __init__(self):
+        super().__init__()
+        self.cls_token_position = 0
+
+    def forward(self, x: BaseModelOutput, attention_mask: Tensor):
+        return x.last_hidden_state[:, self.cls_token_position, :]
+
+
 class ClipModel(nn.Module):
     def __init__(
         self,
         vision: Literal["resnet50"],
         text: Literal["distilbert"],
-        avg_word_embs: bool,
+        pooling: Literal["csl", "mean"],
     ):
         """
         Simple clip model using HF transformers and torchvision models.
         """
+        super().__init__()
         self.vision = load_vision_model(vision)
         self.transformer = load_text_model(text)
         self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
 
-        self.avg_word_embs = avg_word_embs
+        match pooling:
+            case "cls":
+                self.pooler = ClsPooler()
+            case "mean":
+                self.pooler = MeanPooler()
 
     def encode_image(self, image: Tensor) -> Tensor:
         return self.vision(image)
 
     def encode_text(self, inputs: Dict[str, Tensor]) -> Tensor:
-        if self.avg_word_embs:
-            sequence_output = self.transformer(**inputs).last_hidden_state
-            embeddings = torch.sum(
-                sequence_output * inputs["attention_mask"].unsqueeze(-1), dim=1
-            ) / torch.clamp(
-                torch.sum(inputs["attention_mask"], dim=1, keepdim=True), min=1e-9
-            )
-
-            return embeddings
-        else:
-            return self.transformer(**inputs).last_hidden_state[:, 0]
+        out = self.transformer(**inputs)
+        out = self.pooler(out, inputs["attention_mask"])
+        return out
 
     def forward(
         self, image: Tensor, attention_mask: Tensor, input_ids: Tensor
