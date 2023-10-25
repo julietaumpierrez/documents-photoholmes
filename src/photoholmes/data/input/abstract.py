@@ -1,10 +1,3 @@
-"""
-Implementar AbstractDataset. Columbia que herede de Abstract. Wrappear todo con un SplicingDatset que se mapee con config.
-- Nota:
-    - Se podría agregar atributos que se consideren pertientes (formato, tamaño, etc.)
-    - Tuve que agregar type ignore para que no me atomice con el PIL, pero lo tengo que arrastrar en todos los imports de archivos nuestros..
-    - 
-"""
 import os
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
