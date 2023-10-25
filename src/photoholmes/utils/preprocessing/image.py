@@ -21,6 +21,12 @@ class ToTensor(BaseTransform):
         t_image = torch.from_numpy(image)
         if t_image.ndim == 3:
             t_image = t_image.permute(2, 0, 1)
+
+        for k in kwargs:
+            if isinstance(kwargs[k], list):
+                kwargs[k] = np.array(kwargs[k])
+            kwargs[k] = torch.from_numpy(kwargs[k])
+
         return {"image": t_image, **kwargs}
 
 
