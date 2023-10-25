@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.typing import NDArray
 
 from photoholmes.models.base import BaseMethod
 from photoholmes.models.DQ.utils import (
@@ -10,11 +11,11 @@ from photoholmes.models.DQ.utils import (
 
 
 class DQ(BaseMethod):
-    def __init__(self, number_frecs=10, **kwargs):
+    def __init__(self, number_frecs: int = 10, **kwargs):
         super().__init__(**kwargs)
         self.number_frecs = number_frecs
 
-    def predict(self, dct_coefficients: np.ndarray) -> np.ndarray:
+    def predict(self, dct_coefficients: NDArray) -> NDArray:
         M, N = dct_coefficients.shape[1:]
         BPPM = np.zeros((M // 8, N // 8))
         for channel in range(dct_coefficients.shape[0]):

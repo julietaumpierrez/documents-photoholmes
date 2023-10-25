@@ -65,7 +65,7 @@ def read_mask(mask_path):
 
 
 def read_jpeg_data(
-    image_path: str, num_channels: Optional[int] = None
+    image_path: str, num_dct_channels: Optional[int] = None
 ) -> Tuple[NDArray, List[NDArray]]:
     """Reads image from path and returns DCT coefficient matrix for each channel and the
     quantization matrixes. If image is in jpeg format, it decodes the DCT stream and
@@ -88,8 +88,8 @@ def read_jpeg_data(
         jpeg = jpegio.read(temp.name)
         temp.close()
 
-    qtables = _qtables_from_jpeg(jpeg, num_channels)
-    return _DCT_from_jpeg(jpeg, num_channels), qtables
+    qtables = _qtables_from_jpeg(jpeg, num_dct_channels)
+    return _DCT_from_jpeg(jpeg, num_dct_channels), qtables
 
 
 def _qtables_from_jpeg(

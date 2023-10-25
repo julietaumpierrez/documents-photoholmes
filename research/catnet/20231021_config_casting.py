@@ -54,7 +54,7 @@ from PIL import Image
 
 image_path = "data/Im_1.jpg"
 img = np.array(Image.open(image_path))
-dct, qtable_ph = read_jpeg_data(image_path, num_channels=1)
+dct, qtable_ph = read_jpeg_data(image_path, num_dct_channels=1)
 t_x_ph, t_qtable_ph = catnet_preprocessing(img, dct, qtable_ph, n_dct_channels=1)
 mask = model.predict(t_x_ph[None, :], t_qtable_ph[None, :])
 

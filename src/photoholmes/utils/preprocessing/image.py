@@ -1,0 +1,35 @@
+from typing import Dict, TypeVar
+
+import numpy as np
+import torch
+from numpy.typing import NDArray
+from PIL.Image import Image
+from torch import Tensor
+
+from photoholmes.utils.preprocessing.base import BaseTransform
+
+T = TypeVar("T", Tensor, NDArray)
+
+
+class Normalize(BaseTransform):
+    def __call__(self, image: NDArray, **kwargs) -> Dict[str, T]:
+        return {"image": image / 255, **kwargs}
+
+
+class ToTensor(BaseTransform):
+    def __call__(self, image: NDArray, **kwargs) -> Dict[str, T]:
+        t_image = torch.from_numpy(image)
+        if t_image.ndim == 3:
+            t_image = t_image.permute(2, 0, 1)
+        return {"image": t_image, **kwargs}
+
+
+class RGBtoGray(BaseTransform):
+    def __call__(self, image: T, **kwargs) -> Dict[str, T]:
+        if isinstance(image, Tensor):
+            image = 0.299 * image[0] + 0.587 * image[1] + 0.114 * image[2]
+        else:
+            image = (
+                0.299 * image[..., 0] + 0.587 * image[..., 1] + 0.114 * image[..., 2]
+            )
+        return {"image": image, **kwargs}
