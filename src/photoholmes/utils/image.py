@@ -26,7 +26,11 @@ def plot(image, title=None, save_path=None):
 
 
 def plot_multiple(
-    images, titles=None, ncols=4, title: Optional[str] = None, save_path=None
+    images,
+    titles=None,
+    ncols=4,
+    title: Optional[str] = None,
+    save_path=None,
 ):
     """Function for easily plotting one or multiple images"""
     N = len(images)

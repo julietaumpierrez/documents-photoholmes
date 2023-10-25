@@ -11,7 +11,6 @@ data
 __pycache__/
 
 # datasets & extra development folders
-/data/
 /datasets/
 /extra/
 

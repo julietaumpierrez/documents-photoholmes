@@ -1,4 +1,5 @@
 numpy
+Pillow
 matplotlib
 opencv-python
 pyyaml
@@ -7,4 +8,3 @@ scikit-learn
 tqdm
 scipy
 jpegio
-
