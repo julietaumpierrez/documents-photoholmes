@@ -51,7 +51,6 @@ class ColumbiaDataset(AbstractDataset):
     def _get_mask_path(self, image_path) -> str:
         image_filename = image_path.split("/")[-1]
         image_name_list = ".".join(image_filename.split(".")[:-1]).split("_")
-        # image_name_list.insert(-1, "edgemask")
         mask_name = "_".join(image_name_list + ["edgemask"])
         mask_filename = mask_name + self.MASK_EXTENSION
         return os.path.join(self.MASKS_DIR, mask_filename)
