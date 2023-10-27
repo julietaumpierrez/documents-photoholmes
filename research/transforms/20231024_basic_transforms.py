@@ -44,11 +44,16 @@ class ToTensor(BaseTransform):
 
 class Normalize(BaseTransform):
     def __call__(self, image: T, **kwargs) -> Dict[str, T]:
-        return {"image": image / 255, **kwargs}
+        if image.dtype == np.uint8 or image.dtype == torch.uint8:
+            image = image / 255
+        elif image.max() > 1:
+            image = image / 255
+        return {"image": image, **kwargs}
 
 
 # %%
 image = np.array(Image.open("data/img00.png"))
+t_image = torch.from_numpy(image).permute(2, 0, 1)
 plt.imshow(image)
 image.shape
 
@@ -59,6 +64,10 @@ to_tensor = ToTensor()
 
 # %%
 image_T = normalize(image=image, mask=np.zeros(image.shape))
+image_T
+# %%
+t_image_T = normalize(image=t_image, mask=np.zeros(t_image.shape))
+t_image_T
 # %%
 image_T = transform(image, mask=np.zeros(image.shape))
 plt.imshow(image_T["image"], cmap="gray")
@@ -68,6 +77,12 @@ image_T = normalize(image, mask=np.zeros(image.shape))
 image_T = to_tensor(**image_T)
 image_T = transform(**image_T)
 plt.imshow(image_T["image"], cmap="gray")
+image_T["image"].shape
+# %%
+t_image_T = normalize(t_image, mask=np.zeros(image.shape))
+t_image_T = to_tensor(**t_image_T)
+t_image_T = transform(**t_image_T)
+plt.imshow(t_image_T["image"], cmap="gray")
 image_T["image"].shape
 
 # %%

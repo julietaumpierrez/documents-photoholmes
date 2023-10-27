@@ -3,7 +3,6 @@ from typing import Dict, TypeVar
 import numpy as np
 import torch
 from numpy.typing import NDArray
-from PIL.Image import Image
 from torch import Tensor
 
 from photoholmes.utils.preprocessing.base import BaseTransform
@@ -12,12 +11,16 @@ T = TypeVar("T", Tensor, NDArray)
 
 
 class Normalize(BaseTransform):
-    def __call__(self, image: NDArray, **kwargs) -> Dict[str, T]:
-        return {"image": image / 255, **kwargs}
+    def __call__(self, image: T, **kwargs) -> Dict[str, T]:
+        if image.dtype == np.uint8 or image.dtype == torch.uint8:
+            image = image / 255
+        elif image.max() > 1:
+            image = image / 255
+        return {"image": image, **kwargs}
 
 
 class ToTensor(BaseTransform):
-    def __call__(self, image: NDArray, **kwargs) -> Dict[str, T]:
+    def __call__(self, image: NDArray, **kwargs) -> Dict[str, Tensor]:
         t_image = torch.from_numpy(image)
         if t_image.ndim == 3:
             t_image = t_image.permute(2, 0, 1)
