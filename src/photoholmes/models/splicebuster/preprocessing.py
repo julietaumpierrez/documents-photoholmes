@@ -2,11 +2,9 @@ from typing import Dict
 
 from numpy.typing import NDArray
 
-from photoholmes.utils.preprocessing.base import (
-    PreProcessingPipeline,
-    PreprocessingTransform,
-)
+from photoholmes.utils.preprocessing.base import PreprocessingTransform
 from photoholmes.utils.preprocessing.image import Normalize, RGBtoGray
+from photoholmes.utils.preprocessing.pipeline import PreProcessingPipeline
 
 
 class SplicebusterInput(PreprocessingTransform):
