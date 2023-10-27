@@ -39,7 +39,7 @@ def run_model(
     if config is None:
         logger.warning("No config file was provided, using default configs.")
 
-    model = MethodFactory.load(method, config)
+    model, preprocess = MethodFactory.load(method, config)
 
     image = ImFile.open(str(image_path))
 
