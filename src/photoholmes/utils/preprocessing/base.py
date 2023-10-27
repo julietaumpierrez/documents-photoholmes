@@ -1,6 +1,6 @@
-from typing import Any, Dict, List
+from typing import Any
 
 
-class BaseTransform:
+class PreprocessingTransform:
     def __call__(self, **kwargs) -> Any:
         raise NotImplementedError

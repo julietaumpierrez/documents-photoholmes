@@ -18,12 +18,15 @@ from matplotlib import pyplot as plt
 from numpy.typing import NDArray
 from torch import Tensor
 
-from photoholmes.utils.preprocessing.base import BaseTransform, PreProcessingPipeline
+from photoholmes.utils.preprocessing.base import (
+    PreProcessingPipeline,
+    PreprocessingTransform,
+)
 
 T = TypeVar("T", Tensor, NDArray)
 
 
-class RGBtoGray(BaseTransform):
+class RGBtoGray(PreprocessingTransform):
     def __call__(self, image: T, **kwargs) -> Dict[str, T]:
         if isinstance(image, Tensor):
             image = 0.299 * image[0] + 0.587 * image[1] + 0.114 * image[2]
@@ -34,7 +37,7 @@ class RGBtoGray(BaseTransform):
         return {"image": image, **kwargs}
 
 
-class ToTensor(BaseTransform):
+class ToTensor(PreprocessingTransform):
     def __call__(self, image: NDArray, **kwargs) -> Dict[str, T]:
         t_image = torch.from_numpy(image)
         if t_image.ndim == 3:
@@ -42,7 +45,7 @@ class ToTensor(BaseTransform):
         return {"image": t_image, **kwargs}
 
 
-class Normalize(BaseTransform):
+class Normalize(PreprocessingTransform):
     def __call__(self, image: T, **kwargs) -> Dict[str, T]:
         if image.dtype == np.uint8 or image.dtype == torch.uint8:
             image = image / 255

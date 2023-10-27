@@ -4,7 +4,10 @@ from typing import Dict
 import torch
 from torch import Tensor
 
-from photoholmes.utils.preprocessing.base import BaseTransform, PreProcessingPipeline
+from photoholmes.utils.preprocessing.base import (
+    PreProcessingPipeline,
+    PreprocessingTransform,
+)
 from photoholmes.utils.preprocessing.image import ToTensor
 
 
@@ -22,7 +25,7 @@ def get_binary_volume(x: Tensor, T: int = 20) -> Tensor:
     return x_vol
 
 
-class CatnetPreprocessing(BaseTransform):
+class CatnetPreprocessing(PreprocessingTransform):
     def __init__(self, n_dct_channels: int = 1, T: int = 20):
         self.n_dct_channels = n_dct_channels
         self.T = T
