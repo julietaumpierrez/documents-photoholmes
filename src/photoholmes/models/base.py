@@ -1,9 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TypeVar
 
+from numpy.typing import NDArray
+from torch import Tensor
 from torch.nn import Module
 
 from photoholmes.utils.generic import load_yaml
+
+T = TypeVar("T", NDArray, Tensor)
 
 
 class BaseMethod(ABC):
@@ -18,11 +22,12 @@ class BaseMethod(ABC):
         self.threshold = threshold
 
     @abstractmethod
-    def predict(self, image):
+    def predict(self, image: T) -> T:
         """Predicts heatmap from an image."""
 
     def predict_mask(self, heatmap):
-        """Default strategy for mask prediction from the 'predict' (heatmap predicting) method.
+        """Default strategy for mask prediction from the 'predict' (heatmap predicting)
+        method.
         This method can be overriden for smarter post-processing algorythms,
             but should always use 'self.theshold' for metric evaluation purposes.
         """

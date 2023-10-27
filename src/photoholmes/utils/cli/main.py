@@ -6,8 +6,9 @@ import typer
 from matplotlib import pyplot as plt
 from typing_extensions import Annotated
 
+from photoholmes.models.base import BaseTorchMethod
 from photoholmes.models.method_factory import MethodFactory, MethodName
-from photoholmes.utils.image import ImFile
+from photoholmes.utils.image import ImFile, read_jpeg_data
 
 app = typer.Typer()
 
@@ -35,15 +36,24 @@ def run_model(
         ),
     ] = None,
     device: Optional[str] = None,
+    num_dct_channels: Optional[int] = 1,
 ):
     if config is None:
         logger.warning("No config file was provided, using default configs.")
 
     model, preprocess = MethodFactory.load(method, config)
 
-    image = ImFile.open(str(image_path))
+    if isinstance(model, BaseTorchMethod):
+        model.to(device)
 
-    mask = model.predict(image.img)
+    image = ImFile.open(str(image_path)).img
+    if image_path.split(".")[-1] in ["jpg", "jpeg"]:
+        dct_channels, qtables = read_jpeg_data(image_path, num_dct_channels)
+        x = preprocess(image=image, dct_coefficients=dct_channels, qtables=qtables)
+    else:
+        x = preprocess(image=image)
+
+    mask = model.predict(**x)
 
     plt.imshow(mask)
     if out_path is None:

@@ -1,7 +1,7 @@
 from enum import Enum, unique
 from typing import Optional, Tuple, Union
 
-from photoholmes.models import Naive, Splicebuster
+from photoholmes.models import Naive
 from photoholmes.models.base import BaseMethod
 from photoholmes.models.DQ import DQ, dq_preprocessing
 from photoholmes.models.splicebuster import (Splicebuster,
@@ -29,7 +29,7 @@ class MethodFactory:
             case MethodName.NAIVE:
                 return Naive.from_config(config), PreProcessingPipeline([])
             case MethodName.DQ:
-                return (DQ.from_config(config), dq_preprocessing)
+                return DQ.from_config(config), dq_preprocessing
             case MethodName.SPLICEBUSTER:
                 return Splicebuster.from_config(config), splicebuster_preprocess
             case _:
