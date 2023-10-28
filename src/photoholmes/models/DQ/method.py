@@ -11,11 +11,24 @@ from photoholmes.models.DQ.utils import (
 
 
 class DQ(BaseMethod):
-    def __init__(self, number_frecs: int = 10, **kwargs):
+    def __init__(self, number_frecs: int = 10, alpha: float = 1.0, **kwargs) -> None:
+        """
+        Initialize the DQ class.
+
+        :param number_frecs: Number of frequencies, defaults to 10.
+        :param kwargs: Additional keyword arguments.
+        """
         super().__init__(**kwargs)
         self.number_frecs = number_frecs
+        self.alpha = alpha
 
     def predict(self, dct_coefficients: NDArray) -> NDArray:
+        """
+        Predict the BPPM upsampled values.
+
+        :param dct_coefficients: DCT coefficients.
+        :return: BPPM upsampled values.
+        """
         M, N = dct_coefficients.shape[1:]
         BPPM = np.zeros((M // 8, N // 8))
         for channel in range(dct_coefficients.shape[0]):
@@ -26,13 +39,29 @@ class DQ(BaseMethod):
         BPPM_upsampled = upsample_heatmap(BPPM_norm, (M, N))
         return BPPM_upsampled
 
-    def _detect_period(self, histogram):
-        p_H = histogram_period(histogram)
+    def _detect_period(self, histogram: np.ndarray) -> int:
+        """
+        Detect the period of the histogram.
+
+        :param histogram: Input histogram.
+        :return: Detected period.
+        """
+        p_H = histogram_period(histogram, self.alpha)
         p_fft = fft_period(histogram)
         p = min(p_H, p_fft)
         return p
 
-    def _calculate_Pu(self, coefficients_f, histogram, period):
+    def _calculate_Pu(
+        self, coefficients_f: np.ndarray, histogram: np.ndarray, period: int
+    ) -> np.ndarray:
+        """
+        Calculate Pu values for a given frequency.
+
+        :param coefficients_f: Coefficients for a given frequency.
+        :param histogram: Input histogram for a given frequency.
+        :param period: Detected period for a given frequency.
+        :return: Calculated Pu values for a given frequency.
+        """
         coefficients_f -= np.min(coefficients_f)
         M, N = coefficients_f.shape
 
@@ -47,7 +76,13 @@ class DQ(BaseMethod):
 
         return Pu_f
 
-    def _calculate_BPPM_f(self, DCT_coefficients_f):
+    def _calculate_BPPM_f(self, DCT_coefficients_f: np.ndarray) -> np.ndarray:
+        """
+        Calculate BPPM values for given DCT coefficients for a given frequency..
+
+        :param DCT_coefficients_f: DCT coefficients for a given frequency..
+        :return: Calculated BPPM values for a given frequency..
+        """
         hmax = np.max(DCT_coefficients_f)
         hmin = np.min(DCT_coefficients_f)
         if hmax - hmin:
@@ -67,7 +102,16 @@ class DQ(BaseMethod):
                 return BPPM_f
         return np.zeros_like(DCT_coefficients_f)
 
-    def _calculate_BPPM_channel(self, DCT_coefs, fs):
+    def _calculate_BPPM_channel(
+        self, DCT_coefs: np.ndarray, fs: np.ndarray
+    ) -> np.ndarray:
+        """
+        Calculate BPPM values for a given channel.
+
+        :param DCT_coefs: DCT coefficients for the channel.
+        :param fs: Frequency values.
+        :return: Calculated BPPM values for the channel.
+        """
         M, N = DCT_coefs.shape
         BPPM = np.zeros((len(fs), M // 8, N // 8))
         for i in range(len(fs)):
