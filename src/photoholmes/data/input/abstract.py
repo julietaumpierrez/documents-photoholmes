@@ -52,10 +52,6 @@ class AbstractDataset(ABC, Dataset):
     def _read_image(path):
         return torch.from_numpy(np.asarray(Image.open(path)))
 
-    @staticmethod
-    def file_extension(path):
-        return "." + path.split(".")[-1]
-
     def _binarize_mask(self, mask_image) -> Tensor:
         """Overideable method for binarizing mask images."""
         assert (mask_image <= 1).all()
