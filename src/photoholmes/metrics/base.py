@@ -5,7 +5,7 @@ import torch
 from torchmetrics import Metric
 
 
-class PhotoHolmesMetric(Metric, ABC):
+class BaseMetric(Metric, ABC):
     """
     Abstract class for metrics specific to image masks.
     """
