@@ -70,13 +70,14 @@ class ClipModel(nn.Module):
         self,
         vision: Literal["resnet50"],
         text: Literal["distilbert"],
-        pooling: Literal["csl", "mean"],
+        pooling: Literal["cls", "mean"],
     ):
         """
         Simple clip model using HF transformers and torchvision models.
         """
         super().__init__()
-        self.vision = load_vision_model(vision)
+        self.visual = load_vision_model(vision)
+        self.visual.fc = nn.Linear(2048, 768)
         self.transformer = load_text_model(text)
         self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
 
@@ -87,7 +88,7 @@ class ClipModel(nn.Module):
                 self.pooler = MeanPooler()
 
     def encode_image(self, image: Tensor) -> Tensor:
-        return self.vision(image)
+        return self.visual(image)
 
     def encode_text(self, inputs: Dict[str, Tensor]) -> Tensor:
         out = self.transformer(**inputs)
