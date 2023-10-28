@@ -3,10 +3,10 @@ from typing import List, Union
 import torch
 from torchmetrics import AUROC as auroc
 
-from photoholmes.metrics.base import PhotoHolmesMetric
+from photoholmes.metrics.base import BaseMetric
 
 
-class AUROC(PhotoHolmesMetric):
+class AUROC(BaseMetric):
     """
     AUROC metric for image masks using torchmetrics as a wrapper.
     """

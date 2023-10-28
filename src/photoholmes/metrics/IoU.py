@@ -1,10 +1,10 @@
 import torch
 from torchmetrics import JaccardIndex
 
-from photoholmes.metrics.base import PhotoHolmesMetric
+from photoholmes.metrics.base import BaseMetric
 
 
-class IoU(PhotoHolmesMetric):
+class IoU(BaseMetric):
     """
     Intersection over Union (IoU) metric for image masks using torchmetrics as a
     wrapper.

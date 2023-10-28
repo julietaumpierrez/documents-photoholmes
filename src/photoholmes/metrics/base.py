@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Any
 
 import torch
 from torchmetrics import Metric
@@ -21,7 +20,6 @@ class BaseMetric(Metric, ABC):
         """
         Reset the metric values.
         """
-        pass
 
     @abstractmethod
     def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:
@@ -32,4 +30,3 @@ class BaseMetric(Metric, ABC):
             preds (torch.Tensor): Predicted masks.
             target (torch.Tensor): Ground truth masks.
         """
-        pass

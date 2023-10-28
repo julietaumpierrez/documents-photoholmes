@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import torch
 from torchmetrics import ROC as roc
 
-from photoholmes.metrics.base import PhotoHolmesMetric
+from photoholmes.metrics.base import BaseMetric
 
 
-class ROC(PhotoHolmesMetric):
+class ROC(BaseMetric):
     """
     ROC metric for image masks using torchmetrics as a wrapper.
     """
@@ -53,4 +53,3 @@ class ROC(PhotoHolmesMetric):
         plt.ylabel("True Positive Rate")
         plt.title("Receiver Operating Characteristic (ROC)")
         plt.legend(loc="lower right")
-        plt.show()

@@ -1,10 +1,10 @@
 import torch
 from torchmetrics import Precision as precision
 
-from photoholmes.metrics.base import PhotoHolmesMetric
+from photoholmes.metrics.base import BaseMetric
 
 
-class Precision(PhotoHolmesMetric):
+class Precision(BaseMetric):
     """
     Precision metric for image masks using torchmetrics as a wrapper.
     """

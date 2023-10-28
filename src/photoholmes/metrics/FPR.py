@@ -1,10 +1,10 @@
 import torch
 from torchmetrics import Specificity
 
-from photoholmes.metrics.base import PhotoHolmesMetric
+from photoholmes.metrics.base import BaseMetric
 
 
-class FPR(PhotoHolmesMetric):
+class FPR(BaseMetric):
     """
     FPR (False Positive Rate) metric for image masks using torchmetrics as a wrapper.
     """

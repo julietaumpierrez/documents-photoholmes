@@ -1,10 +1,10 @@
 import torch
 from torchmetrics.classification import AveragePrecision
 
-from photoholmes.metrics.base import PhotoHolmesMetric
+from photoholmes.metrics.base import BaseMetric
 
 
-class MAP(PhotoHolmesMetric):
+class MAP(BaseMetric):
     """
     Mean Average Precision (MAP) metric for image masks using torchmetrics.
     """

@@ -1,10 +1,10 @@
 import torch
 from torchmetrics import Recall
 
-from photoholmes.metrics.base import PhotoHolmesMetric
+from photoholmes.metrics.base import BaseMetric
 
 
-class TPR(PhotoHolmesMetric):
+class TPR(BaseMetric):
     """
     TPR (True Positive Rate) metric for image masks using torchmetrics as a wrapper.
     """

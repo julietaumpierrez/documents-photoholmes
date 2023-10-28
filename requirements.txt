@@ -8,4 +8,3 @@ tqdm
 scipy
 jpegio
 torchmetrics
-torch

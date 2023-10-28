@@ -1,10 +1,10 @@
 import torch
 from torchmetrics import MatthewsCorrCoef
 
-from photoholmes.metrics.base import PhotoHolmesMetric
+from photoholmes.metrics.base import BaseMetric
 
 
-class MCC(PhotoHolmesMetric):
+class MCC(BaseMetric):
     """
     Matthews Correlation Coefficient (MCC) metric for image masks using torchmetrics as
     a wrapper.
