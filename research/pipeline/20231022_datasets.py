@@ -34,6 +34,17 @@ plot_multiple(ims, title="Imágenes Columbia")
 plot_multiple(mks, title="Máscaras Columbia")
 
 # %%
+COLUMBIA_PATH = "/home/dsense/extra/tesis/datos/columbia"
+dataset_jpeg = ColumbiaDataset(COLUMBIA_PATH, item_data=["DCT"])
+
+ims = []
+mks = []
+
+x, mk = dataset_jpeg[0]
+print("Stream DCT de primera imagen, canal 0:")
+print(x["DCT"][0])
+
+# %%
 loader = torch.utils.data.DataLoader(
     dataset,
     batch_size=1,  # must be 1 to handle arbitrary input sizes

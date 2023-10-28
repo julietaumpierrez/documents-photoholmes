@@ -4,16 +4,23 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
-from PIL import Image  # type: ignore
 from torch import Tensor
 from torch.utils.data import Dataset
+
+from photoholmes.utils.image import read_DCT, read_image
 
 
 class AbstractDataset(ABC, Dataset):
     def __init__(
-        self, img_dir, transform=None, mask_transform=None, tampered_only=False
+        self,
+        img_dir,
+        item_data=["image"],
+        transform=None,
+        mask_transform=None,
+        tampered_only=False,
     ):
         self.img_dir = img_dir
+        self.item_data = item_data
         self.transform = transform
         self.mask_transform = mask_transform
         self.tampered_only = tampered_only
@@ -34,23 +41,29 @@ class AbstractDataset(ABC, Dataset):
     def __getitem__(self, idx) -> Tuple[Dict, Tensor]:
         x, mask = self._get_data(idx)
         if self.transform:
-            image = self.transform(**x)
+            x = self.transform(**x)
         if self.mask_transform:
             mask = self.mask_transform(mask)
         return x, mask
 
     def _get_data(self, idx) -> Tuple[Dict, Tensor]:
-        image_path = os.path.join(self.img_dir, self.image_paths[idx])
-        image = self._read_image(image_path)
-        mask_path = os.path.join(self.img_dir, self.mask_paths[idx])
-        mask_im = self._read_image(mask_path)
-        mask = self._binarize_mask(mask_im)
-        x = {"image": image}
-        return x, mask
+        x = {}
 
-    @staticmethod
-    def _read_image(path):
-        return torch.from_numpy(np.asarray(Image.open(path)))
+        image_path = os.path.join(self.img_dir, self.image_paths[idx])
+        if "image" in self.item_data:
+            x["image"] = read_image(image_path)
+        elif "DCT" in self.item_data:
+            x["DCT"] = torch.tensor(read_DCT(image_path))
+
+        if self.mask_paths[idx] is np.NaN:
+            arbitrary_element = list(x.values())[0]
+            mask = torch.zeros_like(arbitrary_element[:, :, 0])
+        else:
+            mask_path = os.path.join(self.img_dir, self.mask_paths[idx])
+            mask_im = read_image(mask_path)
+            mask = self._binarize_mask(mask_im)
+
+        return x, mask
 
     def _binarize_mask(self, mask_image) -> Tensor:
         """Overideable method for binarizing mask images."""

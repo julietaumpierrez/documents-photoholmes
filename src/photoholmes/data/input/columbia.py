@@ -62,17 +62,5 @@ class ColumbiaDataset(AbstractDataset):
         mask_filename = mask_name + self.MASK_EXTENSION
         return os.path.join(self.MASKS_DIR, mask_filename)
 
-    def _get_data(self, idx) -> Tuple[Dict, Tensor]:
-        image_path = os.path.join(self.img_dir, self.image_paths[idx])
-        image = self._read_image(image_path)
-        if self.mask_paths[idx] is np.NaN:
-            mask = torch.zeros_like(image[:, :, 0])
-        else:
-            mask_path = os.path.join(self.img_dir, self.mask_paths[idx])
-            mask = self._read_image(mask_path)
-            mask = self._binarize_mask(mask)
-        x = {"image": image}
-        return x, mask
-
     def _binarize_mask(self, mask_image) -> Tensor:
         return mask_image[:, :, self.TAMPERED_COLOR_INDEX] > 0

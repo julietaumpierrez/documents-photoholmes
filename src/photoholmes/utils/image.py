@@ -7,9 +7,21 @@ import cv2 as cv
 import jpegio
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL.Image import open
+import torch
+from PIL import Image
 
 IMG_FOLDER_PATH = "test_images/images/"
+
+
+def read_image(path):
+    return torch.from_numpy(cv.imread(path))
+
+
+def save_image(path, img, *args):
+    if isinstance(img, torch.Tensor):
+        cv.imwrite(path, img.numpy(), *args)
+    else:
+        cv.imwrite(path, img, *args)
 
 
 def plot(image, title=None, save_path=None):
@@ -77,7 +89,9 @@ def read_DCT(image_path: str) -> np.ndarray:
         return _DCT_from_jpeg(image_path)
     else:
         temp = NamedTemporaryFile(suffix=".jpg")
-        open(image_path).convert("RGB").save(temp.name, quality=100, subsampling=0)
+        img = read_image(image_path)
+        save_image(temp.name, img, [cv.IMWRITE_JPEG_QUALITY, 100])
+        # save_image(temp, img, quality=100)
         return _DCT_from_jpeg(temp.name)
 
 
@@ -105,7 +119,8 @@ def _DCT_from_jpeg(image_path: str) -> np.ndarray:
     else:
         sampling_factors[:, :] = 2
 
-    DCT_coef = np.empty((num_channels, *jpeg.coef_arrays[0].shape))
+    dct_shape = jpeg.coef_arrays[0].shape
+    DCT_coef = np.empty((num_channels, *dct_shape))
 
     for i in range(num_channels):
         r, c = jpeg.coef_arrays[i].shape
@@ -121,7 +136,7 @@ def _DCT_from_jpeg(image_path: str) -> np.ndarray:
             block_coefs, (r_factor, c_factor)
         )
 
-        DCT_coef[i] = channel_coefficients
+        DCT_coef[i, :, :] = channel_coefficients[: dct_shape[0], : dct_shape[1]]
 
     return DCT_coef.astype(int)
 
