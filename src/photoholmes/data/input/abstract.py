@@ -1,10 +1,10 @@
 import os
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
-from PIL.Image import open  # type: ignore
+from PIL import Image  # type: ignore
 from torch import Tensor
 from torch.utils.data import Dataset
 
@@ -31,29 +31,32 @@ class AbstractDataset(ABC, Dataset):
     def __len__(self) -> int:
         return len(self.image_paths)
 
-    def __getitem__(self, idx) -> Tuple[Tensor, Tensor]:
-        image, mask = self._get_data(idx)
+    def __getitem__(self, idx) -> Tuple[Dict, Tensor]:
+        x, mask = self._get_data(idx)
         if self.transform:
-            image = self.transform(image)
+            image = self.transform(**x)
         if self.mask_transform:
             mask = self.mask_transform(mask)
-        return image, mask
+        return x, mask
 
-    def _get_data(self, idx) -> Tuple[Tensor, Tensor]:
+    def _get_data(self, idx) -> Tuple[Dict, Tensor]:
         image_path = os.path.join(self.img_dir, self.image_paths[idx])
         image = self._read_image(image_path)
         mask_path = os.path.join(self.img_dir, self.mask_paths[idx])
         mask_im = self._read_image(mask_path)
         mask = self._binarize_mask(mask_im)
-        return image, mask
+        x = {"image": image}
+        return x, mask
 
     @staticmethod
     def _read_image(path):
-        return torch.from_numpy(np.asarray(open(path)))
+        return torch.from_numpy(np.asarray(Image.open(path)))
 
     @staticmethod
     def file_extension(path):
         return "." + path.split(".")[-1]
 
     def _binarize_mask(self, mask_image) -> Tensor:
+        """Overideable method for binarizing mask images."""
+        assert (mask_image <= 1).all()
         return mask_image == 1

@@ -20,16 +20,14 @@ from photoholmes.utils.image import plot_multiple
 
 # %%
 COLUMBIA_PATH = "/home/dsense/extra/tesis/datos/columbia"
-dataset = ColumbiaDataset(
-    COLUMBIA_PATH,
-    tampered_only=True,
-)
-# %%
+dataset = ColumbiaDataset(COLUMBIA_PATH)
+
 ims = []
 mks = []
-for n in range(12):
-    im, mk = dataset[n]
-    ims.append(im)
+idxs = list(range(0, 6)) + list(range(len(dataset) - 6, len(dataset)))
+for n in idxs:
+    x, mk = dataset[n]
+    ims.append(x["image"])
     mks.append(mk)
 
 plot_multiple(ims, title="Imágenes Columbia")
@@ -45,7 +43,12 @@ loader = torch.utils.data.DataLoader(
 )
 ims = []
 mks = []
-for im, mk in list(loader)[:12]:
+for x, mk in list(loader)[:6]:
+    im = x["image"]
+    ims.append(im.squeeze())
+    mks.append(mk.squeeze())
+for x, mk in list(loader)[-6:]:
+    im = x["image"]
     ims.append(im.squeeze())
     mks.append(mk.squeeze())
 
