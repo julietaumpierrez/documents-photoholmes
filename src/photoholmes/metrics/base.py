@@ -15,7 +15,6 @@ class PhotoHolmesMetric(Metric, ABC):
         """
         Compute the metric based on the accumulated values.
         """
-        pass
 
     @abstractmethod
     def reset(self) -> None:
