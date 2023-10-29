@@ -19,9 +19,8 @@ class Normalize(PreprocessingTransform):
         **kwargs: Additional keyword arguments to passthrough.
     Returns:
         A dictionary with the following key-value pairs:
-        - "image": The normalized image.
-        - **kwargs: The additional keyword arguments passed through unchanged.
-
+            - "image": The normalized image.
+            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
     def __call__(self, image: T, **kwargs) -> Dict[str, T]:
@@ -42,8 +41,8 @@ class ToTensor(PreprocessingTransform):
 
     Returns:
         A dictionary with the following key-value pairs:
-        - "image": The input image as a PyTorch tensor.
-        - **kwargs: The additional keyword arguments passed through unchanged.
+            - "image": The input image as a PyTorch tensor.
+            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
     def __call__(self, image: NDArray, **kwargs) -> Dict[str, Tensor]:
@@ -69,8 +68,8 @@ class RGBtoGray(PreprocessingTransform):
 
     Returns:
         A dictionary with the following key-value pairs:
-        - "image": The input image as a grayscale numpy array or PyTorch tensor.
-        - **kwargs: The additional keyword arguments passed through unchanged.
+            - "image": The input image as a grayscale numpy array or PyTorch tensor.
+            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
     def __call__(self, image: T, **kwargs) -> Dict[str, T]:
