@@ -17,9 +17,9 @@ from pathlib import Path
 from typing import Literal, Optional, Union
 
 import torch
-import torch._utils
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
 from photoholmes.models.base import BaseTorchMethod
 from photoholmes.models.catnet.config import (
@@ -464,6 +464,8 @@ class CatNet(BaseTorchMethod):
         self.load_model(arch_config)
         if weights is not None:
             self.load_weigths(weights)
+        else:
+            self.init_weights()
 
     def load_model(self, arch_config: CatnetArchConfig):
         # RGB branch
@@ -770,10 +772,7 @@ class CatNet(BaseTorchMethod):
             logger.warning("=> Cannot load pretrained DCT")
 
     @torch.no_grad()
-    def predict(self, x: torch.Tensor, qtable: torch.Tensor) -> torch.Tensor:
-        if x.ndim == 3:
-            x = x.unsqueeze(0)
-            qtable = qtable.unsqueeze(0)
+    def predict(self, x: Tensor, qtable: Tensor) -> Tensor:
         pred = self.forward(x, qtable)
         pred = F.softmax(pred, dim=1)[:, 1]
         return pred
