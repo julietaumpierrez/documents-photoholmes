@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
+from torch.nn import Module
+
 from photoholmes.utils.generic import load_yaml
 
 
@@ -47,3 +49,9 @@ class BaseMethod(ABC):
             config = {}
 
         return cls(**config)
+
+
+class BaseTorchMethod(BaseMethod, Module):
+    def __init__(self, threshold: float = 0.5, *args, **kwargs) -> None:
+        BaseMethod.__init__(self, threshold=threshold)
+        Module.__init__(self, *args, **kwargs)

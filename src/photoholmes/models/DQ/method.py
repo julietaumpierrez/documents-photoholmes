@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.typing import NDArray
 
 from photoholmes.models.base import BaseMethod
 from photoholmes.models.DQ.utils import (
@@ -21,7 +22,7 @@ class DQ(BaseMethod):
         self.number_frecs = number_frecs
         self.alpha = alpha
 
-    def predict(self, dct_coefficients: np.ndarray) -> np.ndarray:
+    def predict(self, dct_coefficients: NDArray) -> NDArray:
         """
         Predict the BPPM upsampled values.
 
