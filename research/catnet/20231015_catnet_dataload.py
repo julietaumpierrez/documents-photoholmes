@@ -238,7 +238,7 @@ from photoholmes.models.catnet.preprocessing import catnet_preprocessing
 from photoholmes.utils.image import read_jpeg_data
 
 # %%
-dct_ph2, qtable_ph2 = read_jpeg_data(image_path, num_channels=1)
+dct_ph2, qtable_ph2 = read_jpeg_data(image_path, num_dct_channels=1)
 img_2 = np.array(Image.open(image_path))
 # %%
 assert (dct_ph2 == dct).all()

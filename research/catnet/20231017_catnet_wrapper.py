@@ -37,7 +37,7 @@ model = CatNet(pretrained_arch, 2, weights="weights/CAT_full_v2.pth.tar")
 image_path = "data/example_input.jpg"
 
 img = np.array(Image.open(image_path))
-dct, qtable_ph = read_jpeg_data(image_path, num_channels=1)
+dct, qtable_ph = read_jpeg_data(image_path, num_dct_channels=1)
 t_x_ph, t_qtable_ph = catnet_preprocessing(img, dct, qtable_ph, n_dct_channels=1)
 plt.imshow(t_x_ph[:3].permute(1, 2, 0).numpy())
 

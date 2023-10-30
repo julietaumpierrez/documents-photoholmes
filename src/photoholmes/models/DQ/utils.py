@@ -3,7 +3,14 @@ import numpy as np
 from scipy.signal import find_peaks
 
 
-def histogram_period(dct_histogram, alpha=1):
+def histogram_period(dct_histogram: np.ndarray, alpha: float = 1) -> int:
+    """
+    Calculate the period of a DCT histogram using a histogram-based method.
+
+    :param dct_histogram: Input DCT histogram.
+    :param alpha: Weighting factor, defaults to 1.
+    :return: Detected period.
+    """
     Hmax = 0
     period = 1
     k0 = np.argmax(dct_histogram)
@@ -20,7 +27,13 @@ def histogram_period(dct_histogram, alpha=1):
     return period
 
 
-def fft_period(dct_histogram):
+def fft_period(dct_histogram: np.ndarray) -> int:
+    """
+    Calculate the period of a DCT histogram using FFT.
+
+    :param dct_histogram: Input DCT histogram.
+    :return: Detected period.
+    """
     spectrogram = np.abs(np.fft.fftshift(np.fft.fft(dct_histogram)))
     log_spectrogram = np.log(spectrogram)
     c = len(log_spectrogram) // 2
@@ -37,7 +50,14 @@ def fft_period(dct_histogram):
     return period
 
 
-def upsample_heatmap(heatmap, image_shape):
+def upsample_heatmap(heatmap: np.ndarray, image_shape: tuple) -> np.ndarray:
+    """
+    Upsample a heatmap to match the given image shape.
+
+    :param heatmap: Input heatmap.
+    :param image_shape: Desired output shape.
+    :return: Upsampled heatmap.
+    """
     augmented_heatmap = cv2.resize(
         heatmap, (image_shape[1], image_shape[0]), interpolation=0
     )

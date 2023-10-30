@@ -790,14 +790,17 @@ class CatNet(BaseTorchMethod):
         self.load_state_dict(weights)  # type: ignore
 
     @classmethod
-    def from_config(cls, config: Union[CatnetConfig, dict, str, Path]):
+    def from_config(cls, config: Optional[CatnetConfig | dict | str | Path]):
         if isinstance(config, CatnetConfig):
             return cls(**config.__dict__)
 
         if isinstance(config, str) or isinstance(config, Path):
             config = load_yaml(str(config))
 
-        arch = config.pop("arch", None)
+        if config is None:
+            config = {"arch": pretrained_arch}
+
+        arch = config.pop("arch", "pretrained")
         if isinstance(arch, dict):
             arch = CatnetArchConfig.load_from_dict(config["arch"])
         elif arch == "pretrained":

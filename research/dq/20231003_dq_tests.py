@@ -34,7 +34,7 @@ img = np.asarray(open(im_path)).copy()
 image.plot_multiple([img], ncols=2)
 
 # %%
-dct_coefs, _ = image.read_jpeg_data(im_path, num_channels=1)
+dct_coefs, _ = image.read_jpeg_data(im_path, num_dct_channels=1)
 heatmap = method.predict(dct_coefs)
 mask_pred = method.predict_mask(heatmap)
 
