@@ -1,9 +1,6 @@
-from typing import Any, Dict, Optional
-
 import numpy as np
 
 from photoholmes.models.base import BaseMethod
-from photoholmes.utils.generic import load_yaml
 
 
 class Naive(BaseMethod):

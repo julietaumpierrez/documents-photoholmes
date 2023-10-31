@@ -1,9 +1,10 @@
 from enum import Enum, unique
 from typing import Optional, Tuple, Union
 
-from photoholmes.models import Naive
 from photoholmes.models.base import BaseMethod
+from photoholmes.models.catnet import CatNet, catnet_preprocessing
 from photoholmes.models.DQ import DQ, dq_preprocessing
+from photoholmes.models.naive.method import Naive
 from photoholmes.models.splicebuster import (Splicebuster,
                                              splicebuster_preprocess)
 from photoholmes.utils.preprocessing import PreProcessingPipeline
@@ -14,6 +15,7 @@ class MethodName(Enum):
     NAIVE = "naive"
     DQ = "dq"
     SPLICEBUSTER = "splicebuster"
+    CATNET = "catnet"
 
 
 class MethodFactory:
@@ -32,5 +34,7 @@ class MethodFactory:
                 return DQ.from_config(config), dq_preprocessing
             case MethodName.SPLICEBUSTER:
                 return Splicebuster.from_config(config), splicebuster_preprocess
+            case MethodName.CATNET:
+                return CatNet.from_config(config), catnet_preprocessing
             case _:
                 raise NotImplementedError(f"Method '{method_name}' is not implemented.")
