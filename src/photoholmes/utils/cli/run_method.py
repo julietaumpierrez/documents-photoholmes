@@ -2,6 +2,7 @@ import logging
 import os
 from typing import Optional
 
+import torch
 import typer
 from matplotlib import pyplot as plt
 from typing_extensions import Annotated
@@ -39,7 +40,11 @@ def run_method(
     model, preprocess = MethodFactory.load(method, config)
 
     if isinstance(model, BaseTorchMethod):
-        model.to(device)
+        if device is None and torch.cuda.is_available():
+            log.info("Cuda detected.")
+            model.to("cuda")
+        elif device is not None:
+            model.to(device)
 
     image = ImFile.open(str(image_path)).img
     if image_path.split(".")[-1] in ["jpg", "jpeg"]:
