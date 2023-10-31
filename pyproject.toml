@@ -8,7 +8,7 @@ version = "0.0.1"
 requires-python = ">=3.9"
 
 [project.scripts]
-photoholmes="photoholmes.utils.cli.main:cli"
+photoholmes="photoholmes.cli.main:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]

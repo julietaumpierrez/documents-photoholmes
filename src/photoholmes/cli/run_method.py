@@ -53,6 +53,7 @@ def run_method(
     else:
         x = preprocess(image=image)
 
+    print(f"Running {method.value}")
     mask = model.predict(**x)
 
     if len(mask.shape) > 2:
