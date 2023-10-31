@@ -15,7 +15,7 @@ if "research" in os.path.abspath("."):
     get_ipython().run_line_magic("autoreload", "2")
 
 # %%
-method, preprocessing = MethodFactory.create(
+method, preprocessing = MethodFactory.load(
     "catnet", config={"weights": "weights/CAT_full_v2.pth.tar"}
 )
 # %%
