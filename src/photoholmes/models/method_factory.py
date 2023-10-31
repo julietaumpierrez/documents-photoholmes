@@ -25,12 +25,13 @@ class MethodFactory:
                 return DQ.from_config(config), dq_preprocessing
             case MethodName.SPLICEBUSTER:
                 from photoholmes.models.splicebuster import (
-                    Splicebuster, splicebuster_preprocess)
+                    Splicebuster,
+                    splicebuster_preprocess,
+                )
 
                 return Splicebuster.from_config(config), splicebuster_preprocess
             case MethodName.CATNET:
-                from photoholmes.models.catnet import (CatNet,
-                                                       catnet_preprocessing)
+                from photoholmes.models.catnet import CatNet, catnet_preprocessing
 
                 return CatNet.from_config(config), catnet_preprocessing
             case _:

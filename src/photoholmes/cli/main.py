@@ -33,7 +33,7 @@ def run_method_cli(
     run_method(method, image_path, out_path, config, device, num_dct_channels)
 
 
-@app.command(name="benchmark", help="test the cli is working.")
+@app.command(name="test", help="test the cli is working.")
 def test():
     print("test")
 
