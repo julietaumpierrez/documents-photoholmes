@@ -8,20 +8,21 @@ import jpegio
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from PIL import Image
 
 IMG_FOLDER_PATH = "test_images/images/"
 
 
 def read_image(path):
-    return torch.from_numpy(cv.imread(path))
+    return torch.from_numpy(cv.cvtColor(cv.imread(path), cv.COLOR_BGR2RGB))
 
 
 def save_image(path, img, *args):
     if isinstance(img, torch.Tensor):
-        cv.imwrite(path, img.numpy(), *args)
+        # Image.open(path).convert("RGB").save(path, quality=100)
+        img_bgr = cv.cvtColor(img.numpy(), cv.COLOR_RGB2BGR)
     else:
-        cv.imwrite(path, img, *args)
+        img_bgr = cv.cvtColor(img, cv.COLOR_RGB2BGR)
+    cv.imwrite(path, img_bgr, *args)
 
 
 def plot(image, title=None, save_path=None):

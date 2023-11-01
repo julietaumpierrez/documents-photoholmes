@@ -55,7 +55,7 @@ class AbstractDataset(ABC, Dataset):
         elif "DCT" in self.item_data:
             x["DCT"] = torch.tensor(read_DCT(image_path))
 
-        if self.mask_paths[idx] is np.NaN:
+        if self.mask_paths[idx] is None:
             arbitrary_element = list(x.values())[0]
             mask = torch.zeros_like(arbitrary_element[:, :, 0])
         else:

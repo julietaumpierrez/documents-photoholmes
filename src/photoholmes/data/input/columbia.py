@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
-from torch import Tensor
+from torch import NoneType, Tensor
 from torch.utils.data import Dataset
 
 from .abstract import AbstractDataset  # type: ignore
@@ -31,7 +31,7 @@ class ColumbiaDataset(AbstractDataset):
 
     def _get_paths(
         self, img_dir, tampered_only
-    ) -> Tuple[List[str], List[float | str] | List[str]]:
+    ) -> Tuple[List[str], List[None | str] | List[str]]:
         image_filenames = glob.glob(
             os.path.join(img_dir, self.TAMP_DIR, f"*{self.IMAGE_EXTENSION}")
         )
@@ -49,7 +49,7 @@ class ColumbiaDataset(AbstractDataset):
                 for filename in pris_filenames
             ]
             pris_msk_paths = [
-                np.NaN for i in range(len(pris_paths))
+                None for i in range(len(pris_paths))
             ]  # NaN for pristine image flag
             image_paths += pris_paths
             mask_paths += pris_msk_paths
