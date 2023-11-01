@@ -1,8 +1,7 @@
 import os
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Literal, Tuple
 
-import numpy as np
 import torch
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -13,11 +12,12 @@ from photoholmes.utils.image import read_DCT, read_image
 class AbstractDataset(ABC, Dataset):
     def __init__(
         self,
-        img_dir,
-        item_data=["image"],
+        img_dir: str,
+        item_data: List[Literal["image", "DCT"]] = ["image"],
+        # TODO add typing for transforms
         transform=None,
         mask_transform=None,
-        tampered_only=False,
+        tampered_only: bool = False,
     ):
         self.img_dir = img_dir
         self.item_data = item_data
@@ -27,12 +27,14 @@ class AbstractDataset(ABC, Dataset):
         self.image_paths, self.mask_paths = self._get_paths(img_dir, tampered_only)
 
     @abstractmethod
-    def _get_paths(self, img_dir, tampered_only) -> Tuple[List[str], List[str]]:
+    def _get_paths(
+        self, img_dir: str, tampered_only: bool
+    ) -> Tuple[List[str], List[str]]:
         """Abstract method that returns image and mask paths. Should make use of tampered_only attribute."""
         pass
 
     @abstractmethod
-    def _get_mask_path(self, image_path) -> str:
+    def _get_mask_path(self, image_path: str) -> str:
         pass
 
     def __len__(self) -> int:
@@ -65,7 +67,7 @@ class AbstractDataset(ABC, Dataset):
 
         return x, mask
 
-    def _binarize_mask(self, mask_image) -> Tensor:
+    def _binarize_mask(self, mask_image: Tensor) -> Tensor:
         """Overideable method for binarizing mask images."""
         assert (mask_image <= 1).all()
         return mask_image == 1
