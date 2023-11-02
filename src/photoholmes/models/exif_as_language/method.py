@@ -1,10 +1,7 @@
 # Derived from https://github.com/hellomuffin/exif-as-language
-
-
 import random
 import sys
 from pathlib import Path
-from tabnanny import check
 from typing import Literal, Optional
 
 import cv2
@@ -17,7 +14,6 @@ from numpy.typing import NDArray
 from PIL import Image
 from sklearn.decomposition import PCA
 from torchvision.transforms import Compose, Normalize, RandomCrop, Resize, ToTensor
-from traitlets import Bool
 
 from photoholmes.models.base import BaseTorchMethod
 from photoholmes.models.exif_as_language.clip import ClipModel
@@ -117,22 +113,7 @@ def normalized_cut(res: NDArray) -> NDArray:
     return vis
 
 
-class LinearHead(torch.nn.Module):
-    """
-    Class defining Simple linear head
-    """
-
-    def __init__(self, input_dim: int, output_dim: int):
-        super().__init__()
-        self.linear = torch.nn.Linear(input_dim, output_dim)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = x.to(torch.float32)
-        x = self.linear(x)
-        return x
-
-
-class EXIF_SC(BaseTorchMethod):
+class EXIF_SC:
     def __init__(
         self,
         transformer: Literal["distilbert"],
@@ -214,23 +195,22 @@ class EXIF_SC(BaseTorchMethod):
         ), "Image must be bigger than patch size!"
 
         # Initialize image and attributes
-        img = self.init_img(img, num_per_dim=self.num_per_dim)
-        self.img = img
+        p_img = self.init_img(img, num_per_dim=self.num_per_dim)
         # Precompute features for each patch
         with torch.no_grad():
-            patch_features = self.get_patch_feats(img, batch_size=feat_batch_size)
+            patch_features = self.get_patch_feats(p_img, batch_size=feat_batch_size)
 
         # PCA visualization
         pca = PCA(n_components=3, whiten=True)
         feature_transform = pca.fit_transform(patch_features.cpu().numpy())
         pred_pca_map = self._predict_pca_map(
-            img, feature_transform, batch_size=pred_batch_size
+            p_img, feature_transform, batch_size=pred_batch_size
         ).numpy()
 
         # Predict consistency maps
         pred_maps = (
             self._predict_consistency_maps(
-                img, patch_features, batch_size=pred_batch_size
+                p_img, patch_features, batch_size=pred_batch_size
             )
             .detach()
             .numpy()
@@ -295,9 +275,9 @@ class EXIF_SC(BaseTorchMethod):
     def init_img(self, img: torch.Tensor, num_per_dim):
         # Initialize image and attributes
         img = img.to(self.device)
-        img = PatchedImage(img, self.patch_size, num_per_dim)
+        p_img = PatchedImage(img, self.patch_size, num_per_dim)
 
-        return img
+        return p_img
 
     def get_patch_consist_map(self, image, feat_batch_size, index, patch_fake):
         # Initialize image and attributes
@@ -393,8 +373,6 @@ class EXIF_SC(BaseTorchMethod):
     def _predict_pca_map(
         self, img: PatchedImage, patch_features: torch.Tensor, batch_size=64
     ):
-        if not img:
-            img = self.img
         # For each patch, how many overlapping patches?
         spread = max(1, img.patch_size // img.stride)
 
