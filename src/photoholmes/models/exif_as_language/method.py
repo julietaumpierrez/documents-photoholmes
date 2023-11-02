@@ -13,8 +13,8 @@ from PIL import Image
 from torchvision.transforms import Compose, Normalize, ToTensor
 
 from photoholmes.models.exif_as_language.clip import ClipModel
-from photoholmes.utils.exif_structures import PatchedImage
-from photoholmes.utils.PCA import PCA
+from photoholmes.utils.patched_image import PatchedImage
+from photoholmes.utils.pca.pca import PCA
 
 
 def _convert_image_to_rgb(image: Image.Image) -> Image.Image:
