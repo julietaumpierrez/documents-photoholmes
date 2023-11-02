@@ -1,7 +1,5 @@
 # Derived from https://github.com/hellomuffin/exif-as-language
 import random
-import sys
-from pathlib import Path
 from typing import Literal, Optional
 
 import cv2
@@ -13,14 +11,9 @@ import torchvision.transforms as T
 from numpy.typing import NDArray
 from PIL import Image
 from sklearn.decomposition import PCA
-from torchvision.transforms import Compose, Normalize, RandomCrop, Resize, ToTensor
+from torchvision.transforms import Compose, Normalize, ToTensor
 
-from photoholmes.models.base import BaseTorchMethod
 from photoholmes.models.exif_as_language.clip import ClipModel
-
-ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.append(str(ROOT))
-
 from photoholmes.utils.exif_structures import PatchedImage
 
 
@@ -62,13 +55,12 @@ def preprocess(
     return func(image)
 
 
-def create_logits(x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
+def cosine_similarity(x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
     # FIXME: Add docstring
     x1 = x1 / x1.norm(dim=-1, keepdim=True)
     x2 = x2 / x2.norm(dim=-1, keepdim=True)
-    # cosine similarity as logits
-    logits_per_x1 = torch.matmul(x1, x2.t())
-    return logits_per_x1
+    sim = torch.matmul(x1, x2.t())
+    return sim
 
 
 def mean_shift(points_: NDArray, heat_map: NDArray, window: int, iter: int) -> NDArray:
@@ -94,7 +86,6 @@ def mean_shift(points_: NDArray, heat_map: NDArray, window: int, iter: int) -> N
         val.append(
             kdt.count_neighbors(scipy.spatial.cKDTree(np.array([points[i]])), r=eps_5)
         )
-    mode_ind = np.argmax(val)
     ind = np.nonzero(val == np.max(val))
     return np.mean(points[ind[0]], axis=0).reshape(heat_map.shape[0], heat_map.shape[1])
 
@@ -298,7 +289,7 @@ class EXIF_SC:
     def center_patch_consistency(self, patch_features, index, patch_fake):
         center_feature = patch_features[index]
 
-        cos_sims = create_logits(center_feature, patch_features)
+        cos_sims = cosine_similarity(center_feature, patch_features)
         if patch_fake:
             cos_sims = 1 - cos_sims
         return 1 - cos_sims
@@ -417,7 +408,7 @@ class EXIF_SC:
         return responses / vote_counts
 
     def patch_similarity(self, a_feats, b_feats):
-        cos = create_logits(a_feats, b_feats).diagonal()
+        cos = cosine_similarity(a_feats, b_feats).diagonal()
         cos = 1 - cos
         cos = cos.cpu()
         return cos
