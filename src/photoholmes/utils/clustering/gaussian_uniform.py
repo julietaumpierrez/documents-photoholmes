@@ -1,6 +1,6 @@
 # Code derived from https://github.com/grip-unina/noiseprint and CODIGO MARINA
 # FIXME: add license a Marina and Co.
-from typing import Literal, Tuple, Union
+from typing import Tuple
 
 import numpy as np
 import scipy as sp
@@ -29,18 +29,22 @@ class GaussianUniformEM:
         """
         self.p_outlier_init = p_outlier_init
         self.outlier_nlogl = outlier_nlogl
-        self.pi = 1 - p_outlier_init
+        self.pi: float = 1 - p_outlier_init
         self.max_iter = max_iter
         self.tol = tol
+        assert n_init > 1, "n_init must be at least 1"
         self.n_init = n_init
 
-    def fit(self, X: NDArray) -> Tuple[NDArray, NDArray, NDArray]:
+        self.covariance_matrix: NDArray
+        self.mean: NDArray
+
+    def fit(self, X: NDArray) -> Tuple[NDArray, NDArray, float]:
         """
         Fit the model to the data.
         """
-        best_loss = np.inf
-        save = None, None, None
-        for i in range(self.n_init):
+        best_loss = self._fit_once(X)
+        save = self.mean, self.covariance_matrix, self.pi
+        for i in range(self.n_init - 1):
             loss = self._fit_once(X)
             if loss < best_loss:
                 best_loss = loss
@@ -61,7 +65,7 @@ class GaussianUniformEM:
         self.covariance_matrix = np.diag(variance)
         self.pi = 1 - self.p_outlier_init
         loss_old = np.inf
-        loss = 0
+        loss = 0.0
         for i in range(self.max_iter):
             gammas, loss, _ = self._e_step(X)
             loss_diff = loss - loss_old
@@ -76,7 +80,7 @@ class GaussianUniformEM:
         Maximization step.
         """
         n_samples, n_features = X.shape
-        self.pi = np.mean(gammas)
+        self.pi = float(np.mean(gammas))
         self.mean = gammas.dot(X) / (n_samples * self.pi)
         Xc = (X - self.mean) * np.sqrt(gammas[:, None])
         self.covariance_matrix = (Xc.T @ Xc) / (n_samples * self.pi) + np.spacing(
@@ -89,9 +93,7 @@ class GaussianUniformEM:
         """
         try:
             L = np.linalg.cholesky(self.covariance_matrix)
-        except (
-            np.linalg.LinAlgError
-        ) as Error:  # covariance_matrix is not positive definite
+        except np.linalg.LinAlgError:  # covariance_matrix is not positive definite
             for i in range(5):  # try regularizing it several times
                 w, v = sp.linalg.eigh(self.covariance_matrix)
                 w = np.maximum(w, np.spacing(w.max()))

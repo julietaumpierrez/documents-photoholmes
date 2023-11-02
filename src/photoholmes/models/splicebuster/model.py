@@ -53,6 +53,7 @@ class Splicebuster(BaseMethod):
         self.T = T
         self.pca_dim = pca_dim
 
+        self.weight_params: Optional[WeightConfig]
         if weights == "original":
             self.weight_params = WeightConfig()
         else:
@@ -212,17 +213,17 @@ class Splicebuster(BaseMethod):
             flat_features = pca.fit_transform(flat_features)
 
         if self.mixture == "gaussian":
-            mixt = GaussianMixture()
-            mus, covs = mixt.fit(flat_features)
+            gg_mixt = GaussianMixture()
+            mus, covs = gg_mixt.fit(flat_features)
             labels = mahalanobis_distance(
                 flat_features, mus[1], covs[1]
             ) / mahalanobis_distance(flat_features, mus[0], covs[0])
             labels_comp = 1 / labels
             labels = labels if labels.sum() < labels_comp.sum() else labels_comp
         elif self.mixture == "uniform":
-            mixt = GaussianUniformEM()
-            mus, covs, _ = mixt.fit(flat_features)
-            _, labels = mixt.predict(flat_features)
+            gu_mixt = GaussianUniformEM()
+            mus, covs, _ = gu_mixt.fit(flat_features)
+            _, labels = gu_mixt.predict(flat_features)
         else:
             raise ValueError(
                 (
