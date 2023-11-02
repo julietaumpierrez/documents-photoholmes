@@ -10,11 +10,11 @@ import torch
 import torchvision.transforms as T
 from numpy.typing import NDArray
 from PIL import Image
-from sklearn.decomposition import PCA
 from torchvision.transforms import Compose, Normalize, ToTensor
 
 from photoholmes.models.exif_as_language.clip import ClipModel
 from photoholmes.utils.exif_structures import PatchedImage
+from photoholmes.utils.PCA import PCA
 
 
 def _convert_image_to_rgb(image: Image.Image) -> Image.Image:
@@ -118,6 +118,7 @@ class EXIF_SC:
         isOriginal: bool = False,
         pooling: Literal["cls", "mean"] = "mean",
         state_dict_path: Optional[str] = None,
+        seed: int = 44,
     ):
         """
         Parameters
@@ -134,20 +135,19 @@ class EXIF_SC:
         ms_iter: Number of iterations for mean shift
         state_dict_paths: Path to weights
         """
-        random.seed(44)
+        random.seed(seed)
         super().__init__()
         clipNet = ClipModel(vision=visual, text=transformer, pooling=pooling)
         if state_dict_path:
             checkpoint = torch.load(state_dict_path, map_location=device)
             clipNet.load_state_dict(checkpoint)
-        model = clipNet
         self.patch_size = patch_size
         self.num_per_dim = num_per_dim
         self.device = torch.device(device)
         self.ms_window, self.ms_iter = ms_window, ms_iter
         self.isOriginal = isOriginal
         self.linear_head = linear_head
-        self.net = model
+        self.net = clipNet
         self.net.eval()
         self.net.to(device)
 
@@ -180,12 +180,9 @@ class EXIF_SC:
             score : float
                 Prediction score, higher indicates existence of manipulation
         """
-        _, height, width = img.shape
-        assert (
-            min(height, width) > self.patch_size
-        ), "Image must be bigger than patch size!"
 
         # Initialize image and attributes
+        _, height, width = img.shape
         p_img = self.init_img(img, num_per_dim=self.num_per_dim)
         # Precompute features for each patch
         with torch.no_grad():
@@ -265,6 +262,10 @@ class EXIF_SC:
 
     def init_img(self, img: torch.Tensor, num_per_dim):
         # Initialize image and attributes
+        _, height, width = img.shape
+        assert (
+            min(height, width) > self.patch_size
+        ), "Image must be bigger than patch size"
         img = img.to(self.device)
         p_img = PatchedImage(img, self.patch_size, num_per_dim)
 
@@ -362,7 +363,7 @@ class EXIF_SC:
         return responses / vote_counts
 
     def _predict_pca_map(
-        self, img: PatchedImage, patch_features: torch.Tensor, batch_size=64
+        self, img: PatchedImage, patch_features: NDArray, batch_size=64
     ):
         # For each patch, how many overlapping patches?
         spread = max(1, img.patch_size // img.stride)
