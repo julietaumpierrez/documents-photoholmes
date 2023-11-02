@@ -2,7 +2,6 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-
 [project]
 name="photoholmes"
 version = "0.0.1"
@@ -11,3 +10,21 @@ requires-python = ">=3.9"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["photoholmes"]
+
+[tool.black]
+target-version = ['py310']
+
+[tool.isort]
+profile = 'black'
+
+# ===== MYPY configuration ====== #
+[tool.mypy]
+ignore_missing_imports = true
+show_error_codes = true
+
+
+[[tool.mypy.overrides]]
+module = ["torch.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
+# =============================== #

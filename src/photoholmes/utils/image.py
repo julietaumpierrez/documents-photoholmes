@@ -1,12 +1,13 @@
 import os
 from dataclasses import dataclass
 from tempfile import NamedTemporaryFile
-from typing import Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import cv2 as cv
 import jpegio
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.typing import NDArray
 from PIL.Image import open
 
 IMG_FOLDER_PATH = "test_images/images/"
@@ -63,31 +64,52 @@ def read_mask(mask_path):
     return mask > mask.max() / 2
 
 
-def read_DCT(image_path: str) -> np.ndarray:
-    """Reads image from path and returns DCT coefficient matrix for each channel.
-    If image is in jpeg format, it decodes the DCT stream and returns it.
-    Otherwise, the image is saved into a temporary jpeg file and then the DCT stream is decoded.
+def read_jpeg_data(
+    image_path: str, num_dct_channels: Optional[int] = None
+) -> Tuple[NDArray, List[NDArray]]:
+    """Reads image from path and returns DCT coefficient matrix for each channel and the
+    quantization matrixes. If image is in jpeg format, it decodes the DCT stream and
+    returns it. Otherwise, the image is saved into a temporary jpeg file and then the
+    DCT stream is decoded.
+
+    Parameters:
+        image_path: Path to image
+        n_channels: Number of channels to read. If 1, only Y channel is read.
+    Returns:
+        dct: DCT coefficient matrix for each channel
+        qtables: Quantization matrix for each channel
     """
     extension = (image_path[-4:]).lower()
     if extension == ".jpg" or extension == ".jpeg":
-        return _DCT_from_jpeg(image_path)
+        jpeg = jpegio.read(image_path)
     else:
         temp = NamedTemporaryFile(suffix=".jpg")
         open(image_path).convert("RGB").save(temp.name, quality=100, subsampling=0)
-        return _DCT_from_jpeg(temp.name)
+        jpeg = jpegio.read(temp.name)
+        temp.close()
+
+    qtables = _qtables_from_jpeg(jpeg, num_dct_channels)
+    return _DCT_from_jpeg(jpeg, num_dct_channels), qtables
 
 
-def _DCT_from_jpeg(image_path: str) -> np.ndarray:
+def _qtables_from_jpeg(
+    jpeg: jpegio.DecompressedJpeg, num_channels: Optional[int] = None
+) -> List[NDArray]:
+    if num_channels is None:
+        num_channels = len(jpeg.quant_tables)
+    return [jpeg.quant_tables[i].copy() for i in range(num_channels)]
+
+
+def _DCT_from_jpeg(
+    jpeg: jpegio.DecompressedJpeg, num_channels: Optional[int] = None
+) -> np.ndarray:
     """
     :param im_path: JPEG image path
     :return: DCT_coef (Y,Cb,Cr)
     Code derived from https://github.com/mjkwon2021/CAT-Net.git.
     """
-    extension = (image_path[-4:]).lower()
-    assert extension == ".jpg" or extension == ".jpeg"
-
-    jpeg = jpegio.read(str(image_path))
-    num_channels = len(jpeg.coef_arrays)
+    if num_channels is None:
+        num_channels = len(jpeg.coef_arrays)
     ci = jpeg.comp_info
 
     sampling_factors = np.array(

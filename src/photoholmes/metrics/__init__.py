@@ -1,6 +1,23 @@
-from .source import metric_mapping, iou
+# metrics/__init__.py
+
+from .AUROC import AUROC
+from .FPR import FPR
+from .IoU import IoU
+from .MAP import MAP
+from .MCC import MCC
+from .metric_factory import MetricFactory
+from .Precision import Precision
+from .ROC import ROC
+from .TPR import TPR
 
 __all__ = [
-    "metric_mapping",
-    "iou"
+    "AUROC",
+    "FPR",
+    "IoU",
+    "MAP",
+    "MCC",
+    "Precision",
+    "ROC",
+    "TPR",
+    "MetricFactory",
 ]

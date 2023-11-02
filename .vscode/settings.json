@@ -12,4 +12,5 @@
         "black"
     ],
     "python.analysis.autoImportCompletions": true,
+    "editor.rulers": [88]
 }
