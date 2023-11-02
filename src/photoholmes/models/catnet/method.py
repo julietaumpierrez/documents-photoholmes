@@ -476,11 +476,11 @@ class CatNet(BaseTorchMethod):
         self.relu = nn.ReLU(inplace=True)
 
         self.stage1_cfg = arch_config.stage1
-        num_channels = self.stage1_cfg.num_channels[0]
+        num_channels = self.stage1_cfg.num_channels
         block = blocks_dict[self.stage1_cfg.block]
         num_blocks = self.stage1_cfg.num_blocks[0]
         self.layer1 = make_layer(
-            block, 64, num_channels, num_blocks, bn_momentum=self.bn_momentum
+            block, 64, num_channels[0], num_blocks, bn_momentum=self.bn_momentum
         )
         stage1_out_channel = block.expansion * num_channels
 

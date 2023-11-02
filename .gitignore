@@ -16,5 +16,7 @@ __pycache__/
 /extra/
 weights/
 
+out/
+
 #Private
 private
