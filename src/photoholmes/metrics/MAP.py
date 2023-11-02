@@ -1,4 +1,4 @@
-import torch
+from torch import Tensor
 from torchmetrics.classification import AveragePrecision
 
 from photoholmes.metrics.base import BaseMetric
@@ -14,24 +14,24 @@ class MAP(BaseMetric):
         self.ap = AveragePrecision(task="binary")
         self.permuted = permuted
 
-    def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:
+    def update(self, preds: Tensor, target: Tensor) -> None:
         """
         Update the metric values based on the current batch of mask predictions and
         targets.
 
         Args:
-            preds (torch.Tensor): Predicted masks.
-            target (torch.Tensor): Ground truth masks.
+            preds (Tensor): Predicted masks.
+            target (Tensor): Ground truth masks.
         """
         self.ap.update(preds, target)
 
-    def compute(self) -> torch.Tensor:
+    def compute(self) -> Tensor:
         """
         Compute the Mean Average Precision (MAP) or Permuted MAP based on the
         accumulated values.
 
         Returns:
-            torch.Tensor: The computed MAP or Permuted MAP value.
+            Tensor: The computed MAP or Permuted MAP value.
         """
         map_value = self.ap.compute()
 
