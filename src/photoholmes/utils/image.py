@@ -12,21 +12,29 @@ import torch
 IMG_FOLDER_PATH = "test_images/images/"
 
 
-def read_image(path):
-    return torch.from_numpy(cv.cvtColor(cv.imread(path), cv.COLOR_BGR2RGB))
+def read_image(path) -> torch.Tensor:
+    return torch.from_numpy(
+        cv.cvtColor(cv.imread(path), cv.COLOR_BGR2RGB).transpose(2, 0, 1)
+    )
 
 
-def save_image(path, img, *args):
+def save_image(path, img: torch.Tensor | np.ndarray, *args):
     if isinstance(img, torch.Tensor):
-        # Image.open(path).convert("RGB").save(path, quality=100)
-        img_bgr = cv.cvtColor(img.numpy(), cv.COLOR_RGB2BGR)
+        img_bgr = cv.cvtColor(tensor2numpy(img), cv.COLOR_RGB2BGR)
     else:
         img_bgr = cv.cvtColor(img, cv.COLOR_RGB2BGR)
     cv.imwrite(path, img_bgr, *args)
 
 
-def plot(image, title=None, save_path=None):
+def tensor2numpy(image: torch.Tensor) -> np.ndarray:
+    img = image.numpy()
+    return img.transpose(1, 2, 0) if image.ndim > 2 else img
+
+
+def plot(image: torch.Tensor | np.ndarray, title=None, save_path=None):
     """Function for easily plotting an image."""
+    if isinstance(image, torch.Tensor):
+        image = tensor2numpy(image)
     plt.figure()
     plt.imshow(image)
     if title is not None:
@@ -53,6 +61,8 @@ def plot_multiple(
     if nrows > 1:
         fig, ax = plt.subplots(nrows, ncols)
         for n, img in enumerate(images):
+            if isinstance(img, torch.Tensor):
+                img = tensor2numpy(img)
             i = n // ncols
             j = n % ncols
             ax[i, j].imshow(img)
@@ -61,6 +71,8 @@ def plot_multiple(
     else:
         fig, ax = plt.subplots(1, N)
         for n, img in enumerate(images):
+            if isinstance(img, torch.Tensor):
+                img = tensor2numpy(img)
             ax[n].imshow(img)
             ax[n].set_title(titles[n])
             ax[n].set_axis_off()
