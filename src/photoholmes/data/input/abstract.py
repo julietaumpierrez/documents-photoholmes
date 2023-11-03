@@ -28,8 +28,8 @@ class AbstractDataset(ABC, Dataset):
 
     @abstractmethod
     def _get_paths(
-        self, img_dir: str, tampered_only: bool
-    ) -> Tuple[List[str], List[str]]:
+        self, img_dir, tampered_only
+    ) -> Tuple[List[str], List[str] | List[str | None]]:
         """Abstract method that returns image and mask paths. Should make use of tampered_only attribute."""
         pass
 
@@ -40,7 +40,7 @@ class AbstractDataset(ABC, Dataset):
     def __len__(self) -> int:
         return len(self.image_paths)
 
-    def __getitem__(self, idx) -> Tuple[Dict, Tensor]:
+    def __getitem__(self, idx: int) -> Tuple[Dict, Tensor]:
         x, mask = self._get_data(idx)
         if self.transform:
             x = self.transform(**x)
@@ -48,18 +48,18 @@ class AbstractDataset(ABC, Dataset):
             mask = self.mask_transform(mask)
         return x, mask
 
-    def _get_data(self, idx) -> Tuple[Dict, Tensor]:
+    def _get_data(self, idx: int) -> Tuple[Dict, Tensor]:
         x = {}
 
         image_path = os.path.join(self.img_dir, self.image_paths[idx])
         if "image" in self.item_data:
             x["image"] = read_image(image_path)
-        elif "DCT" in self.item_data:
-            x["DCT"] = torch.tensor(read_DCT(image_path))
+        elif "dct_coefficients" in self.item_data:
+            x["dct_coefficients"] = torch.tensor(read_DCT(image_path))
 
         if self.mask_paths[idx] is None:
             arbitrary_element = list(x.values())[0]
-            mask = torch.zeros_like(arbitrary_element[:, :, 0])
+            mask = torch.zeros_like(arbitrary_element[0, :, :])
         else:
             mask_path = os.path.join(self.img_dir, self.mask_paths[idx])
             mask_im = read_image(mask_path)

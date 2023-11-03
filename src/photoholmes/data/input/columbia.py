@@ -28,8 +28,8 @@ class ColumbiaDataset(AbstractDataset):
     TAMPERED_COLOR_INDEX = 1  # Green
 
     def _get_paths(
-        self, img_dir: str, tampered_only: bool
-    ) -> Tuple[List[str], List[Optional[str]]]:
+        self, img_dir, tampered_only
+    ) -> Tuple[List[str], List[str] | List[str | None]]:
         image_filenames = glob.glob(
             os.path.join(img_dir, self.TAMP_DIR, f"*{self.IMAGE_EXTENSION}")
         )
@@ -63,4 +63,4 @@ class ColumbiaDataset(AbstractDataset):
         return os.path.join(self.MASKS_DIR, mask_filename)
 
     def _binarize_mask(self, mask_image: Tensor) -> Tensor:
-        return mask_image[:, :, self.TAMPERED_COLOR_INDEX] > 0
+        return mask_image[self.TAMPERED_COLOR_INDEX, :, :] > 0
