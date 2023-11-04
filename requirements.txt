@@ -8,4 +8,6 @@ scikit-learn
 tqdm
 scipy
 jpegio
+
+# torch requirements
 torchmetrics

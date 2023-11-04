@@ -29,7 +29,7 @@ class CatnetPreprocessing(PreprocessingTransform):
         self.T = T
 
     def __call__(
-        self, image: Tensor, dct_coefficients: Tensor, qtables: Tensor
+        self, image: Tensor, dct_coefficients: Tensor, qtables: Tensor, **kwargs
     ) -> Dict[str, Tensor]:
         h, w = image.shape[1:]
 
@@ -67,7 +67,7 @@ class CatnetPreprocessing(PreprocessingTransform):
         qtables = torch.tensor(qtables, dtype=torch.int16)
 
         x = torch.concatenate((image, t_dct_vols))
-        return {"x": x, "qtable": qtables}
+        return {"x": x[None, :], "qtable": qtables[None, :]}
 
 
 catnet_preprocessing = PreProcessingPipeline(

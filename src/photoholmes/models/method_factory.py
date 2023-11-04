@@ -3,6 +3,7 @@ from typing import Optional
 
 from photoholmes.models.catnet import CatNet, catnet_preprocessing
 from photoholmes.models.DQ import DQ, dq_preprocessing
+from photoholmes.models.naive.method import Naive
 from photoholmes.models.splicebuster import Splicebuster, splicebuster_preprocess
 
 
