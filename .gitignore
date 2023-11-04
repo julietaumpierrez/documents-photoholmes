@@ -13,6 +13,9 @@ __pycache__/
 /data/
 /datasets/
 /extra/
+weights/
+
+out/
 
 #Private
 private
