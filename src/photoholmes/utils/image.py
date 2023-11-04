@@ -7,14 +7,36 @@ import cv2 as cv
 import jpegio
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from numpy.typing import NDArray
 from PIL.Image import open
 
 IMG_FOLDER_PATH = "test_images/images/"
 
 
-def plot(image, title=None, save_path=None):
+def read_image(path) -> torch.Tensor:
+    return torch.from_numpy(
+        cv.cvtColor(cv.imread(path), cv.COLOR_BGR2RGB).transpose(2, 0, 1)
+    )
+
+
+def save_image(path, img: torch.Tensor | np.ndarray, *args):
+    if isinstance(img, torch.Tensor):
+        img_bgr = cv.cvtColor(tensor2numpy(img), cv.COLOR_RGB2BGR)
+    else:
+        img_bgr = cv.cvtColor(img, cv.COLOR_RGB2BGR)
+    cv.imwrite(path, img_bgr, *args)
+
+
+def tensor2numpy(image: torch.Tensor) -> np.ndarray:
+    img = image.numpy()
+    return img.transpose(1, 2, 0) if image.ndim > 2 else img
+
+
+def plot(image: torch.Tensor | np.ndarray, title=None, save_path=None):
     """Function for easily plotting an image."""
+    if isinstance(image, torch.Tensor):
+        image = tensor2numpy(image)
     plt.figure()
     plt.imshow(image)
     if title is not None:
@@ -27,7 +49,11 @@ def plot(image, title=None, save_path=None):
 
 
 def plot_multiple(
-    images, titles=None, ncols=4, title: Optional[str] = None, save_path=None
+    images,
+    titles=None,
+    ncols=4,
+    title: Optional[str] = None,
+    save_path=None,
 ):
     """Function for easily plotting one or multiple images"""
     N = len(images)
@@ -37,6 +63,8 @@ def plot_multiple(
     if nrows > 1:
         fig, ax = plt.subplots(nrows, ncols)
         for n, img in enumerate(images):
+            if isinstance(img, torch.Tensor):
+                img = tensor2numpy(img)
             i = n // ncols
             j = n % ncols
             ax[i, j].imshow(img)
@@ -45,6 +73,8 @@ def plot_multiple(
     else:
         fig, ax = plt.subplots(1, N)
         for n, img in enumerate(images):
+            if isinstance(img, torch.Tensor):
+                img = tensor2numpy(img)
             ax[n].imshow(img)
             ax[n].set_title(titles[n])
             ax[n].set_axis_off()
@@ -84,12 +114,19 @@ def read_jpeg_data(
         jpeg = jpegio.read(image_path)
     else:
         temp = NamedTemporaryFile(suffix=".jpg")
+<<<<<<< src/photoholmes/utils/image.py
+        img = read_image(image_path)
+        save_image(temp.name, img, [cv.IMWRITE_JPEG_QUALITY, 100])
+        # save_image(temp, img, quality=100)
+        return _DCT_from_jpeg(temp.name)
+=======
         open(image_path).convert("RGB").save(temp.name, quality=100, subsampling=0)
         jpeg = jpegio.read(temp.name)
         temp.close()
 
     qtables = _qtables_from_jpeg(jpeg, num_dct_channels)
     return _DCT_from_jpeg(jpeg, num_dct_channels), qtables
+>>>>>>> src/photoholmes/utils/image.py
 
 
 def _qtables_from_jpeg(
@@ -123,7 +160,8 @@ def _DCT_from_jpeg(
     else:
         sampling_factors[:, :] = 2
 
-    DCT_coef = np.empty((num_channels, *jpeg.coef_arrays[0].shape))
+    dct_shape = jpeg.coef_arrays[0].shape
+    DCT_coef = np.empty((num_channels, *dct_shape))
 
     for i in range(num_channels):
         r, c = jpeg.coef_arrays[i].shape
@@ -139,7 +177,7 @@ def _DCT_from_jpeg(
             block_coefs, (r_factor, c_factor)
         )
 
-        DCT_coef[i] = channel_coefficients
+        DCT_coef[i, :, :] = channel_coefficients[: dct_shape[0], : dct_shape[1]]
 
     return DCT_coef.astype(int)
 
