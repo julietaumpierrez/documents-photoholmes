@@ -13,7 +13,7 @@ from photoholmes.models.DQ.utils import (
 
 
 class DQ(BaseMethod):
-    def __init__(self, number_frecs: int = 10, alpha: float = 1.0, **kwargs) -> None:
+    def __init__(self, number_frecs: int = 8, alpha: float = 1.0, **kwargs) -> None:
         """
         Initialize the DQ class.
 

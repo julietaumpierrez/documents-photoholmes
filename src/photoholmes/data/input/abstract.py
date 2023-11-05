@@ -6,14 +6,14 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 
-from photoholmes.utils.image import read_DCT, read_image
+from photoholmes.utils.image import read_image, read_jpeg_data
 
 
 class AbstractDataset(ABC, Dataset):
     def __init__(
         self,
         img_dir: str,
-        item_data: List[Literal["image", "DCT"]] = ["image"],
+        item_data: List[Literal["image", "dct_coefficients", "qtables"]] = ["image"],
         # TODO add typing for transforms
         transform=None,
         mask_transform=None,
@@ -54,8 +54,12 @@ class AbstractDataset(ABC, Dataset):
         image_path = os.path.join(self.img_dir, self.image_paths[idx])
         if "image" in self.item_data:
             x["image"] = read_image(image_path)
-        elif "dct_coefficients" in self.item_data:
-            x["dct_coefficients"] = torch.tensor(read_DCT(image_path))
+        elif "dct_coefficients" in self.item_data or "qtables" in self.item_data:
+            dct, qtables = read_jpeg_data(image_path)
+            if "dct_coefficients" in self.item_data:
+                x["dct_coefficients"] = torch.tensor(dct)
+            if "qtables" in self.item_data:
+                x["qtables"] = torch.tensor(qtables)
 
         if self.mask_paths[idx] is None:
             arbitrary_element = list(x.values())[0]

@@ -112,21 +112,13 @@ def read_jpeg_data(
     extension = (image_path[-4:]).lower()
     if extension == ".jpg" or extension == ".jpeg":
         jpeg = jpegio.read(image_path)
+        return _DCT_from_jpeg(jpeg), _qtables_from_jpeg(jpeg)
     else:
         temp = NamedTemporaryFile(suffix=".jpg")
-<<<<<<< src/photoholmes/utils/image.py
         img = read_image(image_path)
         save_image(temp.name, img, [cv.IMWRITE_JPEG_QUALITY, 100])
-        # save_image(temp, img, quality=100)
-        return _DCT_from_jpeg(temp.name)
-=======
-        open(image_path).convert("RGB").save(temp.name, quality=100, subsampling=0)
         jpeg = jpegio.read(temp.name)
-        temp.close()
-
-    qtables = _qtables_from_jpeg(jpeg, num_dct_channels)
-    return _DCT_from_jpeg(jpeg, num_dct_channels), qtables
->>>>>>> src/photoholmes/utils/image.py
+        return _DCT_from_jpeg(jpeg), _qtables_from_jpeg(jpeg)
 
 
 def _qtables_from_jpeg(

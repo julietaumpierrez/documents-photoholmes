@@ -11,16 +11,17 @@ if "research" in os.path.abspath("."):
 # %%
 from abc import ABC, abstractmethod
 
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from photoholmes.data.input.columbia import ColumbiaDataset
+from photoholmes.data.input.reaslistic_tampering import RealisticTamperingDataset
 from photoholmes.models.splicebuster import Splicebuster
 from photoholmes.utils.image import plot_multiple
 
 # %%
-COLUMBIA_PATH = "/home/dsense/extra/tesis/datos/columbia"
-dataset = ColumbiaDataset(COLUMBIA_PATH)
+REALISTIC_TAMPERING_PATH = "/home/dsense/extra/tesis/datos/realistic_tampering"
+dataset = RealisticTamperingDataset(REALISTIC_TAMPERING_PATH)
 
 ims = []
 mks = []
@@ -35,14 +36,14 @@ plot_multiple(mks, title="Máscaras Columbia")
 
 # %%
 COLUMBIA_PATH = "/home/dsense/extra/tesis/datos/columbia"
-dataset_jpeg = ColumbiaDataset(COLUMBIA_PATH, item_data=["dct_coefficients"])
+dataset_jpeg = ColumbiaDataset(COLUMBIA_PATH, item_data=["DCT"])
 
 ims = []
 mks = []
 
 x, mk = dataset_jpeg[0]
 print("Stream DCT de primera imagen, canal 0:")
-print(x["dct_coefficients"][0])
+print(x["DCT"][0])
 
 # %%
 loader = torch.utils.data.DataLoader(

@@ -34,7 +34,7 @@ class MethodFactory:
         """Instantiates method corresponding to the name passed, from config"""
         method_type = string_to_type(method_name)
         if method_type == MethodType.NAIVE:
-            return Naive.from_config(config)
+            return Naive.from_config(config), None
         elif method_type == MethodType.DQ:
             return DQ.from_config(config), dq_preprocessing
         elif method_type == MethodType.SPLICEBUSTER:
