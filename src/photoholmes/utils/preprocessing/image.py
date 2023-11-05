@@ -1,8 +1,9 @@
-from typing import Dict, TypeVar
+from typing import Dict, TypeVar, Union
 
 import numpy as np
 import torch
 from numpy.typing import NDArray
+from PIL.Image import Image
 from torch import Tensor
 
 from photoholmes.utils.preprocessing.base import PreprocessingTransform
@@ -54,6 +55,26 @@ class ToTensor(PreprocessingTransform):
             if isinstance(kwargs[k], list):
                 kwargs[k] = np.array(kwargs[k])
             kwargs[k] = torch.from_numpy(kwargs[k])
+
+        return {"image": t_image, **kwargs}
+
+
+class ToNumpy(PreprocessingTransform):
+    def __call__(self, image: Union[T, Image], **kwargs) -> Dict[str, NDArray]:
+        if isinstance(image, Tensor):
+            t_image = image.cpu().numpy()
+        elif isinstance(image, np.ndarray):
+            t_image = image.copy()
+        else:
+            t_image = np.array(image)
+
+        for k, v in kwargs.items():
+            if isinstance(v, np.ndarray):
+                continue
+            elif isinstance(v, Tensor):
+                kwargs[k] = v.cpu().numpy()
+            else:
+                kwargs[k] = np.array(v)
 
         return {"image": t_image, **kwargs}
 

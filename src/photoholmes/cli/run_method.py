@@ -3,9 +3,7 @@ import os
 from typing import Optional
 
 import torch
-import typer
 from matplotlib import pyplot as plt
-from typing_extensions import Annotated
 
 from photoholmes.models.base import BaseTorchMethod
 from photoholmes.models.method_factory import MethodFactory, MethodName
@@ -15,18 +13,10 @@ log = logging.getLogger("cli.run_method")
 
 
 def run_method(
-    method: Annotated[
-        MethodName,
-        typer.Argument(help="Method to run the image through.", case_sensitive=False),
-    ],
+    method: MethodName,
     image_path: str,
     out_path: Optional[str] = None,
-    config: Annotated[
-        Optional[str],
-        typer.Option(
-            help="Path to '.yaml' config file. If None, default configs will be used.",
-        ),
-    ] = None,
+    config: Optional[str] = None,
     device: Optional[str] = None,
     num_dct_channels: Optional[int] = 1,
 ):
@@ -47,11 +37,8 @@ def run_method(
             model.to(device)
 
     image = ImFile.open(str(image_path)).img
-    if image_path.split(".")[-1] in ["jpg", "jpeg"]:
-        dct_channels, qtables = read_jpeg_data(image_path, num_dct_channels)
-        x = preprocess(image=image, dct_coefficients=dct_channels, qtables=qtables)
-    else:
-        x = preprocess(image=image)
+    dct_channels, qtables = read_jpeg_data(image_path, num_dct_channels)
+    x = preprocess(image=image, dct_coefficients=dct_channels, qtables=qtables)
 
     print(f"Running {method.value}")
     mask = model.predict(**x)
