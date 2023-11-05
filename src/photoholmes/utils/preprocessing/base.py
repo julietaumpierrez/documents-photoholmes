@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Dict
 
 
 class PreprocessingTransform(ABC):
     @abstractmethod
-    def __call__(self, **kwargs) -> Any:
+    def __call__(self, *args, **kwargs) -> Dict[str, Any]:
         pass

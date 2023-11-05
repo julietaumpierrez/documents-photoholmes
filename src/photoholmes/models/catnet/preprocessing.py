@@ -29,7 +29,7 @@ class CatnetPreprocessing(PreprocessingTransform):
         self.T = T
 
     def __call__(
-        self, image: Tensor, dct_coefficients: Tensor, qtables: Tensor
+        self, image: Tensor, dct_coefficients: Tensor, qtables: Tensor, **kwargs
     ) -> Dict[str, Tensor]:
         h, w = image.shape[1:]
 

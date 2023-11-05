@@ -13,3 +13,21 @@ photoholmes="photoholmes.cli.main:cli"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["photoholmes"]
+
+[tool.black]
+target-version = ['py38']
+
+[tool.isort]
+profile = 'black'
+
+# ===== MYPY configuration ====== #
+[tool.mypy]
+ignore_missing_imports = true
+show_error_codes = true
+
+
+[[tool.mypy.overrides]]
+module = ["torch.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
+# =============================== #

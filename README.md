@@ -17,5 +17,15 @@ pip intsall -r requirements-dev.txt
 pip install -e .
 ```
 
-TODO: add the requirements.txt to the setup so we can skip the first pip install.
+### Pre-commit hooks install
+
+Pre-commit runs check before a commit to ensure the code quality is being preserved. To 
+install the git hooks, run:
+```bash
+pre-commit install
+```
+
+
+### TODO
+[ ] add the requirements.txt to the setup so we can skip the first pip install.
 

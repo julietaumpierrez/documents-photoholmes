@@ -14,7 +14,7 @@ from __future__ import absolute_import, division, print_function
 import logging
 import os
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Tuple, Type, Union
 
 import torch
 import torch.nn as nn
@@ -25,6 +25,7 @@ from photoholmes.models.base import BaseTorchMethod
 from photoholmes.models.catnet.config import (
     CatnetArchConfig,
     CatnetConfig,
+    StageConfig,
     pretrained_arch,
 )
 from photoholmes.utils.generic import load_yaml
@@ -132,19 +133,17 @@ class Bottleneck(nn.Module):
 class HighResolutionModule(nn.Module):
     def __init__(
         self,
-        num_branches,
-        blocks: Union[BasicBlock, Bottleneck],
-        num_blocks,
-        num_inchannels,
-        num_channels,
-        fuse_method,
+        num_branches: int,
+        blocks: Union[Type[BasicBlock], Type[Bottleneck]],
+        num_blocks: List[int],
+        num_inchannels: List[int],
+        num_channels: List[int],
+        fuse_method: Optional[Literal["SUM", "CAT"]],
         bn_momentum: float = 0.01,
         multi_scale_output=True,
     ):
         super(HighResolutionModule, self).__init__()
-        self._check_branches(
-            num_branches, blocks, num_blocks, num_inchannels, num_channels
-        )
+        self._check_branches(num_branches, num_blocks, num_inchannels, num_channels)
 
         self.num_inchannels = num_inchannels
         self.fuse_method = fuse_method
@@ -156,12 +155,10 @@ class HighResolutionModule(nn.Module):
         self.branches = self._make_branches(
             num_branches, blocks, num_blocks, num_channels
         )
-        self.fuse_layers = self._make_fuse_layers()
+        self.fuse_layers: nn.ModuleList = self._make_fuse_layers()
         self.relu = nn.ReLU(inplace=True)
 
-    def _check_branches(
-        self, num_branches, blocks, num_blocks, num_inchannels, num_channels
-    ):
+    def _check_branches(self, num_branches, num_blocks, num_inchannels, num_channels):
         if num_branches != len(num_blocks):
             error_msg = "NUM_BRANCHES({}) <> NUM_BLOCKS({})".format(
                 num_branches, len(num_blocks)
@@ -215,7 +212,7 @@ class HighResolutionModule(nn.Module):
             )
         )
         self.num_inchannels[branch_index] = num_channels[branch_index] * block.expansion
-        for i in range(1, num_blocks[branch_index]):
+        for _i in range(1, num_blocks[branch_index]):
             layers.append(
                 block(
                     self.num_inchannels[branch_index],
@@ -236,7 +233,7 @@ class HighResolutionModule(nn.Module):
 
     def _make_fuse_layers(self):
         if self.num_branches == 1:
-            return []
+            return nn.ModuleList()
 
         num_branches = self.num_branches
         num_inchannels = self.num_inchannels
@@ -317,7 +314,7 @@ class HighResolutionModule(nn.Module):
 
         x_fuse = []
         for i in range(len(self.fuse_layers)):
-            y = x[0] if i == 0 else self.fuse_layers[i][0](x[0])
+            y = x[0] if i == 0 else self.fuse_layers[i][0](x[0])  # type: ignore
             for j in range(1, self.num_branches):
                 if i == j:
                     y = y + x[j]
@@ -325,18 +322,21 @@ class HighResolutionModule(nn.Module):
                     width_output = x[i].shape[-1]
                     height_output = x[i].shape[-2]
                     y = y + F.interpolate(
-                        self.fuse_layers[i][j](x[j]),
+                        self.fuse_layers[i][j](x[j]),  # type: ignore
                         size=[height_output, width_output],
                         mode="bilinear",
                     )
                 else:
-                    y = y + self.fuse_layers[i][j](x[j])
+                    y = y + self.fuse_layers[i][j](x[j])  # type: ignore
             x_fuse.append(self.relu(y))
 
         return x_fuse
 
 
-blocks_dict = {"BASIC": BasicBlock, "BOTTLENECK": Bottleneck}
+blocks_dict: Dict[str, Union[Type[BasicBlock], Type[Bottleneck]]] = {
+    "BASIC": BasicBlock,
+    "BOTTLENECK": Bottleneck,
+}
 
 
 def make_transition_layer(num_channels_pre_layer, num_channels_cur_layer, bn_momentum):
@@ -384,7 +384,14 @@ def make_transition_layer(num_channels_pre_layer, num_channels_cur_layer, bn_mom
     return nn.ModuleList(transition_layers)
 
 
-def make_layer(block, inplanes, planes, blocks, bn_momentum, stride=1):
+def make_layer(
+    block: Union[Type[BasicBlock], Type[Bottleneck]],
+    inplanes: int,
+    planes: int,
+    blocks: int,
+    bn_momentum: float,
+    stride: int = 1,
+) -> nn.Module:
     downsample = None
     if stride != 1 or inplanes != planes * block.expansion:
         downsample = nn.Sequential(
@@ -409,13 +416,18 @@ def make_layer(block, inplanes, planes, blocks, bn_momentum, stride=1):
         )
     )
     inplanes = planes * block.expansion
-    for i in range(1, blocks):
+    for _i in range(1, blocks):
         layers.append(block(inplanes, planes, bn_momentum=bn_momentum))
 
     return nn.Sequential(*layers)
 
 
-def make_stage(layer_config, num_inchannels, bn_momentum, multi_scale_output=True):
+def make_stage(
+    layer_config: StageConfig,
+    num_inchannels: List[int],
+    bn_momentum: float,
+    multi_scale_output: bool = True,
+) -> Tuple[nn.Module, List[int]]:
     num_modules = layer_config.num_modules
     num_branches = layer_config.num_branches
     num_blocks = layer_config.num_blocks
@@ -476,13 +488,13 @@ class CatNet(BaseTorchMethod):
         self.relu = nn.ReLU(inplace=True)
 
         self.stage1_cfg = arch_config.stage1
-        num_channels = self.stage1_cfg.num_channels[0]
+        num_channels = self.stage1_cfg.num_channels
         block = blocks_dict[self.stage1_cfg.block]
         num_blocks = self.stage1_cfg.num_blocks[0]
         self.layer1 = make_layer(
-            block, 64, num_channels, num_blocks, bn_momentum=self.bn_momentum
+            block, 64, num_channels[0], num_blocks, bn_momentum=self.bn_momentum
         )
-        stage1_out_channel = block.expansion * num_channels
+        stage1_out_channel = block.expansion * num_channels[0]
 
         self.stage2_cfg = arch_config.stage2
         num_channels = self.stage2_cfg.num_channels

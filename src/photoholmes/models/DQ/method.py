@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -11,7 +13,7 @@ from photoholmes.models.DQ.utils import (
 
 
 class DQ(BaseMethod):
-    def __init__(self, number_frecs: int = 10, alpha: float = 1.0, **kwargs) -> None:
+    def __init__(self, number_frecs: int = 8, alpha: float = 1.0, **kwargs) -> None:
         """
         Initialize the DQ class.
 
@@ -39,7 +41,7 @@ class DQ(BaseMethod):
         BPPM_upsampled = upsample_heatmap(BPPM_norm, (M, N))
         return BPPM_upsampled
 
-    def _detect_period(self, histogram: np.ndarray) -> int:
+    def _detect_period(self, histogram: NDArray) -> int:
         """
         Detect the period of the histogram.
 
@@ -52,8 +54,8 @@ class DQ(BaseMethod):
         return p
 
     def _calculate_Pu(
-        self, coefficients_f: np.ndarray, histogram: np.ndarray, period: int
-    ) -> np.ndarray:
+        self, coefficients_f: NDArray, histogram: NDArray, period: int
+    ) -> NDArray:
         """
         Calculate Pu values for a given frequency.
 
@@ -76,7 +78,7 @@ class DQ(BaseMethod):
 
         return Pu_f
 
-    def _calculate_BPPM_f(self, DCT_coefficients_f: np.ndarray) -> np.ndarray:
+    def _calculate_BPPM_f(self, DCT_coefficients_f: NDArray) -> NDArray:
         """
         Calculate BPPM values for given DCT coefficients for a given frequency..
 
@@ -103,8 +105,8 @@ class DQ(BaseMethod):
         return np.zeros_like(DCT_coefficients_f)
 
     def _calculate_BPPM_channel(
-        self, DCT_coefs: np.ndarray, fs: np.ndarray
-    ) -> np.ndarray:
+        self, DCT_coefs: NDArray, fs: List[Tuple[int, int]]
+    ) -> NDArray:
         """
         Calculate BPPM values for a given channel.
 

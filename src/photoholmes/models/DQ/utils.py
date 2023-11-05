@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 from scipy.signal import find_peaks
 
 
-def histogram_period(dct_histogram: np.ndarray, alpha: float = 1) -> int:
+def histogram_period(dct_histogram: NDArray, alpha: float = 1) -> int:
     """
     Calculate the period of a DCT histogram using a histogram-based method.
 
@@ -27,7 +28,7 @@ def histogram_period(dct_histogram: np.ndarray, alpha: float = 1) -> int:
     return period
 
 
-def fft_period(dct_histogram: np.ndarray) -> int:
+def fft_period(dct_histogram: NDArray) -> int:
     """
     Calculate the period of a DCT histogram using FFT.
 
@@ -50,7 +51,7 @@ def fft_period(dct_histogram: np.ndarray) -> int:
     return period
 
 
-def upsample_heatmap(heatmap: np.ndarray, image_shape: tuple) -> np.ndarray:
+def upsample_heatmap(heatmap: NDArray, image_shape: tuple) -> NDArray:
     """
     Upsample a heatmap to match the given image shape.
 
