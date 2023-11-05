@@ -10,7 +10,8 @@ from photoholmes.utils.preprocessing.pipeline import PreProcessingPipeline
 
 class DQInput(PreprocessingTransform):
     def __call__(self, dct_coefficients: Tensor, **kwargs) -> Dict[str, NDArray]:
-        return {"dct_coefficients": tensor2numpy(dct_coefficients)}
+        np_dct = tensor2numpy(dct_coefficients)
+        return {"dct_coefficients": np_dct.transpose(2, 0, 1)}
 
 
 dq_preprocessing = PreProcessingPipeline(transforms=[DQInput()])

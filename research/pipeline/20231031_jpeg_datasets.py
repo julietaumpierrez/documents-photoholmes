@@ -52,6 +52,8 @@ dq_dataset = ColumbiaDataset(
     COLUMBIA_PATH, transform=pre, item_data=["dct_coefficients", "qtables"]
 )
 x, mk = dq_dataset[0]
+print("Stream DCT de primera imagen, canal 0:")
+print(x["dct_coefficients"][0])
 print("DCT\n:", x["dct_coefficients"].shape)
 im, _ = dataset[0]
 hm = method.predict(**x)
