@@ -60,6 +60,20 @@ class ToTensor(PreprocessingTransform):
 
 
 class ToNumpy(PreprocessingTransform):
+    """
+    Converts inputs to numpy arrays. If input is already a numpy array,
+    it leaves it as is.
+
+    Args:
+        image: Image to be converted to a tensor.
+        **kwargs: Additional keyword arguments to passthrough.
+
+    Returns:
+        A dictionary with the following key-value pairs:
+            - "image": The input image as a PyTorch tensor.
+            - **kwargs: The additional keyword arguments passed through unchanged.
+    """
+
     def __call__(self, image: Union[T, Image], **kwargs) -> Dict[str, NDArray]:
         if isinstance(image, Tensor):
             t_image = image.cpu().numpy()
