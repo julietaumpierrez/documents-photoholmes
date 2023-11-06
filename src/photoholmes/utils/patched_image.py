@@ -177,7 +177,7 @@ class PatchedImage:
             count += 1
 
     def pred_idxs_gen(self, batch_size=32):
-        """Generator for all prediction map indices
+        """Generator for all prediction map indices.
 
         Parameters
         ----------
@@ -205,8 +205,8 @@ class PatchedImage:
             yield idxs[count * batch_size : (count + 1) * batch_size]
             count += 1
 
-    def pca_idxs_gen(self, batch_size=32):
-        """Generator for all prediction map indices
+    def idxs_gen(self, batch_size=32):
+        """Generator for indices of the image_patches.
 
         Parameters
         ----------

@@ -112,10 +112,8 @@ class EXIF_SC:
         patch_size: int = 128,
         num_per_dim: int = 30,
         device: str = "cuda:0",
-        linear_head=None,
         ms_window: int = 10,
         ms_iter: int = 5,
-        isOriginal: bool = False,
         pooling: Literal["cls", "mean"] = "mean",
         state_dict_path: Optional[str] = None,
         seed: int = 44,
@@ -141,13 +139,13 @@ class EXIF_SC:
         if state_dict_path:
             checkpoint = torch.load(state_dict_path, map_location=device)
             clipNet.load_state_dict(checkpoint)
+
         self.patch_size = patch_size
         self.num_per_dim = num_per_dim
         self.device = torch.device(device)
         self.ms_window, self.ms_iter = ms_window, ms_iter
-        self.isOriginal = isOriginal
-        self.linear_head = linear_head
         self.net = clipNet
+
         self.net.eval()
         self.net.to(device)
 
@@ -156,7 +154,6 @@ class EXIF_SC:
         img: torch.Tensor,
         feat_batch_size=32,
         pred_batch_size=1024,
-        blue_high=True,
     ):
         """
         Parameters
@@ -260,7 +257,7 @@ class EXIF_SC:
             "affinity_matrix": self.generate_afinity_matrix(patch_features),
         }
 
-    def init_img(self, img: torch.Tensor, num_per_dim):
+    def init_img(self, img: torch.Tensor, num_per_dim: Optional[int]):
         # Initialize image and attributes
         _, height, width = img.shape
         assert (
@@ -379,7 +376,7 @@ class EXIF_SC:
         )
 
         # Perform prediction
-        for idxs in img.pca_idxs_gen(batch_size=batch_size):
+        for idxs in img.idxs_gen(batch_size=batch_size):
             # a to be compared to b
             patch_a_idxs = idxs[:, :2]  # [B, 2]
 
@@ -405,8 +402,7 @@ class EXIF_SC:
                     :,
                 ] += 1
 
-        # Normalize predictions
-        return responses / vote_counts
+        # Normalize predictions return responses / vote_counts
 
     def patch_similarity(self, a_feats, b_feats):
         cos = cosine_similarity(a_feats, b_feats).diagonal()
