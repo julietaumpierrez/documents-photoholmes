@@ -1,3 +1,6 @@
+# testing
+pytest
+
 pre-commit
 # formatters
 black

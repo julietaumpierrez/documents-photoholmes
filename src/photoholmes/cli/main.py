@@ -27,10 +27,13 @@ def run_method_cli(
     ] = None,
     device: Optional[str] = None,
     num_dct_channels: Optional[int] = 1,
+    all_qtables: bool = False,
 ):
     from .run_method import run_method
 
-    run_method(method, image_path, out_path, config, device, num_dct_channels)
+    run_method(
+        method, image_path, out_path, config, device, num_dct_channels, all_qtables
+    )
 
 
 @app.command(name="health", help="test the cli is working.")

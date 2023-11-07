@@ -19,6 +19,7 @@ def run_method(
     config: Optional[str] = None,
     device: Optional[str] = None,
     num_dct_channels: Optional[int] = 1,
+    all_qtables: bool = False,
 ):
     if config is None:
         log.warning(
@@ -37,7 +38,7 @@ def run_method(
             model.to(device)
 
     image = ImFile.open(str(image_path)).img
-    dct_channels, qtables = read_jpeg_data(image_path, num_dct_channels)
+    dct_channels, qtables = read_jpeg_data(image_path, num_dct_channels, all_qtables)
     x = preprocess(image=image, dct_coefficients=dct_channels, qtables=qtables)
 
     print(f"Running {method.value}")
