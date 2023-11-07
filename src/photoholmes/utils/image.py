@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from numpy.typing import NDArray
-from PIL.Image import open
 
 IMG_FOLDER_PATH = "test_images/images/"
 
@@ -112,13 +111,14 @@ def read_jpeg_data(
     extension = (image_path[-4:]).lower()
     if extension == ".jpg" or extension == ".jpeg":
         jpeg = jpegio.read(image_path)
-        return _DCT_from_jpeg(jpeg), _qtables_from_jpeg(jpeg)
     else:
         temp = NamedTemporaryFile(suffix=".jpg")
         img = read_image(image_path)
         save_image(temp.name, img, [cv.IMWRITE_JPEG_QUALITY, 100])
         jpeg = jpegio.read(temp.name)
-        return _DCT_from_jpeg(jpeg), _qtables_from_jpeg(jpeg)
+    return _DCT_from_jpeg(jpeg, num_channels=num_dct_channels), _qtables_from_jpeg(
+        jpeg, num_channels=num_dct_channels
+    )
 
 
 def _qtables_from_jpeg(
