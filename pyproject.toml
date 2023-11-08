@@ -7,12 +7,12 @@ name="photoholmes"
 version = "0.0.1"
 requires-python = ">=3.9"
 
-[project.scripts]
-photoholmes="photoholmes.cli.main:cli"
-
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["photoholmes"]
+include = ["photoholmes*"]
+
+[project.scripts]
+photoholmes="photoholmes.cli.main:cli"
 
 [tool.black]
 target-version = ['py310']
