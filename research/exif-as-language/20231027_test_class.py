@@ -10,7 +10,7 @@ from photoholmes.models.exif_as_language.method import EXIF_SC
 
 # %%
 image = Image.open(
-    "/Users/julietaumpierrez/Downloads/Columbia Uncompressed Image Splicing Detection/4cam_splc/canong3_canonxt_sub_01.tif"
+    "/Users/julietaumpierrez/Downloads/Columbia Uncompressed Image Splicing Detection/4cam_auth/canonxt_35_sub_03.tif"
 )  # .convert("L")
 np_image = np.array(image)
 plt.imshow(np_image, cmap="gray")

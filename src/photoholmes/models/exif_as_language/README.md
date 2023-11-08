@@ -16,6 +16,8 @@ The result of this training scheme are two encoder, one image and text, that wor
 
 ## Usage
 
+In order to use the method as it is included in this library you need to run the clean_weights_exif.py in the original weights in order to clean the unused weights. # FIXME
+
 Add later usage of method 
 
 ## Results on benchmarking dataset
