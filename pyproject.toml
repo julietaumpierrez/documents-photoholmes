@@ -15,7 +15,7 @@ where = ["src"]
 include = ["photoholmes"]
 
 [tool.black]
-target-version = ['py38']
+target-version = ['py310']
 
 [tool.isort]
 profile = 'black'

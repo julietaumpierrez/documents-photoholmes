@@ -1,7 +1,8 @@
 image: python:3.10.13
 
 variables:
-  PRE_COMMIT_HOME: ${CI_PROJECT_DIR}/.cache/pre-commit
+  PRE_COMMIT_HOME: $CI_PROJECT_DIR/.cache/pre-commit
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 stages:
   - lint
@@ -11,7 +12,7 @@ cache:
   paths:
     - .cache/pip
     - venv/
-    - ${PRE_COMMIT_HOME}
+    - $PRE_COMMIT_HOME
 
 before_script:
   - python --version ; pip --version # For debugging
