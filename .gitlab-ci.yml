@@ -4,6 +4,10 @@ variables:
   PRE_COMMIT_HOME: $CI_PROJECT_DIR/.cache/pre-commit
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+
 stages:
   - lint
   - test
