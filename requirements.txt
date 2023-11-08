@@ -9,5 +9,3 @@ scipy
 jpegio
 typer
 
-# torch requirements
-torchmetrics

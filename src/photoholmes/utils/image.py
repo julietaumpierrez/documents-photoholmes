@@ -119,6 +119,7 @@ def read_jpeg_data(
         img = read_image(image_path)
         save_image(temp.name, img, [cv.IMWRITE_JPEG_QUALITY, 100])
         jpeg = jpegio.read(temp.name)
+
     return _DCT_from_jpeg(jpeg, num_channels=num_dct_channels), _qtables_from_jpeg(
         jpeg, all=all_quant_tables
     )
