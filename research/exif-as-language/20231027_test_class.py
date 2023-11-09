@@ -14,7 +14,7 @@ if "research" in os.path.abspath("."):
     get_ipython().run_line_magic("autoreload", "2")
 # %%
 image = Image.open(
-    "data/COLUMBIA/4cam_splc/canong3_canonxt_sub_01.tif"
+    "/Users/julietaumpierrez/Downloads/Columbia Uncompressed Image Splicing Detection/4cam_auth/canonxt_35_sub_03.tif"
 )  # .convert("L")
 # image = Image.open("data/img00.png")  # .convert("L")
 np_image = np.array(image)
