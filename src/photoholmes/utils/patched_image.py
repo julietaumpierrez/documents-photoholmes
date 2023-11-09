@@ -1,17 +1,28 @@
 from math import floor
+from typing import Optional
 
 import numpy as np
 import torch
+from numpy.typing import NDArray
 
 
 class PatchedImage:
     def __init__(
         self,
         data: torch.Tensor,
-        patch_size=224,
-        num_per_dim=None,
+        patch_size: int = 224,
+        num_per_dim: Optional[int] = None,
     ):
-        """Representation of an image that is sliced into patches"""
+        """Representation of an image that is sliced into patches
+
+        Parameters
+        ----------
+        data: torch.Tensor
+            - [C, H, W]
+        patch_size: int
+        num_per_dim: int | None
+            - if None, takes the value of patch size
+        """
         self.data = data.float()
 
         # Initialize image attributes
@@ -21,7 +32,7 @@ class PatchedImage:
         _, height, width = data.shape
 
         # Compute patch stride on image
-        if num_per_dim:
+        if num_per_dim is not None:
             self.stride = (max(height, width) - self.patch_size) // num_per_dim
         else:
             self.stride = patch_size
@@ -30,7 +41,7 @@ class PatchedImage:
         self.max_h_idx = 1 + floor((height - self.patch_size) / self.stride)
         self.max_w_idx = 1 + floor((width - self.patch_size) / self.stride)
 
-    def get_patch(self, h_idx: int, w_idx: int):
+    def get_patch(self, h_idx: int, w_idx: int) -> torch.Tensor:
         """Get a patch from the image
 
         Parameters
@@ -41,7 +52,7 @@ class PatchedImage:
         Returns
         -------
         torch.Tensor
-            [_, patch_size, patch_size]
+            [C, patch_size, patch_size]
         """
         h_coord = h_idx * self.stride
         w_coord = w_idx * self.stride
@@ -50,8 +61,9 @@ class PatchedImage:
             :, h_coord : h_coord + self.patch_size, w_coord : w_coord + self.patch_size
         ]
 
-    def get_patch_map(self, h_idx: int, w_idx: int):
-        """
+    def get_patch_map(self, h_idx: int, w_idx: int) -> torch.Tensor:
+        """Get a binary mask for the patch.
+
         Parameters
         ----------
         h_idx : int
@@ -74,7 +86,7 @@ class PatchedImage:
 
         return binary_map
 
-    def get_patches(self, idxs: torch.Tensor):
+    def get_patches(self, idxs: NDArray) -> torch.Tensor:
         """Get patches from image given its indices
 
         Parameters
@@ -105,7 +117,7 @@ class PatchedImage:
 
         return patches
 
-    def get_patch_maps(self, idxs: torch.Tensor):
+    def get_patch_maps(self, idxs: NDArray) -> torch.Tensor:
         n_patches = idxs.shape[0]
         _, height, width = self.shape
 
@@ -113,7 +125,6 @@ class PatchedImage:
 
         for i, idx in enumerate(idxs):
             h_idx, w_idx = idx
-
             maps[i] = self.get_patch_map(h_idx, w_idx)
 
         return maps
@@ -134,17 +145,13 @@ class PatchedImage:
         count = 0
 
         # Initialize indices / coords of all patches, [n_patches, 2]
-        h_idxs = torch.arange(self.max_h_idx)
-        w_idxs = torch.arange(self.max_w_idx)
-        idxs = torch.stack(torch.meshgrid([h_idxs, w_idxs])).view(2, -1).T
+        h_idxs = np.arange(self.max_h_idx)
+        w_idxs = np.arange(self.max_w_idx)
+        idxs = np.stack(np.meshgrid(h_idxs, w_idxs)).transpose(0, 2, 1).reshape(2, -1).T
 
         n_patches = len(idxs)
 
-        while True:
-            # Break when run out of patches
-            if count * batch_size >= n_patches:
-                break
-
+        while count * batch_size < n_patches:
             # Yield a batch of patches
             patches = self.get_patches(
                 idxs[count * batch_size : (count + 1) * batch_size]
@@ -156,18 +163,13 @@ class PatchedImage:
         count = 0
 
         # Initialize indices / coords of all patches, [n_patches, 2]
-        h_idxs = torch.arange(self.max_h_idx)
-        w_idxs = torch.arange(self.max_w_idx)
-        idxs = torch.stack(torch.meshgrid([h_idxs, w_idxs])).view(2, -1).T
+        h_idxs = np.arange(self.max_h_idx)
+        w_idxs = np.arange(self.max_w_idx)
+        idxs = np.stack(np.meshgrid(h_idxs, w_idxs)).transpose(0, 2, 1).reshape(2, -1).T
 
         n_patches = len(idxs)
 
-        while True:
-            # Break when run out of patches
-            if count * batch_size >= n_patches:
-                break
-
-            # Yield a batch of patches
+        while count * batch_size < n_patches:
             patches = self.get_patch_maps(
                 idxs[count * batch_size : (count + 1) * batch_size]
             )
@@ -175,7 +177,7 @@ class PatchedImage:
             count += 1
 
     def pred_idxs_gen(self, batch_size=32):
-        """Generator for all prediction map indices
+        """Generator for all prediction map indices.
 
         Parameters
         ----------
@@ -187,17 +189,6 @@ class PatchedImage:
         torch.Tensor
             [batch_size, 4]
         """
-        # h_idxs = torch.arange(self.max_h_idx)
-        # w_idxs = torch.arange(self.max_w_idx)
-
-        # # All possible pairs of patches, [n_idxs, 4]
-        # # n_idxs: max_h_ind ^ 2 * max_w_ind ^ 2
-        # idxs = (
-        #     torch.stack(torch.meshgrid([h_idxs, w_idxs, h_idxs, w_idxs])).view(4, -1).T
-        # )
-
-        # # All possible pairs of patches, [n_idxs, 4]
-        # # n_idxs: max_h_ind ^ 2 * max_w_ind ^ 2
         idxs = (
             np.mgrid[
                 0 : self.max_h_idx,
@@ -210,15 +201,12 @@ class PatchedImage:
         )
 
         count = 0
-        while True:
-            if count * batch_size >= len(idxs):
-                break
-
+        while count * batch_size < len(idxs):
             yield idxs[count * batch_size : (count + 1) * batch_size]
             count += 1
 
-    def pca_idxs_gen(self, batch_size=32):
-        """Generator for all prediction map indices
+    def idxs_gen(self, batch_size=32):
+        """Generator for indices of the image_patches.
 
         Parameters
         ----------
@@ -230,17 +218,6 @@ class PatchedImage:
         torch.Tensor
             [batch_size, 4]
         """
-        # h_idxs = torch.arange(self.max_h_idx)
-        # w_idxs = torch.arange(self.max_w_idx)
-
-        # # All possible pairs of patches, [n_idxs, 4]
-        # # n_idxs: max_h_ind ^ 2 * max_w_ind ^ 2
-        # idxs = (
-        #     torch.stack(torch.meshgrid([h_idxs, w_idxs, h_idxs, w_idxs])).view(4, -1).T
-        # )
-
-        # # All possible pairs of patches, [n_idxs, 4]
-        # # n_idxs: max_h_ind ^ 2 * max_w_ind ^ 2
         idxs = (
             np.mgrid[
                 0 : self.max_h_idx,
@@ -251,9 +228,6 @@ class PatchedImage:
         )
 
         count = 0
-        while True:
-            if count * batch_size >= len(idxs):
-                break
-
+        while count * batch_size < len(idxs):
             yield idxs[count * batch_size : (count + 1) * batch_size]
             count += 1

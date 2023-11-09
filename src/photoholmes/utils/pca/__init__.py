@@ -1,1 +1,3 @@
-from photoholmes.utils.PCA.pca import PCA
+from photoholmes.utils.pca.pca import PCA
+
+__all__ = ["PCA"]
