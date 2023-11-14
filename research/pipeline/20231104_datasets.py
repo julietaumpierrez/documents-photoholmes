@@ -16,16 +16,19 @@ import torch
 from torch.utils.data import DataLoader
 
 from photoholmes.data.input.coverage import CoverageDataset
+from photoholmes.data.input.osn import OSNDataset
 from photoholmes.data.input.reaslistic_tampering import RealisticTamperingDataset
 from photoholmes.models.splicebuster import Splicebuster
 from photoholmes.utils.image import plot_multiple
 
-DATASET_NAME = "Coverage"
+# %%
+# Elegir Dataset
+DATASET_NAME = "OSN"
 DATA_PATH = "/home/dsense/extra/tesis/datos/"
 FOLDER_NAME = "_".join((DATASET_NAME.lower()).split(" "))  # Replace if necessary
 DATASET_PATH = DATA_PATH + FOLDER_NAME
 
-dataset_class = CoverageDataset
+dataset_class = OSNDataset
 
 # %%
 SEED = 42
