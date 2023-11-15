@@ -4,9 +4,9 @@ from typing import Dict
 import torch
 from torch import Tensor
 
-from photoholmes.utils.preprocessing.base import PreprocessingTransform
-from photoholmes.utils.preprocessing.image import ToTensor
-from photoholmes.utils.preprocessing.pipeline import PreProcessingPipeline
+from photoholmes.preprocessing.base import PreprocessingTransform
+from photoholmes.preprocessing.image import ToTensor
+from photoholmes.preprocessing.pipeline import PreProcessingPipeline
 
 
 def get_binary_volume(x: Tensor, T: int = 20) -> Tensor:

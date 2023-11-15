@@ -10,7 +10,7 @@ class Naive(BaseMethod):
         super().__init__(**kwargs)
         self.sigma = sigma
 
-    def predict(self, image: np.ndarray) -> np.ndarray:
+    def predict(self, image: np.ndarray, **kwargs) -> np.ndarray:
         """Predicts masks from a list of images."""
         shape = image.shape[:2] if image.ndim > 2 else image.shape
         return np.random.normal(0.5, self.sigma, size=shape)
