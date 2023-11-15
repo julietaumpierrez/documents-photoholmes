@@ -15,7 +15,7 @@ stages:
 lint:
   cache:
     paths:
-      - .cache/pip
+      - $PRE_COMMIT_HOME
   script:
     - pip install pre-commit flake8 black isort
     - pre-commit run --all-files
