@@ -4,7 +4,7 @@ from typing import Optional
 import typer
 from typing_extensions import Annotated
 
-from photoholmes.models.registry import MethodName
+from photoholmes.methods.registry import MethodName
 
 logging.basicConfig()
 

@@ -21,8 +21,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-from photoholmes.models.base import BaseTorchMethod
-from photoholmes.models.catnet.config import (
+from photoholmes.methods.base import BaseTorchMethod
+from photoholmes.methods.catnet.config import (
     CatnetArchConfig,
     CatnetConfig,
     StageConfig,

@@ -4,7 +4,7 @@ from typing import Any, Dict, Literal, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from photoholmes.models.base import BaseMethod
+from photoholmes.methods.base import BaseMethod
 from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
 from photoholmes.utils.clustering.gaussian_uniform import GaussianUniformEM
 from photoholmes.utils.generic import load_yaml

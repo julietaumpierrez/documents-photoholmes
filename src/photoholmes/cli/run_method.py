@@ -5,8 +5,8 @@ from typing import Optional
 import torch
 from matplotlib import pyplot as plt
 
-from photoholmes.models.base import BaseTorchMethod
-from photoholmes.models.method_factory import MethodFactory, MethodName
+from photoholmes.methods.base import BaseTorchMethod
+from photoholmes.methods.method_factory import MethodFactory, MethodName
 from photoholmes.utils.image import ImFile, read_jpeg_data
 
 log = logging.getLogger("cli.run_method")
