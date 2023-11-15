@@ -1,6 +1,6 @@
 import numpy as np
 
-from photoholmes.models.base import BaseMethod
+from photoholmes.methods.base import BaseMethod
 
 
 class Naive(BaseMethod):

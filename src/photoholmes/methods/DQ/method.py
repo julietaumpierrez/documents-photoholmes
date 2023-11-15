@@ -3,8 +3,8 @@ from typing import List, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from photoholmes.models.base import BaseMethod
-from photoholmes.models.DQ.utils import (
+from photoholmes.methods.base import BaseMethod
+from photoholmes.methods.DQ.utils import (
     ZIGZAG,
     fft_period,
     histogram_period,
