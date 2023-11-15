@@ -9,10 +9,13 @@ requires-python = ">=3.9"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["photoholmes"]
+include = ["photoholmes*"]
+
+[project.scripts]
+photoholmes="photoholmes.cli.main:cli"
 
 [tool.black]
-target-version = ['py38']
+target-version = ['py310']
 
 [tool.isort]
 profile = 'black'

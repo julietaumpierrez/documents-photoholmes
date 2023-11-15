@@ -5,6 +5,7 @@ venv
 
 # packaging
 *.egg-info/
+build/
 
 # caches
 __pycache__/

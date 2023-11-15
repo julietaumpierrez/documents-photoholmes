@@ -3,11 +3,9 @@ Pillow
 matplotlib
 opencv-python
 pyyaml
-pytest
 scikit-learn
 tqdm
 scipy
 jpegio
+typer
 
-# torch requirements
-torchmetrics

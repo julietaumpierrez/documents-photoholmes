@@ -59,15 +59,17 @@ class CatnetPreprocessing(PreprocessingTransform):
             dct_coefficients[i] = dct_coefficients[i][
                 s_r : s_r + crop_size[0], s_c : s_c + crop_size[1]
             ]
-        t_dct_coeffs = torch.tensor(dct_coefficients, dtype=torch.float)
 
         image = (image - 127.5) / 127.5
-        t_dct_vols = get_binary_volume(t_dct_coeffs, T=self.T)
-
-        qtables = torch.tensor(qtables, dtype=torch.int16)
+        t_dct_vols = get_binary_volume(dct_coefficients, T=self.T)
 
         x = torch.concatenate((image, t_dct_vols))
-        return {"x": x[None, :], "qtable": qtables[None, :]}
+
+        if x.ndim == 3:
+            x = x[None, :]
+            qtables = qtables[None, :]
+
+        return {"x": x, "qtable": qtables}
 
 
 catnet_preprocessing = PreProcessingPipeline(

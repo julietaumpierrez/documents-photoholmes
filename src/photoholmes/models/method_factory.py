@@ -1,45 +1,38 @@
-from enum import Enum, unique
-from typing import Optional
+from typing import Optional, Tuple, Union
 
-from photoholmes.models.catnet import CatNet, catnet_preprocessing
-from photoholmes.models.DQ import DQ, dq_preprocessing
-from photoholmes.models.naive.method import Naive
-from photoholmes.models.splicebuster import Splicebuster, splicebuster_preprocess
-
-
-@unique
-class MethodType(Enum):
-    NAIVE = 0
-    DQ = 1
-    SPLICEBUSTER = 2
-    CATNET = 3
-
-
-def string_to_type(method_name: str) -> MethodType:
-    if method_name == "naive":
-        return MethodType.NAIVE
-    elif method_name == "dq":
-        return MethodType.DQ
-    elif method_name == "splicebuster":
-        return MethodType.SPLICEBUSTER
-    elif method_name == "catnet":
-        return MethodType.CATNET
-    else:
-        raise Exception("Method Type not implemented yet.")
+from photoholmes.models.base import BaseMethod
+from photoholmes.models.registry import MethodName
+from photoholmes.utils.preprocessing import PreProcessingPipeline
 
 
 class MethodFactory:
     @staticmethod
-    def create(method_name: str, config: Optional[dict] = None):
+    def load(
+        method_name: Union[str, MethodName],
+        config: Optional[Union[dict, str]] = None,
+    ) -> Tuple[BaseMethod, PreProcessingPipeline]:
         """Instantiates method corresponding to the name passed, from config"""
-        method_type = string_to_type(method_name)
-        if method_type == MethodType.NAIVE:
-            return Naive.from_config(config), None
-        elif method_type == MethodType.DQ:
-            return DQ.from_config(config), dq_preprocessing
-        elif method_type == MethodType.SPLICEBUSTER:
-            return Splicebuster.from_config(config), splicebuster_preprocess
-        elif method_type == MethodType.CATNET:
-            return CatNet.from_config(config), catnet_preprocessing
-        else:
-            raise Exception("Selected method_name is not defined")
+        if isinstance(method_name, str):
+            method_name = MethodName(method_name.lower())
+        match method_name:
+            case MethodName.NAIVE:
+                from photoholmes.models.naive.method import Naive
+
+                return Naive.from_config(config), PreProcessingPipeline([])
+            case MethodName.DQ:
+                from photoholmes.models.DQ import DQ, dq_preprocessing
+
+                return DQ.from_config(config), dq_preprocessing
+            case MethodName.SPLICEBUSTER:
+                from photoholmes.models.splicebuster import (
+                    Splicebuster,
+                    splicebuster_preprocess,
+                )
+
+                return Splicebuster.from_config(config), splicebuster_preprocess
+            case MethodName.CATNET:
+                from photoholmes.models.catnet import CatNet, catnet_preprocessing
+
+                return CatNet.from_config(config), catnet_preprocessing
+            case _:
+                raise NotImplementedError(f"Method '{method_name}' is not implemented.")
