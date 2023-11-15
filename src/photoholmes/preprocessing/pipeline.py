@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from photoholmes.utils.preprocessing.base import PreprocessingTransform
+from photoholmes.preprocessing.base import PreprocessingTransform
 
 
 class PreProcessingPipeline:

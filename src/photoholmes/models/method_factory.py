@@ -2,7 +2,7 @@ from typing import Optional, Tuple, Union
 
 from photoholmes.models.base import BaseMethod
 from photoholmes.models.registry import MethodName
-from photoholmes.utils.preprocessing import PreProcessingPipeline
+from photoholmes.preprocessing import PreProcessingPipeline
 
 
 class MethodFactory:
