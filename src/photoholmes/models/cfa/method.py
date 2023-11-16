@@ -240,5 +240,5 @@ class CFANet(BaseTorchMethod):
             config = config.__dict__
 
         if config is None:
-            config = {"weihgts": None}
+            config = {"weights": None}
         return cls(**config)
