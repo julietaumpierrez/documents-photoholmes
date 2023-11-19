@@ -37,26 +37,23 @@ class ToTensor(PreprocessingTransform):
     Converts a numpy array to a PyTorch tensor.
 
     Args:
-        image: Image to be converted to a tensor.
-        **kwargs: Additional keyword arguments to passthrough.
+        **kwargs: Keyword arguments to passthrough.
 
     Returns:
         A dictionary with the following key-value pairs:
-            - "image": The input image as a PyTorch tensor.
-            - **kwargs: The additional keyword arguments passed through unchanged.
+            - **kwargs: The keyword arguments passed through unchanged.
     """
 
-    def __call__(self, image: NDArray, **kwargs) -> Dict[str, Tensor]:
-        t_image = torch.from_numpy(image)
-        if t_image.ndim == 3:
-            t_image = t_image.permute(2, 0, 1)
-
+    def __call__(self, **kwargs) -> Dict[str, Tensor]:
         for k in kwargs:
-            if isinstance(kwargs[k], list):
+            if kwargs[k] == "image":
+                kwargs[k] = torch.from_numpy(kwargs[k])
+                if kwargs[k].ndim == 3:
+                    kwargs[k] = kwargs[k].permute(2, 0, 1)
+            elif isinstance(kwargs[k], list):
                 kwargs[k] = np.array(kwargs[k])
             kwargs[k] = torch.from_numpy(kwargs[k])
-
-        return {"image": t_image, **kwargs}
+        return {**kwargs}
 
 
 class ToNumpy(PreprocessingTransform):
@@ -65,23 +62,14 @@ class ToNumpy(PreprocessingTransform):
     it leaves it as is.
 
     Args:
-        image: Image to be converted to a tensor.
-        **kwargs: Additional keyword arguments to passthrough.
+        **kwargs: Keyword arguments to passthrough.
 
     Returns:
         A dictionary with the following key-value pairs:
-            - "image": The input image as a PyTorch tensor.
-            - **kwargs: The additional keyword arguments passed through unchanged.
+            - **kwargs: The keyword arguments passed through unchanged.
     """
 
-    def __call__(self, image: Union[T, Image], **kwargs) -> Dict[str, NDArray]:
-        if isinstance(image, Tensor):
-            t_image = image.cpu().numpy()
-        elif isinstance(image, np.ndarray):
-            t_image = image.copy()
-        else:
-            t_image = np.array(image)
-
+    def __call__(self, **kwargs) -> Dict[str, NDArray]:
         for k, v in kwargs.items():
             if isinstance(v, np.ndarray):
                 continue
@@ -89,8 +77,7 @@ class ToNumpy(PreprocessingTransform):
                 kwargs[k] = v.cpu().numpy()
             else:
                 kwargs[k] = np.array(v)
-
-        return {"image": t_image, **kwargs}
+        return {**kwargs}
 
 
 class RGBtoGray(PreprocessingTransform):
