@@ -1,4 +1,4 @@
-from typing import Dict, TypeVar, Union
+from typing import Dict, List, TypeVar, Union
 
 import numpy as np
 import torch
@@ -11,7 +11,7 @@ from photoholmes.preprocessing.base import PreprocessingTransform
 T = TypeVar("T", Tensor, NDArray)
 
 
-class Normalize(PreprocessingTransform):
+class ZeroOneRange(PreprocessingTransform):
     """
     Changes the image range from [0, 255] to [0, 1].
 
@@ -29,6 +29,47 @@ class Normalize(PreprocessingTransform):
             image = image / 255
         elif image.max() > 1:
             image = image / 255
+        return {"image": image, **kwargs}
+
+
+class Normalize(PreprocessingTransform):
+    """
+    Normalize an image.
+
+    Args:
+        image: Image to be normalized.
+        **kwargs: Additional keyword arguments to passthrough.
+    Returns:
+        A dictionary with the following key-value pairs:
+            - "image": The normalized image.
+            - **kwargs: The additional keyword arguments passed through unchanged.
+    """
+
+    def __init__(self, mean: Union[List[int], T], std: Union[List[int], T]) -> None:
+        if isinstance(mean, list):
+            self.mean = np.array(mean)
+        else:
+            self.mean = mean
+        if isinstance(std, list):
+            self.std = np.array(std)
+        else:
+            self.std = std
+
+    def __call__(self, image: T, **kwargs):
+        if isinstance(image, Tensor):
+            mean = torch.as_tensor(self.mean)
+            std = torch.as_tensor(self.std)
+
+            image = (image.float() - mean.view(3, 1, 1)) / std.view(3, 1, 1)
+
+        else:
+            mean = self.mean
+            std = self.std
+
+            image = (image.astype(np.float32) - mean.reshape((1, 1, -1))) / std.reshape(
+                (1, 1, -1)
+            )
+
         return {"image": image, **kwargs}
 
 

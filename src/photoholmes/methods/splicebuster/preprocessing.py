@@ -13,5 +13,5 @@ class SplicebusterInput(PreprocessingTransform):
 
 
 splicebuster_preprocess = PreProcessingPipeline(
-    transforms=[Normalize(), RGBtoGray(), ToNumpy(), SplicebusterInput()]
+    transforms=[ZeroOneRange(), RGBtoGray(), ToNumpy(), SplicebusterInput()]
 )
