@@ -41,7 +41,6 @@ class BaseDataset(ABC, Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[Dict, Tensor]:
         x, mask = self._get_data(idx)
-        print(x)
         if self.transform:
             x = self.transform(**x)
         if self.mask_transform:
@@ -54,7 +53,6 @@ class BaseDataset(ABC, Dataset):
         # image_path = os.path.join(self.img_dir, self.image_paths[idx])
         image_path = self.image_paths[idx]
         if "image" in self.item_data:
-            print(image_path)
             x["image"] = read_image(image_path)
         if "dct_coefficients" in self.item_data or "qtables" in self.item_data:
             dct, qtables = read_jpeg_data(image_path)
