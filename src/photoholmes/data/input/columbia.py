@@ -4,10 +4,10 @@ from typing import List, Optional, Tuple
 
 from torch import Tensor
 
-from .abstract import AbstractDataset
+from .base import BaseDataset
 
 
-class ColumbiaDataset(AbstractDataset):
+class ColumbiaDataset(BaseDataset):
     """
     Directory structure:
     img_dir (Columbia Uncompressed Image Splicing Detection)

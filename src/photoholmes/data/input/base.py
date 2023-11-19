@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 from photoholmes.utils.image import read_image, read_jpeg_data
 
 
-class AbstractDataset(ABC, Dataset):
+class BaseDataset(ABC, Dataset):
     def __init__(
         self,
         img_dir: str,
@@ -42,6 +42,7 @@ class AbstractDataset(ABC, Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[Dict, Tensor]:
         x, mask = self._get_data(idx)
+        print(x)
         if self.transform:
             x = self.transform(**x)
         if self.mask_transform:
@@ -53,8 +54,9 @@ class AbstractDataset(ABC, Dataset):
 
         image_path = os.path.join(self.img_dir, self.image_paths[idx])
         if "image" in self.item_data:
+            print(image_path)
             x["image"] = read_image(image_path)
-        elif "dct_coefficients" in self.item_data or "qtables" in self.item_data:
+        if "dct_coefficients" in self.item_data or "qtables" in self.item_data:
             dct, qtables = read_jpeg_data(image_path)
             if "dct_coefficients" in self.item_data:
                 x["dct_coefficients"] = torch.tensor(dct)
