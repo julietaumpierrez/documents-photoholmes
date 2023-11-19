@@ -1,4 +1,3 @@
-import os
 from abc import ABC, abstractmethod
 from typing import Dict, List, Literal, Tuple
 
@@ -42,7 +41,6 @@ class BaseDataset(ABC, Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[Dict, Tensor]:
         x, mask = self._get_data(idx)
-        print(x)
         if self.transform:
             x = self.transform(**x)
         if self.mask_transform:
@@ -52,9 +50,9 @@ class BaseDataset(ABC, Dataset):
     def _get_data(self, idx: int) -> Tuple[Dict, Tensor]:
         x = {}
 
-        image_path = os.path.join(self.img_dir, self.image_paths[idx])
+        # image_path = os.path.join(self.img_dir, self.image_paths[idx])
+        image_path = self.image_paths[idx]
         if "image" in self.item_data:
-            print(image_path)
             x["image"] = read_image(image_path)
         if "dct_coefficients" in self.item_data or "qtables" in self.item_data:
             dct, qtables = read_jpeg_data(image_path)
@@ -67,8 +65,7 @@ class BaseDataset(ABC, Dataset):
             arbitrary_element = list(x.values())[0]
             mask = torch.zeros_like(arbitrary_element[0, :, :])
         else:
-            mask_path = os.path.join(self.img_dir, self.mask_paths[idx])
-            mask_im = read_image(mask_path)
+            mask_im = read_image(self.mask_paths[idx])
             mask = self._binarize_mask(mask_im)
 
         return x, mask
