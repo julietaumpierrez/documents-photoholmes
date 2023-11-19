@@ -10,7 +10,7 @@ from .abstract import AbstractDataset
 class RealisticTamperingDataset(AbstractDataset):
     """
     Directory structure:
-    img_dir (Columbia Uncompressed Image Splicing Detection)
+    img_dir (realistic-tampering-dataset)
     ├── Canon_60D
     │   ├── ground-truth
     |   |   └── [masks in PNG]

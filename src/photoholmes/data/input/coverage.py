@@ -10,7 +10,7 @@ from .abstract import AbstractDataset
 class CoverageDataset(AbstractDataset):
     """
     Directory structure:
-    img_dir (Columbia Uncompressed Image Splicing Detection)
+    img_dir (COVERAGE)
     ├── image
     │   ├── pristine images as {NUM}.tif
     │   └── tampered images as {NUM}t.tif

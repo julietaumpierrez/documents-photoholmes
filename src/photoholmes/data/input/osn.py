@@ -10,7 +10,7 @@ from .abstract import AbstractDataset
 class OSNDataset(AbstractDataset):
     """
     Directory structure:
-    img_dir (Columbia Uncompressed Image Splicing Detection)
+    img_dir (ImageForgeriesOSN_Dataset)
     ├── [base directory]
     │   └── ...[img in PNG/JPG/TIF]
     ├── [base_directory + social_network_modification]
