@@ -1,4 +1,4 @@
-from typing import Dict, List, TypeVar, Union
+from typing import Dict, Tuple, TypeVar, Union
 
 import numpy as np
 import torch
@@ -45,12 +45,16 @@ class Normalize(PreprocessingTransform):
             - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
-    def __init__(self, mean: Union[List[int], T], std: Union[List[int], T]) -> None:
-        if isinstance(mean, list):
+    def __init__(
+        self,
+        mean: Union[Tuple[float, float, float], T],
+        std: Union[Tuple[float, float, float], T],
+    ) -> None:
+        if isinstance(mean, tuple):
             self.mean = np.array(mean)
         else:
             self.mean = mean
-        if isinstance(std, list):
+        if isinstance(std, tuple):
             self.std = np.array(std)
         else:
             self.std = std
@@ -60,17 +64,17 @@ class Normalize(PreprocessingTransform):
             mean = torch.as_tensor(self.mean)
             std = torch.as_tensor(self.std)
 
-            image = (image.float() - mean.view(3, 1, 1)) / std.view(3, 1, 1)
+            t_image = (image.float() - mean.view(3, 1, 1)) / std.view(3, 1, 1)
 
         else:
             mean = self.mean
             std = self.std
 
-            image = (image.astype(np.float32) - mean.reshape((1, 1, -1))) / std.reshape(
-                (1, 1, -1)
-            )
+            t_image = (
+                image.astype(np.float32) - mean.reshape((1, 1, -1))
+            ) / std.reshape((1, 1, -1))
 
-        return {"image": image, **kwargs}
+        return {"image": t_image, **kwargs}
 
 
 class ToTensor(PreprocessingTransform):
@@ -155,4 +159,23 @@ class RGBtoGray(PreprocessingTransform):
             image = (
                 0.299 * image[..., 0] + 0.587 * image[..., 1] + 0.114 * image[..., 2]
             )
+        return {"image": image, **kwargs}
+
+
+class GrayToRGB(PreprocessingTransform):
+    """
+    Converts an grayscale image to RGB
+    """
+
+    def __call__(self, image: T, **kwargs):
+        if isinstance(image, Tensor):
+            if image.ndim == 2:
+                image = image.unsqueeze(0).repeat(3, 1, 1)
+            elif image.shape[0] == 1:
+                image = image.repeat(3, 1, 1)
+        elif isinstance(image, np.ndarray):
+            if image.ndim == 2:
+                image = np.repeat(image[:, :, np.newaxis], 3, axis=2)
+            elif image.shape[2] == 1:
+                image = np.repeat(image, 3, axis=2)
         return {"image": image, **kwargs}

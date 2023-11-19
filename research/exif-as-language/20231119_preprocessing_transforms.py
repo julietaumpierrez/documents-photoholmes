@@ -90,4 +90,55 @@ image_numpy = image.permute(1, 2, 0).numpy()
 norm_image_numpy = normalize(image_numpy)["image"]
 # %%
 norm_image_torch == torch.from_numpy(norm_image_numpy).permute(2, 0, 1)
+
+
+import matplotlib.pyplot as plt
+
 # %%
+from PIL import Image
+
+
+class GrayToRGB(PreprocessingTransform):
+    """
+    Converts an grayscale image to RGB
+    """
+
+    def __call__(self, image: T, **kwargs):
+        if isinstance(image, Tensor):
+            image = image.unsqueeze(0).repeat(3, 1, 1)
+        elif isinstance(image, np.ndarray):
+            image = np.repeat(image[:, :, np.newaxis], 3, axis=2)
+        return {"image": image, **kwargs}
+
+
+# %%
+image = np.array(Image.open("data/img00.png").convert("L"))
+
+gray_to_rgb = GrayToRGB()
+plt.imshow(image, cmap="gray")
+# %%
+image_rgb = gray_to_rgb(image=image)["image"]
+plt.imshow(image_rgb, cmap="gray")
+
+# %%
+image_tensor = torch.as_tensor(image)
+# %%
+image_tensor_rgb = gray_to_rgb(image=image_tensor)["image"]
+
+
+# %%
+def _convert_image_to_rgb(image: Image.Image) -> Image.Image:
+    """Convert image to RGB if necessary
+    Params: Input image
+    Return: RGB image"""
+    return image.convert("RGB")
+
+
+image_pil = Image.open("data/img00.png").convert("L")
+image_rgb_pil = np.array(_convert_image_to_rgb(image_pil))
+
+plt.imshow(image_rgb_pil, cmap="gray")
+# %%
+(image_rgb_pil == image_rgb).all()
+# %%
+from photoholmes.models.exif_as_language import ExifAsLanguage
