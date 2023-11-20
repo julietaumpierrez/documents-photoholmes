@@ -8,3 +8,6 @@ tqdm
 scipy
 jpegio
 torchmetrics
+imageio
+scikit_image
+mpmath
