@@ -4,12 +4,12 @@ from typing import Any, Dict, Literal, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from photoholmes.models.base import BaseMethod
+from photoholmes.methods.base import BaseMethod
+from photoholmes.postprocessing.resizing import upscale_mask
 from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
 from photoholmes.utils.clustering.gaussian_uniform import GaussianUniformEM
 from photoholmes.utils.generic import load_yaml
 from photoholmes.utils.pca import PCA
-from photoholmes.utils.postprocessing.resizing import upscale_mask
 
 from .config import WeightConfig
 from .utils import (

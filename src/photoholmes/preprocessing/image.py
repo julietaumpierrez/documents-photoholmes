@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from PIL.Image import Image
 from torch import Tensor
 
-from photoholmes.utils.preprocessing.base import PreprocessingTransform
+from photoholmes.preprocessing.base import PreprocessingTransform
 
 T = TypeVar("T", Tensor, NDArray)
 
