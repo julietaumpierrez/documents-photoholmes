@@ -19,7 +19,7 @@ from photoholmes.models.splicebuster import Splicebuster
 from photoholmes.utils.image import plot_multiple
 
 # %%
-COLUMBIA_PATH = "/home/dsense/extra/tesis/datos/columbia"
+COLUMBIA_PATH = "/home/pento/workspace/fing/photoholmes/data/Columbia_subsample"
 dataset = ColumbiaDataset(COLUMBIA_PATH)
 
 ims = []
