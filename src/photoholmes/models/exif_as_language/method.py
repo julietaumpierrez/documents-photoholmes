@@ -14,6 +14,8 @@ from photoholmes.utils.pca.pca import PCA
 
 from .utils import cosine_similarity, mean_shift, normalized_cut
 
+# FIXME fix docstrings
+
 
 class EXIF_SC:
     def __init__(
@@ -39,7 +41,8 @@ class EXIF_SC:
         patch_size : int, optional
             Size of patches, by default 128
         num_per_dim : int, optional
-            Number of patches to use along the largest dimension, by default None (stride using patch_size)
+            Number of patches to use along the largest dimension,
+            by default None (stride using patch_size)
         device : str, optional
             , by default "cuda:0"
         ms_window: Window size for mean shift
@@ -178,30 +181,6 @@ class EXIF_SC:
         p_img = PatchedImage(img, self.patch_size, num_per_dim=self.num_per_dim)
 
         return p_img
-
-    def get_patch_consist_map(self, image, feat_batch_size, index, patch_fake):
-        # Initialize image and attributes
-        img = self.init_img(image)
-        # Precompute features for each patch
-        with torch.no_grad():
-            patch_features = self.get_patch_feats(
-                img, batch_size=feat_batch_size
-            )  # [n_patches, n_features]
-
-        # Predict consistency maps
-        patch_consist_map = self.center_patch_consistency(
-            patch_features, index, patch_fake
-        )
-
-        return patch_consist_map
-
-    def center_patch_consistency(self, patch_features, index, patch_fake):
-        center_feature = patch_features[index]
-
-        cos_sims = cosine_similarity(center_feature, patch_features)
-        if patch_fake:
-            cos_sims = 1 - cos_sims
-        return 1 - cos_sims
 
     def predict_consistency_maps(
         self, img: PatchedImage, patch_features: Tensor, batch_size=64
