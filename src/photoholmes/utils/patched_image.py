@@ -1,3 +1,4 @@
+import logging
 from math import floor
 from typing import Optional
 
@@ -5,12 +6,15 @@ import numpy as np
 import torch
 from numpy.typing import NDArray
 
+logger = logging.getLogger(__name__)
+
 
 class PatchedImage:
     def __init__(
         self,
         data: torch.Tensor,
-        patch_size: int = 224,
+        patch_size: int,
+        stride: Optional[int] = None,
         num_per_dim: Optional[int] = None,
     ):
         """Representation of an image that is sliced into patches
@@ -20,8 +24,11 @@ class PatchedImage:
         data: torch.Tensor
             - [C, H, W]
         patch_size: int
+        stride: int | None
+            - If None, it's calculated using num_per_dim
         num_per_dim: int | None
-            - if None, takes the value of patch size
+            - If stride is None, calculates it as as (max(height, widht) - patch_size) / self.stride
+            - if None,
         """
         self.data = data.float()
 
@@ -32,7 +39,11 @@ class PatchedImage:
         _, height, width = data.shape
 
         # Compute patch stride on image
-        if num_per_dim is not None:
+        if stride is not None:
+            if num_per_dim is not None:
+                logger.warn("Both `stride` and `num_per_dim` where set, using stride")
+            self.stride = stride
+        elif num_per_dim is not None:
             self.stride = (max(height, width) - self.patch_size) // num_per_dim
         else:
             self.stride = patch_size
