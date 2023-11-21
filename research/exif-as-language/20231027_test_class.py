@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from photoholmes.models.exif_as_language.method import EXIF_SC, preprocess
+from photoholmes.models.exif_as_language.method import EXIFAsLanguage, preprocess
 
 if "research" in os.path.abspath("."):
     os.chdir("../../")
@@ -27,7 +27,7 @@ device = "cpu"
 # device = "mps"
 path = "weights/exif/pruned_weights.pth"
 # path = "/Users/julietaumpierrez/Desktop/Exif_as_language/exif-as-language/pruned_weights.pth"
-model = EXIF_SC(
+model = EXIFAsLanguage(
     transformer="distilbert", visual="resnet50", state_dict_path=path, device=device
 )
 torched_image = torch.from_numpy(np_image).permute(2, 0, 1)

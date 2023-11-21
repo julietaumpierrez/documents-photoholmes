@@ -17,7 +17,7 @@ from .utils import cosine_similarity, mean_shift, normalized_cut
 # FIXME fix docstrings
 
 
-class EXIF_SC:
+class EXIFAsLanguage:
     def __init__(
         self,
         transformer: Literal["distilbert"],

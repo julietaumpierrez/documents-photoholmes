@@ -3,7 +3,7 @@ import os
 
 import matplotlib.pyplot as plt
 
-from photoholmes.models.exif_as_language.method import EXIF_SC
+from photoholmes.models.exif_as_language.method import EXIFAsLanguage
 from photoholmes.models.exif_as_language.preprocessing import exif_preprocessing
 from photoholmes.utils.image import read_image
 
@@ -18,7 +18,7 @@ image = read_image("data/img00.png") / 255
 plt.imshow(image.permute(1, 2, 0))
 
 # %%
-method = EXIF_SC(
+method = EXIFAsLanguage(
     "distilbert",
     "resnet50",
     device="cpu",

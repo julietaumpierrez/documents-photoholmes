@@ -145,7 +145,7 @@ plt.imshow(image_rgb_pil, cmap="gray")
 import matplotlib.pyplot as plt
 from torchvision.transforms import Compose, Normalize, ToPILImage, ToTensor
 
-from photoholmes.models.exif_as_language import EXIF_SC
+from photoholmes.models.exif_as_language import EXIFAsLanguage
 
 
 def _transform(mean: tuple, std: tuple) -> Compose:
@@ -179,7 +179,7 @@ def preprocess(
     return func(image)
 
 
-method = EXIF_SC(
+method = EXIFAsLanguage(
     "distilbert",
     "resnet50",
     device="cpu",
