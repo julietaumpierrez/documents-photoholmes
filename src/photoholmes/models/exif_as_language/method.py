@@ -25,7 +25,7 @@ class EXIFAsLanguage:
         patch_size: int = 128,
         num_per_dim: int = 30,
         feat_batch_size: int = 32,
-        pred_batch_size=1024,
+        pred_batch_size: int = 1024,
         device: str = "cuda:0",
         ms_window: int = 10,
         ms_iter: int = 5,

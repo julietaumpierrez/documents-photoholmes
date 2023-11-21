@@ -1,0 +1,12 @@
+transformer: distilbert
+visual: resnet50
+patch_size: 128
+num_per_dim: 30
+feat_batch_size: 32
+pred_batch_size: 1024
+device: cpu
+ms_window: 10
+ms_iter: 5
+pooling: mean
+state_dict_path: <path_to_weights>
+seed: 44
