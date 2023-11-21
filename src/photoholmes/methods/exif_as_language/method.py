@@ -117,18 +117,6 @@ class EXIFAsLanguage(BaseMethod):
             p_img, patch_features, batch_size=self.pred_batch_size
         ).numpy()
 
-        # sample prediction maps
-        preds = [
-            pred_maps[0, 0],
-            pred_maps[pred_maps.shape[0] - 1, pred_maps.shape[1] - 1],
-            pred_maps[0, pred_maps.shape[1] - 1],
-            pred_maps[pred_maps.shape[0] - 1, 0],
-            pred_maps[pred_maps.shape[0] // 2, pred_maps.shape[1] // 2],
-            pred_maps[pred_maps.shape[0] - 1, pred_maps.shape[1] // 2],
-            pred_maps[pred_maps.shape[0] * 3 // 4, pred_maps.shape[1] // 2],
-            pred_maps[pred_maps.shape[0] * 2 // 3, pred_maps.shape[1] // 2],
-        ]
-
         # Produce a single response map
         ms = mean_shift(
             pred_maps.reshape((-1, pred_maps.shape[0] * pred_maps.shape[1])),
@@ -139,12 +127,6 @@ class EXIFAsLanguage(BaseMethod):
 
         # Run clustering to get localization map
         ncuts = normalized_cut(pred_maps)
-
-        out_preds = []
-        for pred in preds:
-            out_preds.append(
-                cv2.resize(pred, (width, height), interpolation=cv2.INTER_LINEAR)
-            )
 
         out_ms = cv2.resize(ms, (width, height), interpolation=cv2.INTER_LINEAR)
         out_ncuts = cv2.resize(
@@ -168,7 +150,6 @@ class EXIFAsLanguage(BaseMethod):
             "ms": out_ms,
             "ncuts": out_ncuts,
             "score": pred_maps.mean(),
-            "preds": out_preds,
             "pca": out_pca,
             "affinity_matrix": self.generate_afinity_matrix(patch_features),
         }
