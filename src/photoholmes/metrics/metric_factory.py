@@ -7,7 +7,26 @@ from photoholmes.metrics.registry import MetricName
 class MetricFactory:
     @staticmethod
     def load(metric_name: Union[str, MetricName]) -> BaseMetric:
-        """Instantiates a metric corresponding to the name passed."""
+        """
+        Instantiates and returns a metric object corresponding to the specified
+        metric name.
+
+        Args:
+            metric_name (Union[str, MetricName]): The name of the metric to load.
+                Can be a string or a MetricName enum instance.
+
+        Returns:
+            BaseMetric: An instance of a subclass of photoholmes.metrics.base.BaseMetric
+                corresponding to the provided metric name.
+
+        Raises:
+            NotImplementedError: If the metric name provided is not recognized or not
+                implemented.
+
+        Examples:
+            >>> metric = MetricFactory.load("auroc")
+            >>> metric = MetricFactory.load(MetricName.PRECISION)
+        """
         if isinstance(metric_name, str):
             metric_name = MetricName(metric_name.lower())
 

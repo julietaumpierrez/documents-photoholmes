@@ -1,9 +1,8 @@
-from typing import Dict, TypeVar, Union
+from typing import Dict, TypeVar
 
 import numpy as np
 import torch
 from numpy.typing import NDArray
-from PIL.Image import Image
 from torch import Tensor
 
 from photoholmes.preprocessing.base import PreprocessingTransform

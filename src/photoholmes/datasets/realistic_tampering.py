@@ -4,10 +4,10 @@ from typing import List, Optional, Tuple
 
 from torch import Tensor
 
-from .abstract import AbstractDataset
+from .base import BaseDataset
 
 
-class RealisticTamperingDataset(AbstractDataset):
+class RealisticTamperingDataset(BaseDataset):
     """
     Directory structure:
     img_dir (realistic-tampering-dataset)
@@ -51,25 +51,20 @@ class RealisticTamperingDataset(AbstractDataset):
     def _get_camera_paths(
         self, camera_dir, tampered_only
     ) -> Tuple[List[str], List[str] | List[str | None]]:
-        image_filenames = glob.glob(
+        image_paths = glob.glob(
             os.path.join(camera_dir, self.TAMP_DIR, f"*{self.IMAGE_EXTENSION}")
         )
-        image_paths = [
-            os.path.join(camera_dir, self.TAMP_DIR, filename)
-            for filename in image_filenames
-        ]
+
         mask_paths: List[Optional[str]] = [
-            self._get_mask_path(image_path) for image_path in image_paths
+            os.path.join(self.img_dir, self._get_mask_path(image_path))
+            for image_path in image_paths
         ]
 
         if not tampered_only:
-            pris_filenames = glob.glob(
+            pris_paths = glob.glob(
                 os.path.join(camera_dir, self.AUTH_DIR, f"*{self.IMAGE_EXTENSION}")
             )
-            pris_paths = [
-                os.path.join(camera_dir, self.AUTH_DIR, filename)
-                for filename in pris_filenames
-            ]
+
             pris_msk_paths = [None] * len(pris_paths)
             image_paths += pris_paths
             mask_paths += pris_msk_paths
