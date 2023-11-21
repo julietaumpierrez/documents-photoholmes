@@ -61,8 +61,8 @@ class Normalize(PreprocessingTransform):
 
     def __call__(self, image: T, **kwargs):
         if isinstance(image, Tensor):
-            mean = torch.as_tensor(self.mean)
-            std = torch.as_tensor(self.std)
+            mean = torch.as_tensor(self.mean, dtype=torch.float32)
+            std = torch.as_tensor(self.std, dtype=torch.float32)
 
             t_image = (image.float() - mean.view(3, 1, 1)) / std.view(3, 1, 1)
 

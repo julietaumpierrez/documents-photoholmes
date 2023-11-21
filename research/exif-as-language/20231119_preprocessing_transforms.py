@@ -140,5 +140,73 @@ image_rgb_pil = np.array(_convert_image_to_rgb(image_pil))
 plt.imshow(image_rgb_pil, cmap="gray")
 # %%
 (image_rgb_pil == image_rgb).all()
+
 # %%
-from photoholmes.models.exif_as_language import ExifAsLanguage
+import matplotlib.pyplot as plt
+from torchvision.transforms import Compose, Normalize, ToPILImage, ToTensor
+
+from photoholmes.models.exif_as_language import EXIF_SC
+
+
+def _transform(mean: tuple, std: tuple) -> Compose:
+    """Compose transforms
+    Params:
+        mean(tuple): mean values for normalization
+        std(tuple): std values for normalization
+    Return: Composed transforms"""
+    return Compose(
+        [
+            _convert_image_to_rgb,
+            ToTensor(),
+            Normalize(mean, std),
+        ]
+    )
+
+
+def preprocess(
+    image: torch.Tensor,
+    mean: tuple = (0.48145466, 0.4578275, 0.40821073),
+    std: tuple = (0.26862954, 0.26130258, 0.27577711),
+) -> torch.Tensor:
+    """Preprocess image with _transform
+    Params: Input image
+            mean (tuple): mean values for normalization
+            std (tuple): std values for normalization
+    Return: Preprocessed image"""
+    toPIL = ToPILImage()
+    image = toPIL(image)
+    func = _transform(mean, std)
+    return func(image)
+
+
+method = EXIF_SC(
+    "distilbert",
+    "resnet50",
+    device="cpu",
+    state_dict_path="weights/exif/pruned_weights.pth",
+)
+
+# %%
+from torchvision.io import read_image
+
+from photoholmes.models.exif_as_language.preprocessing import exif_preprocessing
+
+image = read_image("data/img00.png") / 255
+image = image.to(dtype=torch.float32)
+
+# %%
+image_input_old = preprocess(image=image)
+# %%
+out = method.predict(img=image_input_old)
+
+plt.imshow(out["ms"])
+plt.show()
+# %%
+image_input = exif_preprocessing(image=image)
+# %%
+out = method.predict(img=image_input["image"])
+
+plt.imshow(out["ms"])
+plt.show()
+
+# %%

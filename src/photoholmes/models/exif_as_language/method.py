@@ -4,114 +4,14 @@ from typing import Literal, Optional
 
 import cv2
 import numpy as np
-import scipy
-import sklearn.cluster
 import torch
-import torchvision.transforms as T
 from numpy.typing import NDArray
-from PIL import Image
-from torchvision.transforms import Compose, Normalize, ToTensor
 
 from photoholmes.models.exif_as_language.clip import ClipModel
 from photoholmes.utils.patched_image import PatchedImage
 from photoholmes.utils.pca.pca import PCA
 
-
-def _convert_image_to_rgb(image: Image.Image) -> Image.Image:
-    """Convert image to RGB if necessary
-    Params: Input image
-    Return: RGB image"""
-    return image.convert("RGB")
-
-
-def _transform(mean: tuple, std: tuple) -> T.Compose:
-    """Compose transforms
-    Params:
-        mean(tuple): mean values for normalization
-        std(tuple): std values for normalization
-    Return: Composed transforms"""
-    return Compose(
-        [
-            _convert_image_to_rgb,
-            ToTensor(),
-            Normalize(mean, std),
-        ]
-    )
-
-
-def preprocess(
-    image: torch.Tensor,
-    mean: tuple = (0.48145466, 0.4578275, 0.40821073),
-    std: tuple = (0.26862954, 0.26130258, 0.27577711),
-) -> torch.Tensor:
-    """Preprocess image with _transform
-    Params: Input image
-            mean (tuple): mean values for normalization
-            std (tuple): std values for normalization
-    Return: Preprocessed image"""
-    toPIL = T.ToPILImage()
-    image = toPIL(image)
-    func = _transform(mean, std)
-    return func(image)
-
-
-def cosine_similarity(x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
-    # FIXME: Add docstring
-    x1 = x1 / x1.norm(dim=-1, keepdim=True)
-    x2 = x2 / x2.norm(dim=-1, keepdim=True)
-    sim = torch.matmul(x1, x2.t())
-    return sim
-
-
-def mean_shift(points_: NDArray, heat_map: NDArray, window: int, iter: int) -> NDArray:
-    """Applys Mean Shift algorithm in order to obtain a uniform heatmap
-    Params: points_: Affinity matrix between patches
-            heat_map: Heatmap obtained from the affinity matrix
-            window: window size
-            iter: number of iterations
-    Returns: Uniform heatmap after mean shift on rows
-    with modification from original code to take into account
-    the cases with eps_5= 0
-    """
-    points = np.copy(points_)
-    kdt = scipy.spatial.cKDTree(points)
-    eps_5 = np.percentile(
-        scipy.spatial.distance.cdist(points, points, metric="euclidean"), window
-    )
-    if eps_5 != 0:
-        for epis in range(iter):
-            for point_ind in range(points.shape[0]):
-                point = points[point_ind]
-                nearest_inds = kdt.query_ball_point(point, r=eps_5)
-                points[point_ind] = np.mean(points[nearest_inds], axis=0)
-        val = []
-        for i in range(points.shape[0]):
-            val.append(
-                kdt.count_neighbors(
-                    scipy.spatial.cKDTree(np.array([points[i]])), r=eps_5
-                )
-            )
-        ind = np.nonzero(val == np.max(val))
-        result = np.mean(points[ind[0]], axis=0).reshape(
-            heat_map.shape[0], heat_map.shape[1]
-        )
-    else:
-        result = np.zeros((heat_map.shape[0], heat_map.shape[1]))
-    return result
-
-
-def normalized_cut(res: NDArray) -> NDArray:
-    """Spectral clustering via Normalized Cuts
-    Params: res: Affinity matrix between patches
-    Returns: normalized cut
-    """
-    res = 1 - res
-    sc = sklearn.cluster.SpectralClustering(
-        n_clusters=2, n_jobs=-1, affinity="precomputed"
-    )
-    out = sc.fit_predict(res.reshape((res.shape[0] * res.shape[1], -1)))
-    vis = out.reshape((res.shape[0], res.shape[1]))
-    return vis
+from .utils import cosine_similarity, mean_shift, normalized_cut
 
 
 class EXIF_SC:
@@ -412,7 +312,8 @@ class EXIF_SC:
                     :,
                 ] += 1
 
-        # Normalize predictions return responses / vote_counts
+        # Normalize predictions
+        return responses / vote_counts
 
     def patch_similarity(self, a_feats, b_feats):
         cos = cosine_similarity(a_feats, b_feats).diagonal()
@@ -440,9 +341,7 @@ class EXIF_SC:
 
         # Generator for patches; raster scan order
         for patches in img.patches_gen(batch_size):
-            processed_patches = torch.stack(
-                [preprocess(patch) for patch in patches], dim=0
-            ).to(self.device)
+            processed_patches = patches.to(self.device)
             feat = self.net.encode_image(processed_patches)
 
             if len(feat.shape) == 1:
