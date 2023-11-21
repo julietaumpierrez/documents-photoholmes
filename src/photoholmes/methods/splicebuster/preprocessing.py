@@ -1,5 +1,4 @@
-from photoholmes.preprocessing.base import PreprocessingTransform
-from photoholmes.preprocessing.image import Normalize, RGBtoGray, ToNumpy
+from photoholmes.preprocessing.image import RGBtoGray, ToNumpy, ZeroOneRange
 from photoholmes.preprocessing.input import InputSelection
 from photoholmes.preprocessing.pipeline import PreProcessingPipeline
 
