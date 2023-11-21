@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import torch
 from numpy.typing import NDArray
+from torch import Tensor
 
 from photoholmes.models.exif_as_language.clip import ClipModel
 from photoholmes.utils.patched_image import PatchedImage
@@ -21,6 +22,8 @@ class EXIF_SC:
         visual: Literal["resnet50"],
         patch_size: int = 128,
         num_per_dim: int = 30,
+        feat_batch_size: int = 32,
+        pred_batch_size=1024,
         device: str = "cuda:0",
         ms_window: int = 10,
         ms_iter: int = 5,
@@ -52,6 +55,8 @@ class EXIF_SC:
 
         self.patch_size = patch_size
         self.num_per_dim = num_per_dim
+        self.feat_batch_size = feat_batch_size
+        self.pred_batch_size = pred_batch_size
         self.device = torch.device(device)
         self.ms_window, self.ms_iter = ms_window, ms_iter
         self.net = clipNet
@@ -61,9 +66,7 @@ class EXIF_SC:
 
     def predict(
         self,
-        img: torch.Tensor,
-        feat_batch_size=32,
-        pred_batch_size=1024,
+        img: Tensor,
     ):
         """
         Parameters
@@ -90,26 +93,24 @@ class EXIF_SC:
 
         # Initialize image and attributes
         _, height, width = img.shape
-        p_img = self.init_img(img, num_per_dim=self.num_per_dim)
+        p_img = self.init_img(img)
         # Precompute features for each patch
         with torch.no_grad():
-            patch_features = self.get_patch_feats(p_img, batch_size=feat_batch_size)
+            patch_features = self.get_patch_feats(
+                p_img, batch_size=self.feat_batch_size
+            )
 
         # PCA visualization
         pca = PCA(n_components=3, whiten=True)
         feature_transform = pca.fit_transform(patch_features.cpu().numpy())
-        pred_pca_map = self._predict_pca_map(
-            p_img, feature_transform, batch_size=pred_batch_size
-        ).numpy()
+        pred_pca_map = self.predict_pca_map(
+            p_img, feature_transform, batch_size=self.pred_batch_size
+        )
 
         # Predict consistency maps
-        pred_maps = (
-            self._predict_consistency_maps(
-                p_img, patch_features, batch_size=pred_batch_size
-            )
-            .detach()
-            .numpy()
-        )
+        pred_maps = self.predict_consistency_maps(
+            p_img, patch_features, batch_size=self.pred_batch_size
+        ).numpy()
 
         # sample prediction maps
         preds = [
@@ -167,20 +168,20 @@ class EXIF_SC:
             "affinity_matrix": self.generate_afinity_matrix(patch_features),
         }
 
-    def init_img(self, img: torch.Tensor, num_per_dim: Optional[int]):
+    def init_img(self, img: Tensor) -> PatchedImage:
         # Initialize image and attributes
         _, height, width = img.shape
         assert (
             min(height, width) > self.patch_size
         ), "Image must be bigger than patch size"
         img = img.to(self.device)
-        p_img = PatchedImage(img, self.patch_size, num_per_dim)
+        p_img = PatchedImage(img, self.patch_size, num_per_dim=self.num_per_dim)
 
         return p_img
 
     def get_patch_consist_map(self, image, feat_batch_size, index, patch_fake):
         # Initialize image and attributes
-        img = self.init_img(image, num_per_dim=None)
+        img = self.init_img(image)
         # Precompute features for each patch
         with torch.no_grad():
             patch_features = self.get_patch_feats(
@@ -202,8 +203,8 @@ class EXIF_SC:
             cos_sims = 1 - cos_sims
         return 1 - cos_sims
 
-    def _predict_consistency_maps(
-        self, img: PatchedImage, patch_features: torch.Tensor, batch_size=64
+    def predict_consistency_maps(
+        self, img: PatchedImage, patch_features: Tensor, batch_size=64
     ):
         # For each patch, how many overlapping patches?
         spread = max(1, img.patch_size // img.stride)
@@ -237,11 +238,11 @@ class EXIF_SC:
             patch_b_idxs = idxs[:, 2:]  # [B, 2]
 
             # Convert 2D index into its 1D version
-            a_idxs = torch.from_numpy(
-                np.ravel_multi_index(patch_a_idxs.T, [img.max_h_idx, img.max_w_idx])
+            a_idxs = np.ravel_multi_index(
+                patch_a_idxs.T.tolist(), [img.max_h_idx, img.max_w_idx]
             )  # [B]
-            b_idxs = torch.from_numpy(
-                np.ravel_multi_index(patch_b_idxs.T, [img.max_h_idx, img.max_w_idx])
+            b_idxs = np.ravel_multi_index(
+                patch_b_idxs.T.tolist(), [img.max_h_idx, img.max_w_idx]
             )
 
             # Grab corresponding features
@@ -269,20 +270,19 @@ class EXIF_SC:
         # Normalize predictions
         return responses / vote_counts
 
-    def _predict_pca_map(
+    def predict_pca_map(
         self, img: PatchedImage, patch_features: NDArray, batch_size=64
-    ):
+    ) -> NDArray:
         # For each patch, how many overlapping patches?
         spread = max(1, img.patch_size // img.stride)
 
         # Aggregate prediction maps; for each patch, compared to each other patch
-        responses = torch.zeros(
+        responses = np.zeros(
             (img.max_h_idx + spread - 1, img.max_w_idx + spread - 1, 3)
         )
         # Number of predictions for each patch
         vote_counts = (
-            torch.zeros((img.max_h_idx + spread - 1, img.max_w_idx + spread - 1, 3))
-            + 1e-4
+            np.zeros((img.max_h_idx + spread - 1, img.max_w_idx + spread - 1, 3)) + 1e-4
         )
 
         # Perform prediction
@@ -291,8 +291,8 @@ class EXIF_SC:
             patch_a_idxs = idxs[:, :2]  # [B, 2]
 
             # Convert 2D index into its 1D version
-            a_idxs = torch.from_numpy(
-                np.ravel_multi_index(patch_a_idxs.T, [img.max_h_idx, img.max_w_idx])
+            a_idxs = np.ravel_multi_index(
+                patch_a_idxs.T.tolist(), [img.max_h_idx, img.max_w_idx]
             )  # [B]
 
             # Grab corresponding features
@@ -315,7 +315,7 @@ class EXIF_SC:
         # Normalize predictions
         return responses / vote_counts
 
-    def patch_similarity(self, a_feats, b_feats):
+    def patch_similarity(self, a_feats: Tensor, b_feats: Tensor) -> Tensor:
         cos = cosine_similarity(a_feats, b_feats).diagonal()
         cos = 1 - cos
         cos = cos.cpu()
@@ -353,13 +353,10 @@ class EXIF_SC:
 
         return patch_features
 
-    def generate_afinity_matrix(self, patch_features):
+    def generate_afinity_matrix(self, patch_features: Tensor) -> Tensor:
         patch_features = torch.nn.functional.normalize(patch_features)
         result = torch.matmul(patch_features, patch_features.t())
 
-        # sort_idx = torch.argsort(result_norm)
-        # result = result[sort_idx]
-        # result = result[:, sort_idx]
         return result
 
     def get_valid_patch_mask(self, mask: PatchedImage, batch_size=32):
