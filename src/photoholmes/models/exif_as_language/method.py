@@ -8,6 +8,7 @@ import torch
 from numpy.typing import NDArray
 from torch import Tensor
 
+from photoholmes.models.base import BaseMethod
 from photoholmes.models.exif_as_language.clip import ClipModel
 from photoholmes.utils.patched_image import PatchedImage
 from photoholmes.utils.pca.pca import PCA
@@ -17,7 +18,7 @@ from .utils import cosine_similarity, mean_shift, normalized_cut
 # FIXME fix docstrings
 
 
-class EXIFAsLanguage:
+class EXIFAsLanguage(BaseMethod):
     def __init__(
         self,
         transformer: Literal["distilbert"],
@@ -51,6 +52,7 @@ class EXIFAsLanguage:
         """
         random.seed(seed)
         super().__init__()
+
         clipNet = ClipModel(vision=visual, text=transformer, pooling=pooling)
         if state_dict_path:
             checkpoint = torch.load(state_dict_path, map_location=device)
