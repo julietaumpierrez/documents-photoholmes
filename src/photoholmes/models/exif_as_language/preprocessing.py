@@ -1,5 +1,6 @@
 from photoholmes.utils.preprocessing import PreProcessingPipeline
 from photoholmes.utils.preprocessing.image import GrayToRGB, Normalize
+from photoholmes.utils.preprocessing.input import InputSelection
 
 exif_preprocessing = PreProcessingPipeline(
     [
@@ -8,5 +9,6 @@ exif_preprocessing = PreProcessingPipeline(
             mean=(0.48145466, 0.4578275, 0.40821073),
             std=(0.26862954, 0.26130258, 0.27577711),
         ),
+        InputSelection(["image"]),
     ]
 )

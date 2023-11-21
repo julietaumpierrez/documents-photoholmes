@@ -71,13 +71,13 @@ class EXIFAsLanguage(BaseMethod):
 
     def predict(
         self,
-        img: Tensor,
+        image: Tensor,
     ):
         """
         Parameters
         ----------
         img : torch.Tensor
-            [C, H, W], range: [0, 255]
+            [C, H, W], range: [0, 1]
         feat_batch_size : int, optional
             , by default 32
         pred_batch_size : int, optional
@@ -97,8 +97,8 @@ class EXIFAsLanguage(BaseMethod):
         """
 
         # Initialize image and attributes
-        _, height, width = img.shape
-        p_img = self.init_img(img)
+        _, height, width = image.shape
+        p_img = self.init_img(image)
         # Precompute features for each patch
         with torch.no_grad():
             patch_features = self.get_patch_feats(

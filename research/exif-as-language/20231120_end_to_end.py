@@ -26,7 +26,7 @@ method = EXIFAsLanguage(
 )
 # %%
 exif_input = exif_preprocessing(image=image)
-out = method.predict(img=exif_input["image"])
+out = method.predict(image=exif_input["image"])
 
 # %%
 plt.imshow(out["ms"])

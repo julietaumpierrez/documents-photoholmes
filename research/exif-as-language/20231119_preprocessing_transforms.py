@@ -197,14 +197,14 @@ image = image.to(dtype=torch.float32)
 # %%
 image_input_old = preprocess(image=image)
 # %%
-out = method.predict(img=image_input_old)
+out = method.predict(image=image_input_old)
 
 plt.imshow(out["ms"])
 plt.show()
 # %%
 image_input = exif_preprocessing(image=image)
 # %%
-out = method.predict(img=image_input["image"])
+out = method.predict(image=image_input["image"])
 
 plt.imshow(out["ms"])
 plt.show()
