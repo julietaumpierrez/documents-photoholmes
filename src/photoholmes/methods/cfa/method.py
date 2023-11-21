@@ -14,8 +14,8 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
-from photoholmes.models.base import BaseTorchMethod
-from photoholmes.models.cfa.config import CFAConfig
+from photoholmes.methods.base import BaseTorchMethod
+from photoholmes.methods.cfa.config import CFAConfig
 from photoholmes.utils.generic import load_yaml
 
 logger = logging.getLogger(__name__)
