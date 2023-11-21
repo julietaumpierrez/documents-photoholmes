@@ -7,3 +7,4 @@ class MethodName(Enum):
     DQ = "dq"
     SPLICEBUSTER = "splicebuster"
     CATNET = "catnet"
+    CFANET = "cfanet"
