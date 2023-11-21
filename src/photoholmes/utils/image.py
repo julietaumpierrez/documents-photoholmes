@@ -7,14 +7,35 @@ import cv2 as cv
 import jpegio
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from numpy.typing import NDArray
-from PIL.Image import open
 
 IMG_FOLDER_PATH = "test_images/images/"
 
 
-def plot(image, title=None, save_path=None):
+def read_image(path) -> torch.Tensor:
+    return torch.from_numpy(
+        cv.cvtColor(cv.imread(path), cv.COLOR_BGR2RGB).transpose(2, 0, 1)
+    )
+
+
+def save_image(path, img: torch.Tensor | np.ndarray, *args):
+    if isinstance(img, torch.Tensor):
+        img_bgr = cv.cvtColor(tensor2numpy(img), cv.COLOR_RGB2BGR)
+    else:
+        img_bgr = cv.cvtColor(img, cv.COLOR_RGB2BGR)
+    cv.imwrite(path, img_bgr, *args)
+
+
+def tensor2numpy(image: torch.Tensor) -> np.ndarray:
+    img = image.numpy()
+    return img.transpose(1, 2, 0) if image.ndim > 2 else img
+
+
+def plot(image: torch.Tensor | np.ndarray, title=None, save_path=None):
     """Function for easily plotting an image."""
+    if isinstance(image, torch.Tensor):
+        image = tensor2numpy(image)
     plt.figure()
     plt.imshow(image)
     if title is not None:
@@ -27,7 +48,11 @@ def plot(image, title=None, save_path=None):
 
 
 def plot_multiple(
-    images, titles=None, ncols=4, title: Optional[str] = None, save_path=None
+    images,
+    titles=None,
+    ncols=4,
+    title: Optional[str] = None,
+    save_path=None,
 ):
     """Function for easily plotting one or multiple images"""
     N = len(images)
@@ -37,6 +62,8 @@ def plot_multiple(
     if nrows > 1:
         fig, ax = plt.subplots(nrows, ncols)
         for n, img in enumerate(images):
+            if isinstance(img, torch.Tensor):
+                img = tensor2numpy(img)
             i = n // ncols
             j = n % ncols
             ax[i, j].imshow(img)
@@ -45,6 +72,8 @@ def plot_multiple(
     else:
         fig, ax = plt.subplots(1, N)
         for n, img in enumerate(images):
+            if isinstance(img, torch.Tensor):
+                img = tensor2numpy(img)
             ax[n].imshow(img)
             ax[n].set_title(titles[n])
             ax[n].set_axis_off()
@@ -65,7 +94,9 @@ def read_mask(mask_path):
 
 
 def read_jpeg_data(
-    image_path: str, num_dct_channels: Optional[int] = None
+    image_path: str,
+    num_dct_channels: Optional[int] = None,
+    all_quant_tables: bool = False,
 ) -> Tuple[NDArray, List[NDArray]]:
     """Reads image from path and returns DCT coefficient matrix for each channel and the
     quantization matrixes. If image is in jpeg format, it decodes the DCT stream and
@@ -75,6 +106,7 @@ def read_jpeg_data(
     Parameters:
         image_path: Path to image
         n_channels: Number of channels to read. If 1, only Y channel is read.
+        quant_tables:
     Returns:
         dct: DCT coefficient matrix for each channel
         qtables: Quantization matrix for each channel
@@ -84,20 +116,22 @@ def read_jpeg_data(
         jpeg = jpegio.read(image_path)
     else:
         temp = NamedTemporaryFile(suffix=".jpg")
-        open(image_path).convert("RGB").save(temp.name, quality=100, subsampling=0)
+        img = read_image(image_path)
+        save_image(temp.name, img, [cv.IMWRITE_JPEG_QUALITY, 100])
         jpeg = jpegio.read(temp.name)
-        temp.close()
 
-    qtables = _qtables_from_jpeg(jpeg, num_dct_channels)
-    return _DCT_from_jpeg(jpeg, num_dct_channels), qtables
+    return _DCT_from_jpeg(jpeg, num_channels=num_dct_channels), _qtables_from_jpeg(
+        jpeg, all=all_quant_tables
+    )
 
 
 def _qtables_from_jpeg(
-    jpeg: jpegio.DecompressedJpeg, num_channels: Optional[int] = None
+    jpeg: jpegio.DecompressedJpeg, all: bool = False
 ) -> List[NDArray]:
-    if num_channels is None:
-        num_channels = len(jpeg.quant_tables)
-    return [jpeg.quant_tables[i].copy() for i in range(num_channels)]
+    if all:
+        return [jpeg.quant_tables[i].copy() for i in range(len(jpeg.quant_tables))]
+    else:
+        return [jpeg.quant_tables[0].copy()]
 
 
 def _DCT_from_jpeg(
@@ -121,9 +155,10 @@ def _DCT_from_jpeg(
         if (sampling_factors[:, 1] == sampling_factors[0, 1]).all():
             sampling_factors[:, 1] = 2
     else:
-        sampling_factors[:, :] = 2
+        sampling_factors[0, :] = 2
 
-    DCT_coef = np.empty((num_channels, *jpeg.coef_arrays[0].shape))
+    dct_shape = jpeg.coef_arrays[0].shape
+    DCT_coef = np.empty((num_channels, *dct_shape))
 
     for i in range(num_channels):
         r, c = jpeg.coef_arrays[i].shape
@@ -139,7 +174,7 @@ def _DCT_from_jpeg(
             block_coefs, (r_factor, c_factor)
         )
 
-        DCT_coef[i] = channel_coefficients
+        DCT_coef[i, :, :] = channel_coefficients[: dct_shape[0], : dct_shape[1]]
 
     return DCT_coef.astype(int)
 
@@ -169,12 +204,12 @@ class ImFile:
     mask: Optional[np.ndarray] = None
 
     @classmethod
-    def from_path(cls, image_path: str, mask_path: Optional[str] = None):
+    def open(cls, image_path: str, mask_path: Optional[str] = None):
         """Initializes image from a given image_path, and optionally a mask path containing forgery ground truth."""
         name = image_path.split("/")[-1]
         img = cv.imread(image_path)
         img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-        mask = mask = cv.imread(mask_path) if mask_path is not None else None
+        mask = cv.imread(mask_path) if mask_path is not None else None
         return cls(name, img, mask)
 
     @property

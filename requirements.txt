@@ -1,10 +1,11 @@
 numpy
+Pillow
 matplotlib
 opencv-python
 pyyaml
-pytest
 scikit-learn
 tqdm
 scipy
 jpegio
-torchmetrics
+typer
+

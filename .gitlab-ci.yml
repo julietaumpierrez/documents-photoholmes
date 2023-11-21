@@ -1,0 +1,35 @@
+image: joflaherty/photoholmes-test
+
+variables:
+  PRE_COMMIT_HOME: $CI_PROJECT_DIR/.cache/pre-commit
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+
+stages:
+  - lint
+  - test
+
+lint:
+  cache:
+    paths:
+      - $PRE_COMMIT_HOME
+  script:
+    - pip install pre-commit flake8 black isort
+    - pre-commit run --all-files
+
+test:
+  cache:
+    paths:
+      - .cache/pip
+  script:
+    - pip install -r requirements.txt
+    - pip install -r requirements-cpu.txt
+    - pip install pytest
+    - pip install .
+    - pytest --junitxml=junit.xml
+  artifacts:
+    reports:
+      junit: junit.xml
