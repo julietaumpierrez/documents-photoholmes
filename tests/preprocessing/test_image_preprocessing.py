@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import torch
 from PIL import Image
 
@@ -6,11 +7,15 @@ from photoholmes.preprocessing.image import RGBtoGray, ToNumpy, ToTensor
 
 
 # ============================= ToTensor Tests =========================================
-def test_to_tensor_3_channels():
+@pytest.fixture
+def to_tensor():
+    return ToTensor()
+
+
+def test_to_tensor_3_channels(to_tensor: ToTensor):
     np_image = np.random.rand(100, 100, 3).astype(np.float32)
     dct_coeffs = np.random.rand(100, 100, 2).astype(np.float32)
 
-    to_tensor = ToTensor()
     result = to_tensor(np_image, dct_coefficients=dct_coeffs)
 
     assert isinstance(result, dict)
@@ -23,10 +28,9 @@ def test_to_tensor_3_channels():
     np.testing.assert_allclose(result["dct_coefficients"].numpy(), dct_coeffs)
 
 
-def test_to_tensor_1_channel():
+def test_to_tensor_1_channel(to_tensor: ToTensor):
     np_image = np.random.rand(100, 100).astype(np.float32)
 
-    to_tensor = ToTensor()
     result = to_tensor(np_image)
 
     assert isinstance(result, dict)
@@ -37,12 +41,16 @@ def test_to_tensor_1_channel():
 
 
 # =============================== Normalize Tests ======================================
-def test_to_numpy_tensor():
+@pytest.fixture
+def to_numpy():
+    return ToNumpy()
+
+
+def test_to_numpy_tensor(to_numpy: ToNumpy):
     # Create a torch tensor
     torch_image = torch.rand((3, 100, 100))
 
     # Apply the ToNumpy transform
-    to_numpy = ToNumpy()
     result = to_numpy(torch_image)
 
     # Check that the output is a dictionary with a numpy array
@@ -54,12 +62,11 @@ def test_to_numpy_tensor():
     np.testing.assert_allclose(result["image"], torch_image.numpy())
 
 
-def test_to_numpy_pil():
+def test_to_numpy_pil(to_numpy: ToNumpy):
     # Create a PIL Image
     pil_image = Image.fromarray((np.random.rand(100, 100, 3) * 255).astype(np.uint8))
 
     # Apply the ToNumpy transform
-    to_numpy = ToNumpy()
     result = to_numpy(pil_image)
 
     # Check that the output is a dictionary with a numpy array
@@ -71,12 +78,11 @@ def test_to_numpy_pil():
     np.testing.assert_allclose(result["image"], np.array(pil_image))
 
 
-def test_to_numpy_kwargs_tensor():
+def test_to_numpy_kwargs_tensor(to_numpy: ToNumpy):
     # Create a torch tensor
     extra = torch.zeros((6,))
 
     # Apply the ToNumpy transform
-    to_numpy = ToNumpy()
     result = to_numpy(extra=extra)
 
     # Check that the output is a dictionary with a numpy array
@@ -86,12 +92,11 @@ def test_to_numpy_kwargs_tensor():
     assert np.allclose(result["extra"], extra.numpy())
 
 
-def test_to_numpy_kwargs_numpy():
+def test_to_numpy_kwargs_numpy(to_numpy: ToNumpy):
     # Create a numpy array
     extra = np.zeros((6,))
 
     # Apply the ToNumpy transform
-    to_numpy = ToNumpy()
     result = to_numpy(extra=extra)
 
     # Check that the output is a dictionary with a numpy array
@@ -101,12 +106,11 @@ def test_to_numpy_kwargs_numpy():
     assert np.allclose(result["extra"], extra)
 
 
-def test_to_numpy_kwargs_other():
+def test_to_numpy_kwargs_other(to_numpy: ToNumpy):
     # Create a list
     extra = [0, 1, 2, 3, 4, 5]
 
     # Apply the ToNumpy transform
-    to_numpy = ToNumpy()
     result = to_numpy(extra=extra)
 
     # Check that the output is a dictionary with a numpy array
@@ -117,13 +121,17 @@ def test_to_numpy_kwargs_other():
 
 
 # =============================== RGBtoGray Tests ======================================
-def test_rgb_to_gray_tensor():
+@pytest.fixture
+def rgb_to_gray():
+    return RGBtoGray()
+
+
+def test_rgb_to_gray_tensor(rgb_to_gray: RGBtoGray):
     # Create a torch tensor
     torch_image = torch.rand((3, 100, 100))
     extra = "passthrough"
 
     # Apply the RGBtoGray transform
-    rgb_to_gray = RGBtoGray()
     result = rgb_to_gray(torch_image, extra=extra)
 
     # Check that the output is a dictionary with a torch tensor
@@ -133,13 +141,12 @@ def test_rgb_to_gray_tensor():
     assert result["image"].shape == (100, 100)
 
 
-def test_rgb_to_gray_numpy():
+def test_rgb_to_gray_numpy(rgb_to_gray: RGBtoGray):
     # Create a numpy array
     np_image = np.random.rand(100, 100, 3).astype(np.float32)
     extra = "passthrough"
 
     # Apply the RGBtoGray transform
-    rgb_to_gray = RGBtoGray()
     result = rgb_to_gray(np_image, extra=extra)
 
     # Check that the output is a dictionary with a numpy array
