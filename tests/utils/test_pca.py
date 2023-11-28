@@ -10,6 +10,9 @@ class TestPCA:
         return PCA(n_components=2)
 
     def test_fit(self, pca):
+        """
+        Test that the PCA can be fitted.
+        """
         # Create a numpy array
         features = np.random.rand(100, 10)
 
