@@ -24,6 +24,9 @@ class BaseDataset(ABC, Dataset):
         self.mask_transform = mask_transform
         self.tampered_only = tampered_only
         self.image_paths, self.mask_paths = self._get_paths(img_dir, tampered_only)
+        self.jpeg_data = (
+            "dct_coefficients" in self.item_data or "qtables" in self.item_data
+        )
 
     @abstractmethod
     def _get_paths(
@@ -50,11 +53,10 @@ class BaseDataset(ABC, Dataset):
     def _get_data(self, idx: int) -> Tuple[Dict, Tensor]:
         x = {}
 
-        # image_path = os.path.join(self.img_dir, self.image_paths[idx])
         image_path = self.image_paths[idx]
         if "image" in self.item_data:
             x["image"] = read_image(image_path)
-        if "dct_coefficients" in self.item_data or "qtables" in self.item_data:
+        if self.jpeg_data:
             dct, qtables = read_jpeg_data(image_path)
             if "dct_coefficients" in self.item_data:
                 x["dct_coefficients"] = torch.tensor(dct)
