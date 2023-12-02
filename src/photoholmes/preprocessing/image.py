@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, TypeVar, Union
+from typing import Dict, Optional, Tuple, TypeVar, Union
 
 import numpy as np
 import torch
@@ -119,12 +119,15 @@ class ToNumpy(PreprocessingTransform):
             - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
-    def __call__(self, image: Union[T, Image], **kwargs) -> Dict[str, NDArray]:
+    def __call__(
+        self, image: Optional[Union[T, Image]] = None, **kwargs
+    ) -> Dict[str, NDArray]:
+        t_image = None
         if isinstance(image, Tensor):
-            t_image = image.cpu().numpy()
+            t_image = image.permute(1, 2, 0).cpu().numpy()
         elif isinstance(image, np.ndarray):
             t_image = image.copy()
-        else:
+        elif image is not None:
             t_image = np.array(image)
 
         for k, v in kwargs.items():
@@ -135,7 +138,10 @@ class ToNumpy(PreprocessingTransform):
             else:
                 kwargs[k] = np.array(v)
 
-        return {"image": t_image, **kwargs}
+        if t_image is None:
+            return {**kwargs}
+        else:
+            return {"image": t_image, **kwargs}
 
 
 class RGBtoGray(PreprocessingTransform):
