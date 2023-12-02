@@ -34,4 +34,20 @@ class Precision(BaseMetric):
         """
         Reset the metric values.
         """
+
         self.precision.reset()
+
+        self._update_count = 0
+        self._forward_cache = None
+        self._computed = None
+
+        for attr, default in self._defaults.items():
+            current_val = getattr(self, attr)
+            if isinstance(default, Tensor):
+                setattr(self, attr, default.detach().clone().to(current_val.device))
+            else:
+                setattr(self, attr, [])
+
+        # reset internal states
+        self._cache = None
+        self._is_synced = False
