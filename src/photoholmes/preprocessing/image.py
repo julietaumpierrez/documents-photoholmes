@@ -1,8 +1,9 @@
-from typing import Dict, TypeVar
+from typing import Dict, Optional, TypeVar, Union
 
 import numpy as np
 import torch
 from numpy.typing import NDArray
+from PIL.Image import Image
 from torch import Tensor
 
 from photoholmes.preprocessing.base import PreprocessingTransform
@@ -36,23 +37,26 @@ class ToTensor(PreprocessingTransform):
     Converts a numpy array to a PyTorch tensor.
 
     Args:
-        **kwargs: Keyword arguments to passthrough.
+        image: Image to be converted to a tensor.
+        **kwargs: Additional keyword arguments to passthrough.
 
     Returns:
         A dictionary with the following key-value pairs:
-            - **kwargs: The keyword arguments passed through unchanged.
+            - "image": The input image as a PyTorch tensor.
+            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
-    def __call__(self, **kwargs) -> Dict[str, Tensor]:
+    def __call__(self, image: NDArray, **kwargs) -> Dict[str, Tensor]:
+        t_image = torch.from_numpy(image)
+        if t_image.ndim == 3:
+            t_image = t_image.permute(2, 0, 1)
+
         for k in kwargs:
-            if kwargs[k] == "image":
-                kwargs[k] = torch.from_numpy(kwargs[k])
-                if kwargs[k].ndim == 3:
-                    kwargs[k] = kwargs[k].permute(2, 0, 1)
-            elif isinstance(kwargs[k], list):
+            if isinstance(kwargs[k], list):
                 kwargs[k] = np.array(kwargs[k])
             kwargs[k] = torch.from_numpy(kwargs[k])
-        return {**kwargs}
+
+        return {"image": t_image, **kwargs}
 
 
 class ToNumpy(PreprocessingTransform):
@@ -61,14 +65,26 @@ class ToNumpy(PreprocessingTransform):
     it leaves it as is.
 
     Args:
-        **kwargs: Keyword arguments to passthrough.
+        image: Image to be converted to a tensor.
+        **kwargs: Additional keyword arguments to passthrough.
 
     Returns:
         A dictionary with the following key-value pairs:
-            - **kwargs: The keyword arguments passed through unchanged.
+            - "image": The input image as a PyTorch tensor.
+            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
-    def __call__(self, **kwargs) -> Dict[str, NDArray]:
+    def __call__(
+        self, image: Optional[Union[T, Image]] = None, **kwargs
+    ) -> Dict[str, NDArray]:
+        t_image = None
+        if isinstance(image, Tensor):
+            t_image = image.permute(1, 2, 0).cpu().numpy()
+        elif isinstance(image, np.ndarray):
+            t_image = image.copy()
+        elif image is not None:
+            t_image = np.array(image)
+
         for k, v in kwargs.items():
             if isinstance(v, np.ndarray):
                 continue
@@ -76,7 +92,11 @@ class ToNumpy(PreprocessingTransform):
                 kwargs[k] = v.cpu().numpy()
             else:
                 kwargs[k] = np.array(v)
-        return {**kwargs}
+
+        if t_image is None:
+            return {**kwargs}
+        else:
+            return {"image": t_image, **kwargs}
 
 
 class RGBtoGray(PreprocessingTransform):
