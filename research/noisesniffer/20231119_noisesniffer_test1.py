@@ -29,13 +29,13 @@ def read_image(filename):
 
 
 # %%
-# image = Image.open(
-#   "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
-# )  # .convert("L")
-# np_image = np.array(image).astype(float)
-# plt.imshow(np_image, cmap="gray")
-filename = "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
-np_image = read_image(filename)
+image = Image.open(
+    "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
+)  # .convert("L")
+np_image = np.array(image)  # .astype(float)
+plt.imshow(np_image, cmap="gray")
+# filename = "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
+# np_image = read_image(filename)
 # %%
 print(np.unique(np_image))
 # %%
