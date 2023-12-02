@@ -102,8 +102,9 @@ class Noisesniffer(BaseMethod):
         """
         Run Noisesniffer on an image.
         Input: Image to test.
-        Output: # FIXME
+        Output: # TODO
         """
+        image = image.astype(float)
         valid_blocks_indices = compute_valid_blocks_indices(image, self.w)
         img_means = all_image_means(image, self.w)
 

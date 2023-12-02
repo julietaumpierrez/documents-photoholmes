@@ -29,12 +29,13 @@ def read_image(filename):
 
 
 # %%
-image = Image.open(
-    "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
-)  # .convert("L")
-np_image = np.array(image).astype(np.float32)
-plt.imshow(np_image, cmap="gray")
-
+# image = Image.open(
+#   "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
+# )  # .convert("L")
+# np_image = np.array(image).astype(float)
+# plt.imshow(np_image, cmap="gray")
+filename = "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
+np_image = read_image(filename)
 # %%
 print(np.unique(np_image))
 # %%
@@ -49,4 +50,20 @@ plt.imshow(mask)
 image_orig = Image.open("/Users/julietaumpierrez/Desktop/NoiseSniffer/output_mask.png")
 # %%
 plt.imshow(image_orig - mask)
+# %%
+# %%
+image = Image.open(
+    "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
+)  # .convert("L")
+np_image = np.array(image).astype(float)
+image = Image.open(
+    "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
+)  # .convert("L")
+np_image64 = np.array(image).astype(np.float32)
+
+plt.imshow(np_image64 - np_image)
+print(np.unique(np_image64))
+# print()
+
+
 # %%
