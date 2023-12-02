@@ -36,6 +36,19 @@ def run_method_cli(
     )
 
 
+@app.command(name="adapt-weights", help="Adapt weights for a photoholmes method")
+def run_adapt_weights(method: MethodName, weights_path: str, out_path: str):
+    match method:
+        case MethodName.EXIF_AS_LANGUAGE:
+            from photoholmes.methods.exif_as_language.prune_original_weights import (
+                prune_original_weights,
+            )
+
+            prune_original_weights(weights_path, out_path)
+        case _:
+            logging.info("No adaptation needed for this method.")
+
+
 @app.command(name="health", help="test the cli is working.")
 def test():
     print("CLI is working!")

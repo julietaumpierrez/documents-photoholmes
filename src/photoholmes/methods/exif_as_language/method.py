@@ -8,10 +8,10 @@ import torch
 from numpy.typing import NDArray
 from torch import Tensor
 
-from photoholmes.models.base import BaseMethod
-from photoholmes.models.exif_as_language.clip import ClipModel
+from photoholmes.methods.base import BaseMethod
+from photoholmes.methods.exif_as_language.clip import ClipModel
 from photoholmes.utils.patched_image import PatchedImage
-from photoholmes.utils.pca.pca import PCA
+from photoholmes.utils.pca import PCA
 
 from .utils import cosine_similarity, mean_shift, normalized_cut
 

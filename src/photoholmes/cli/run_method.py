@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 
 from photoholmes.methods.base import BaseTorchMethod
 from photoholmes.methods.method_factory import MethodFactory, MethodName
-from photoholmes.utils.image import ImFile, read_jpeg_data
+from photoholmes.utils.image import read_image, read_jpeg_data
 
 log = logging.getLogger("cli.run_method")
 
@@ -37,7 +37,7 @@ def run_method(
         elif device is not None:
             model.to(device)
 
-    image = ImFile.open(str(image_path)).img
+    image = read_image(image_path)
     dct_channels, qtables = read_jpeg_data(image_path, num_dct_channels, all_qtables)
     x = preprocess(image=image, dct_coefficients=dct_channels, qtables=qtables)
 
