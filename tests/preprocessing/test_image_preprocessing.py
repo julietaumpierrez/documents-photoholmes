@@ -20,16 +20,19 @@ class TestToTensor:
         Test that the ToTensor transform converts a three channel numpy image to a torch
         tensor.
         """
-        np_image = np.random.rand(100, 100, 3).astype(np.float32)
-        dct_coeffs = np.random.rand(100, 100, 2).astype(np.float32)
+        np_image_shape = (100, 100, 3)
+        dct_coeffs_shape = (100, 100, 2)
+
+        np_image = np.random.rand(*np_image_shape).astype(np.float32)
+        dct_coeffs = np.random.rand(*dct_coeffs_shape).astype(np.float32)
 
         result = to_tensor(np_image, dct_coefficients=dct_coeffs)
 
         assert isinstance(result, dict)
         assert isinstance(result["image"], torch.Tensor)
         assert isinstance(result["dct_coefficients"], torch.Tensor)
-        assert result["image"].shape == (3, 100, 100)
-        assert result["dct_coefficients"].shape == (100, 100, 2)
+        assert result["image"].shape == (3, *np_image_shape[:2])
+        assert result["dct_coefficients"].shape == dct_coeffs_shape
 
         np.testing.assert_allclose(
             result["image"].numpy(), np_image.transpose((2, 0, 1))
@@ -40,13 +43,14 @@ class TestToTensor:
         """
         Test that the ToTensor transform converts a one channel numpy image to a torch.
         """
-        np_image = np.random.rand(100, 100).astype(np.float32)
+        np_image_shape = (100, 100)
+        np_image = np.random.rand(*np_image_shape).astype(np.float32)
 
         result = to_tensor(np_image)
 
         assert isinstance(result, dict)
         assert isinstance(result["image"], torch.Tensor)
-        assert result["image"].shape == (100, 100)
+        assert result["image"].shape == np_image_shape
 
         np.testing.assert_allclose(result["image"].numpy(), np_image)
 
@@ -62,7 +66,8 @@ class TestToNumpy:
         image.
         """
         # Create a torch tensor
-        torch_image = torch.rand((3, 100, 100))
+        torch_image_shape = (3, 100, 100)
+        torch_image = torch.rand(torch_image_shape)
 
         # Apply the ToNumpy transform
         result = to_numpy(torch_image)
@@ -70,7 +75,7 @@ class TestToNumpy:
         # Check that the output is a dictionary with a numpy array
         assert isinstance(result, dict)
         assert isinstance(result["image"], np.ndarray)
-        assert result["image"].shape == (100, 100, 3)
+        assert result["image"].shape == (*torch_image_shape[1:], torch_image_shape[0])
 
         # Check that the values in the array are the same as in the tensor
         np.testing.assert_allclose(
@@ -81,9 +86,10 @@ class TestToNumpy:
         """
         Test that the ToNumpy transform converts a PIL Image to a numpy array.
         """
+        image_shape = (100, 100, 3)
         # Create a PIL Image
         pil_image = Image.fromarray(
-            (np.random.rand(100, 100, 3) * 255).astype(np.uint8)
+            (np.random.rand(*image_shape) * 255).astype(np.uint8)
         )
 
         # Apply the ToNumpy transform
@@ -92,7 +98,7 @@ class TestToNumpy:
         # Check that the output is a dictionary with a numpy array
         assert isinstance(result, dict)
         assert isinstance(result["image"], np.ndarray)
-        assert result["image"].shape == (100, 100, 3)
+        assert result["image"].shape == (*image_shape[:2], image_shape[2])
 
         # Check that the values in the array are the same as in the PIL Image
         np.testing.assert_allclose(result["image"], np.array(pil_image))
@@ -102,7 +108,8 @@ class TestToNumpy:
         Test that the ToNumpy transform converts a torch tensor image to a numpy array.
         """
         # Create a torch tensor
-        extra = torch.zeros((6,))
+        extra_shape = (6,)
+        extra = torch.zeros(extra_shape)
 
         # Apply the ToNumpy transform
         result = to_numpy(extra=extra)
@@ -112,7 +119,7 @@ class TestToNumpy:
         assert isinstance(
             result["extra"], np.ndarray
         ), "Extra should come out as an array"
-        assert result["extra"].shape == (6,)
+        assert result["extra"].shape == extra_shape
         assert np.allclose(result["extra"], extra.numpy())
 
     def test_to_numpy_kwargs_numpy(self, to_numpy: ToNumpy):
@@ -120,7 +127,8 @@ class TestToNumpy:
         Test that the ToNumpy transform converts a numpy kwargs to a numpy array.
         """
         # Create a numpy array
-        extra = np.zeros((6,))
+        extra_shape = (6,)
+        extra = np.zeros(extra_shape)
 
         # Apply the ToNumpy transform
         result = to_numpy(extra=extra)
@@ -130,7 +138,7 @@ class TestToNumpy:
         assert isinstance(
             result["extra"], np.ndarray
         ), "Extra should come out as an array"
-        assert result["extra"].shape == (6,)
+        assert result["extra"].shape == extra_shape
         assert np.allclose(result["extra"], extra)
 
     def test_to_numpy_kwargs_other(self, to_numpy: ToNumpy):
@@ -138,7 +146,8 @@ class TestToNumpy:
         Test that the ToNumpy transform converts a torch tensor kwarg to a numpy array.
         """
         # Create a list
-        extra = [0, 1, 2, 3, 4, 5]
+        extra_len = 6
+        extra = list(range(extra_len))
 
         # Apply the ToNumpy transform
         result = to_numpy(extra=extra)
@@ -148,7 +157,7 @@ class TestToNumpy:
         assert isinstance(
             result["extra"], np.ndarray
         ), "Extra should come out as an array"
-        assert result["extra"].shape == (6,)
+        assert result["extra"].shape == (extra_len,)
         assert np.allclose(result["extra"], np.array(extra))
 
 
@@ -159,7 +168,8 @@ class TestRGBtoGray:
 
     def test_rgb_to_gray_tensor(self, rgb_to_gray: RGBtoGray):
         # Create a torch tensor
-        torch_image = torch.rand((3, 100, 100))
+        image_shape = (3, 100, 100)
+        torch_image = torch.rand(image_shape)
         extra = "passthrough"
 
         # Apply the RGBtoGray transform
@@ -171,11 +181,12 @@ class TestRGBtoGray:
         assert isinstance(
             result["extra"], str
         ), "Extra should be passed through unchanged"
-        assert result["image"].shape == (100, 100)
+        assert result["image"].shape == image_shape[1:]
 
     def test_rgb_to_gray_numpy(self, rgb_to_gray: RGBtoGray):
         # Create a numpy array
-        np_image = np.random.rand(100, 100, 3).astype(np.float32)
+        image_shape = (100, 100, 3)
+        np_image = np.random.rand(*image_shape).astype(np.float32)
         extra = "passthrough"
 
         # Apply the RGBtoGray transform
@@ -187,7 +198,7 @@ class TestRGBtoGray:
         assert isinstance(
             result["extra"], str
         ), "Extra should be passed through unchanged"
-        assert result["image"].shape == (100, 100)
+        assert result["image"].shape == image_shape[:2]
 
 
 # TODO add tests for Normalize when EXIF is merged

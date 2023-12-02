@@ -9,22 +9,24 @@ from photoholmes.utils.clustering.gaussian_uniform import GaussianUniformEM
 class TestGaussianMixture:
     @pytest.fixture
     def gm(self):
-        return GaussianMixture(n_components=2)
+        self.n_components = 2
+        return GaussianMixture(n_components=self.n_components)
 
     def test_init(self, gm):
-        assert gm.n_components == 2
+        assert gm.n_components == self.n_components
         assert hasattr(gm, "gm")
 
     def test_fit(self, gm):
         # Create a numpy array
-        features = np.random.rand(100, 10)
+        feature_shape = (100, 10)
+        features = np.random.rand(*feature_shape)
 
         # Fit the GaussianMixture
         mus, covs = gm.fit(features)
 
         # Check that the means and covariances have the right shape
-        assert mus.shape == (2, 10)
-        assert covs.shape == (2, 10, 10)
+        assert mus.shape == (self.n_components, feature_shape[-1])
+        assert covs.shape == (self.n_components, feature_shape[-1], feature_shape[-1])
 
 
 # =========================== Guassian Uniform =========================================
@@ -39,22 +41,26 @@ class TestGaussianUniformEM:
 
     def test_fit(self, gu: GaussianUniformEM):
         # Create a numpy array
-        X1 = np.random.rand(100, 10)
-        X2 = np.random.uniform(0, 1, (100, 10))
+        X1_shape = (100, 10)
+        X2_shape = (100, 10)
+        X1 = np.random.rand(*X1_shape)
+        X2 = np.random.uniform(0, 1, X2_shape)
         features = np.vstack((X1, X2))
 
         # Fit the GaussianUniformEM
         mean, covariance_matrix, pi = gu.fit(features)
 
         # Check that the mean, covariance_matrix, and pi have the right shape
-        assert mean.shape == (10,)
-        assert covariance_matrix.shape == (10, 10)
+        assert mean.shape == (X1_shape[-1],)
+        assert covariance_matrix.shape == (X1_shape[-1], X1_shape[-1])
         assert isinstance(pi, float)
 
     def test_predict(self, gu: GaussianUniformEM):
         # Create a numpy array
-        X1 = np.random.rand(100, 10)
-        X2 = np.random.uniform(0, 1, (100, 10))
+        X1_shape = (100, 10)
+        X2_shape = (100, 10)
+        X1 = np.random.rand(*X1_shape)
+        X2 = np.random.uniform(0, 1, X2_shape)
         features = np.vstack((X1, X2))
 
         # Fit the GaussianUniformEM
@@ -64,5 +70,5 @@ class TestGaussianUniformEM:
         gammas, mahal = gu.predict(features)
 
         # Check that the gammas and mahal have the right shape
-        assert gammas.shape == (200,)
-        assert mahal.shape == (200,)
+        assert gammas.shape == (X1_shape[0] + X2_shape[0],)
+        assert mahal.shape == (X1_shape[0] + X2_shape[0],)
