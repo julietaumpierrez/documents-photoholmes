@@ -2,10 +2,10 @@
 .venv
 venv
 .env
-data
 
 # packaging
 *.egg-info/
+build/
 
 # caches
 __pycache__/

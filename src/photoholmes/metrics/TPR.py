@@ -1,4 +1,4 @@
-import torch
+from torch import Tensor
 from torchmetrics import Recall
 
 from photoholmes.metrics.base import BaseMetric
@@ -13,17 +13,17 @@ class TPR(BaseMetric):
         super().__init__()
         self.recall = Recall(task="binary")
 
-    def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:
+    def update(self, preds: Tensor, target: Tensor) -> None:
         """
         Update the metric values based on the current batch of mask predictions and targets.
 
         Args:
-            preds (torch.Tensor): Predicted masks.
-            target (torch.Tensor): Ground truth masks.
+            preds (Tensor): Predicted masks.
+            target (Tensor): Ground truth masks.
         """
         self.recall.update(preds, target)
 
-    def compute(self) -> torch.Tensor:
+    def compute(self) -> Tensor:
         """
         Compute the TPR based on the accumulated values.
         """

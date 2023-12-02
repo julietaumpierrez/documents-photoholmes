@@ -26,7 +26,7 @@ def is_jpeg(path: str) -> bool:
 
 
 im_names = ["Im_1.jpg", "Im_3.jpg"]
-method = MethodFactory.create(method_name)
+method = MethodFactory.load(method_name)
 
 
 im_path = IMAGES_PATH + im_names[im_selection]
