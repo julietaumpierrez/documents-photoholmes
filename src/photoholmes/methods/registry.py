@@ -8,3 +8,4 @@ class MethodName(Enum):
     SPLICEBUSTER = "splicebuster"
     CATNET = "catnet"
     EXIF_AS_LANGUAGE = "exif_as_language"
+    CFANET = "cfanet"

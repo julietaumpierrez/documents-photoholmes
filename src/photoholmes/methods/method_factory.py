@@ -35,11 +35,15 @@ class MethodFactory:
 
                 return CatNet.from_config(config), catnet_preprocessing
             case MethodName.EXIF_AS_LANGUAGE:
-                from photoholmes.models.exif_as_language import (
+                from photoholmes.methods.exif_as_language import (
                     EXIFAsLanguage,
                     exif_preprocessing,
                 )
 
                 return EXIFAsLanguage.from_config(config), exif_preprocessing
+            case MethodName.CFANET:
+                from photoholmes.methods.cfa import CFANet, cfanet_preprocessing
+
+                return CFANet.from_config(config), cfanet_preprocessing
             case _:
                 raise NotImplementedError(f"Method '{method_name}' is not implemented.")
