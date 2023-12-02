@@ -78,12 +78,6 @@ class EXIFAsLanguage(BaseMethod):
         ----------
         img : torch.Tensor
             [C, H, W], range: [0, 1]
-        feat_batch_size : int, optional
-            , by default 32
-        pred_batch_size : int, optional
-            , by default 1024
-        blue_high : bool
-            , by default True
 
         Returns
         -------
