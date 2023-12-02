@@ -47,8 +47,8 @@ class Normalize(PreprocessingTransform):
 
     def __init__(
         self,
-        mean: Union[Tuple[float, float, float], T],
-        std: Union[Tuple[float, float, float], T],
+        mean: Union[Tuple[float, ...], T],
+        std: Union[Tuple[float, ...], T],
     ) -> None:
         if isinstance(mean, tuple):
             self.mean = np.array(mean)
@@ -64,15 +64,20 @@ class Normalize(PreprocessingTransform):
             mean = torch.as_tensor(self.mean, dtype=torch.float32)
             std = torch.as_tensor(self.std, dtype=torch.float32)
 
-            t_image = (image.float() - mean.view(3, 1, 1)) / std.view(3, 1, 1)
+            if image.ndim == 3:
+                mean = mean.view(3, 1, 1)
+                std = std.view(3, 1, 1)
+
+            t_image = (image.float() - mean) / std
 
         else:
             mean = self.mean
             std = self.std
+            if image.ndim == 3:
+                mean = mean.reshape((1, 1, -1))
+                std = std.reshape((1, 1, -1))
 
-            t_image = (
-                image.astype(np.float32) - mean.reshape((1, 1, -1))
-            ) / std.reshape((1, 1, -1))
+            t_image = (image.astype(np.float32) - mean) / std
 
         return {"image": t_image, **kwargs}
 
