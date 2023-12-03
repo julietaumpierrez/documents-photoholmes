@@ -246,10 +246,7 @@ def bin_is_valid(b: int, n: float, m: float, stds_sorted_blocks: NDArray) -> boo
     See Alg. 9 in the paper
     """
     M = int(b * n * m)
-    if len(np.where(stds_sorted_blocks == 0)[0]) < M:
-        return True
-    else:
-        return False
+    return len(np.where(stds_sorted_blocks == 0)[0]) < M
 
 
 def compute_neighbour_blocks(index: List, img: NDArray, W: int) -> List:
@@ -303,7 +300,7 @@ def binom_tail(K: int, N: int, w: int, m: float) -> float:
     paper
     Output: Binomial Tail
     """
-    if 1 - binom.cdf((np.floor(K / w**2)) - 1, np.ceil(N / w**2), m) != 0:
+    if not (1 - binom.cdf((np.floor(K / w**2)) - 1, np.ceil(N / w**2), m)):
         return 1 - binom.cdf((np.floor(K / w**2)) - 1, np.ceil(N / w**2), m)
     else:
         list_probs = [
