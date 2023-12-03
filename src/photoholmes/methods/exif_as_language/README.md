@@ -2,8 +2,6 @@
 
 This is the implementation of the [EXIF as Language](https://arxiv.org/pdf/2301.04647.pdf) paper. The original implementation could be found [here](https://github.com/hellomuffin/exif-as-language).
 
-The code contained in this library was derived from [the original implementation](https://github.com/hellomuffin/exif-as-language) 
-
 ## Description
 
 An image file contains not only the pixel values, but also a lot of extra-metadata that accompanies the image taken: camera model, exposure time, focal length, jpeg quantization details, etc... In this method the content of the image is contrasted with the exif information to detect any inconsistencies between what is "said" about the image and what the image is.
