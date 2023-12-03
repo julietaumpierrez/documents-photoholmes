@@ -11,7 +11,8 @@ class TestPatchedImage:
 
     @pytest.fixture
     def image(self):
-        data = torch.rand((3, 100, 150))
+        data_shape = (3, 100, 150)
+        data = torch.rand(data_shape)
         patch_size = self.PATCH_SIZE
         stride = self.STRIDE
         return PatchedImage(data, patch_size=patch_size, stride=stride)
@@ -23,7 +24,8 @@ class TestPatchedImage:
         assert image.max_w_idx == 29
 
     def test_stride_calculation(self):
-        data = torch.rand((3, 100, 100))
+        data_shape = (3, 100, 100)
+        data = torch.rand(data_shape)
         patch_size = 10
         num_per_dim = 5
         image = PatchedImage(data, patch_size, num_per_dim=num_per_dim)
@@ -36,7 +38,7 @@ class TestPatchedImage:
     def test_get_patches(self, image: PatchedImage):
         idxs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
         patches = image.get_patches(idxs)
-        assert patches.shape == (4, 3, 10, 10)
+        assert patches.shape == (idxs.shape[0], 3, self.PATCH_SIZE, self.PATCH_SIZE)
 
     def test_get_patch_map(self, image: PatchedImage):
         patch_map = image.get_patch_map(0, 0)
