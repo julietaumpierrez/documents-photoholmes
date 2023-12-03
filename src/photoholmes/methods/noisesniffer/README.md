@@ -2,7 +2,6 @@
 
 This is the implementation of the [Noisesniffer](https://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000341) paper. The original implementation could be found [here](https://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000341). # FIXME: Link to article
 
-The code contained in this library was derived from [the original implementation](https://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000341) 
 
 ## Description
 

@@ -104,15 +104,15 @@ def get_T(w: int) -> int:
     """
     if w == 3:
         return 3
-    if w == 5:
+    elif w == 5:
         return 5
-    if w == 7:
+    elif w == 7:
         return 8
-    if w == 8:
+    elif w == 8:
         return 9
     else:
         print(f"unknown block side {w}")
-        return 0
+    return 0
 
 
 def get_T_mask(w: int) -> NDArray:
@@ -176,7 +176,7 @@ def update_samples_per_bin(b: int, num_blocks: int) -> int:
     See Alg. 4 in the paper
     """
     num_bins = int(round(num_blocks / b))
-    if num_bins == 0:
+    if not num_bins:
         num_bins = 1
     b_updated = int(num_blocks / num_bins)
     return b_updated
@@ -260,24 +260,23 @@ def compute_neighbour_blocks(index: List, img: NDArray, W: int) -> List:
     Output: list of neighbour cells
     """
     neighbours = []
-    if index[0] >= 1 and index[0] < int(
-        img.shape[0] / W
-    ):  # index[0] in range(1,int(img.shape[0] / W)):
+
+    if index[0] >= 1 and index[0] < int(img.shape[0] / W):
         neighbours.append([index[0] + 1, index[1]])
         neighbours.append([index[0] - 1, index[1]])
-    if index[0] == 0:
+    elif index[0] == 0:
         neighbours.append([index[0] + 1, index[1]])
-    if index[0] == int(img.shape[0] / W):
+    elif index[0] == int(img.shape[0] / W):
         neighbours.append([index[0] - 1, index[1]])
-    if index[1] >= 1 and index[1] < int(
-        img.shape[1] / W
-    ):  # index[1] in range(1,int(img.shape[1] / W)):
+
+    if index[1] >= 1 and index[1] < int(img.shape[1] / W):
         neighbours.append([index[0], index[1] + 1])
         neighbours.append([index[0], index[1] - 1])
-    if index[1] == 0:
+    elif index[1] == 0:
         neighbours.append([index[0], index[1] + 1])
-    if index[1] == int(img.shape[1] / W):
+    elif index[1] == int(img.shape[1] / W):
         neighbours.append([index[0], index[1] - 1])
+
     return neighbours
 
 
@@ -342,10 +341,7 @@ def seed_crit_satisfied(
         crit_seed = red_blocks[i, j] / all_blocks[i, j] - m
     else:
         crit_seed = 0
-    if crit_seed > 0 and mask[i, j] == 0:
-        return True
-    else:
-        return False
+    return crit_seed > 0 and mask[i, j] == 0
 
 
 def growing_crit_satisfied(
@@ -367,12 +363,9 @@ def growing_crit_satisfied(
     """
     N_B = all_blocks[neighbour[0], neighbour[1]]
     K_B = red_blocks[neighbour[0], neighbour[1]]
-    if binom_tail(K_R, N_R, w, m) / R_fin > 4 * binom_tail(
-        K_R + K_B, N_R + N_B, w, m
-    ) / (R_fin + 1):
-        return True
-    else:
-        return False
+    binom_of_region = binom_tail(K_R, N_R, w, m)
+    binom_of_region_plus_neighbour = binom_tail(K_R + K_B, N_R + N_B, w, m)
+    return binom_of_region / R_fin > 4 * binom_of_region_plus_neighbour / (R_fin + 1)
 
 
 def compute_save_NFA(

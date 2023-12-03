@@ -7,7 +7,7 @@ import torch
 from PIL import Image  # type: ignore
 from skimage import io
 
-from photoholmes.models.noisesniffer.method import Noisesniffer
+from photoholmes.methods.noisesniffer.method import Noisesniffer
 
 
 # %%

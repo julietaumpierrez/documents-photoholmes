@@ -7,7 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 from skimage.util import view_as_windows
 
-from photoholmes.models.base import BaseMethod
+from photoholmes.methods.base import BaseMethod
 
 from .utils import (
     all_image_means,
