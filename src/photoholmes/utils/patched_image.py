@@ -119,8 +119,6 @@ class PatchedImage:
             device=self.data.device,
         )
 
-        # FIXME Any way to vectorize this?
-        # https://discuss.pytorch.org/t/advanced-fancy-indexing-across-batches/103445
         for i, idx in enumerate(idxs):
             h_idx, w_idx = idx
 
