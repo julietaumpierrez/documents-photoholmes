@@ -4,10 +4,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torchvision.models import resnet50
 
 try:
-    from transformers import DistilBertConfig, DistilBertModel
     from transformers.modeling_outputs import BaseModelOutput
 except ImportError:
     raise ImportError(
@@ -23,6 +21,8 @@ def load_vision_model(model_name: Literal["resnet50"]) -> nn.Module:
     """
     match model_name.lower():
         case "resnet50":
+            from torchvision.models import resnet50
+
             model = resnet50()
         case _:
             raise NotImplementedError(f"Model name {model_name} is not implemented.")
@@ -38,6 +38,8 @@ def load_text_model(model_name: Literal["distilbert"]) -> nn.Module:
     """
     match model_name.lower():
         case "distilbert":
+            from transformers import DistilBertConfig, DistilBertModel
+
             bert_config = DistilBertConfig()
             model = DistilBertModel(bert_config)
         case _:
