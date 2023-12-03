@@ -15,9 +15,8 @@ from photoholmes.utils.pca import PCA
 
 from .utils import cosine_similarity, mean_shift, normalized_cut
 
+
 # FIXME fix docstrings
-
-
 class EXIFAsLanguage(BaseMethod):
     def __init__(
         self,
