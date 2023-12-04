@@ -60,5 +60,12 @@ class MethodFactory:
                 from photoholmes.methods.cfa import CFANet, cfanet_preprocessing
 
                 return CFANet.from_config(config), cfanet_preprocessing
+            case MethodName.NOISESNIFFER:
+                from photoholmes.methods.noisesniffer import (
+                    Noisesniffer,
+                    noisesniffer_preprocess,
+                )
+
+                return Noisesniffer.from_config(config), noisesniffer_preprocess
             case _:
                 raise NotImplementedError(f"Method '{method_name}' is not implemented.")
