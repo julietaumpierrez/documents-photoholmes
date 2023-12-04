@@ -6,7 +6,6 @@ class MetricName(Enum):
     AUROC = "auroc"
     FPR = "fpr"
     IoU = "iou"
-    MAP = "map"
     MCC = "mcc"
     Precision = "precision"
     ROC = "roc"

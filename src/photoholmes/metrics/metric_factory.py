@@ -1,12 +1,37 @@
 from typing import Union
 
-from photoholmes.metrics.base import BaseMetric
+from torchmetrics import Metric
+
 from photoholmes.metrics.registry import MetricName
 
 
 class MetricFactory:
+    """
+    MetricFactory class responsible for creating metric instances.
+
+    Methods:
+        load(metric_name: Union[str, MetricName]) -> Metric:
+            Instantiates and returns a metric object based on the specified metric name.
+
+    Supported Metrics:
+        - AUROC (Area Under the Receiver Operating Characteristic curve)
+        - FPR (False Positive Rate)
+        - IoU (Intersection over Union, also known as Jaccard Index)
+        - MCC (Matthews Correlation Coefficient)
+        - Precision
+        - ROC (Receiver Operating Characteristic curve)
+        - TPR (True Positive Rate, synonymous with Recall)
+
+    Examples:
+        To create an AUROC metric:
+        >>> metric = MetricFactory.load("auroc")
+
+        To create a Precision metric using the MetricName enum:
+        >>> metric = MetricFactory.load(MetricName.PRECISION)
+    """
+
     @staticmethod
-    def load(metric_name: Union[str, MetricName]) -> BaseMetric:
+    def load(metric_name: Union[str, MetricName]) -> Metric:
         """
         Instantiates and returns a metric object corresponding to the specified
         metric name.
@@ -32,36 +57,32 @@ class MetricFactory:
 
         match metric_name:
             case MetricName.AUROC:
-                from photoholmes.metrics.AUROC import AUROC
+                from torchmetrics import AUROC
 
-                return AUROC()
+                return AUROC(task="binary")
             case MetricName.FPR:
                 from photoholmes.metrics.FPR import FPR
 
                 return FPR()
             case MetricName.IoU:
-                from photoholmes.metrics.IoU import IoU
+                from torchmetrics import JaccardIndex as IoU
 
-                return IoU()
-            case MetricName.MAP:
-                from photoholmes.metrics.MAP import MAP
-
-                return MAP()
+                return IoU(task="binary")
             case MetricName.MCC:
-                from photoholmes.metrics.MCC import MCC
+                from torchmetrics import MatthewsCorrCoef
 
-                return MCC()
+                return MatthewsCorrCoef(task="binary")
             case MetricName.Precision:
-                from photoholmes.metrics.Precision import Precision
+                from torchmetrics import Precision
 
-                return Precision()
+                return Precision(task="binary")
             case MetricName.ROC:
-                from photoholmes.metrics.ROC import ROC
+                from torchmetrics import ROC
 
-                return ROC()
+                return ROC(task="binary")
             case MetricName.TPR:
-                from photoholmes.metrics.TPR import TPR
+                from torchmetrics import Recall as TPR
 
-                return TPR()
+                return TPR(task="binary")
             case _:
                 raise NotImplementedError(f"Metric '{metric_name}' is not implemented.")

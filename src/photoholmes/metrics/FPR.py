@@ -1,52 +1,76 @@
+import torch
 from torch import Tensor
-from torchmetrics import Specificity
-
-from photoholmes.metrics.base import BaseMetric
+from torchmetrics import Metric
 
 
-class FPR(BaseMetric):
+class FPR(Metric):
     """
-    FPR (False Positive Rate) metric for image masks using torchmetrics as a wrapper.
+    The FPR (False Positive Rate) metric calculates the proportion of
+    false positive predictions in relation to the total number of actual
+    negative samples.
+
+    Attributes:
+        false_positives (torch.Tensor): A tensor that accumulates the count of false
+                                        positive predictions across batches.
+        total_negatives (torch.Tensor): A tensor that accumulates the count of true
+                                        negative instances across batches.
+
+    Methods:
+        __init__(**kwargs): Initializes the FPR metric object.
+        update(preds: Tensor, target: Tensor): Updates the states with a new batch of
+                                               predictions and targets.
+        compute() -> Tensor: Computes the False Positive Rate over all batches.
+
+    Example:
+        >>> fpr_metric = FPR()
+        >>> for preds_batch, targets_batch in data_loader:
+        >>>     fpr_metric.update(preds_batch, targets_batch)
+        >>> fpr = fpr_metric.compute()
     """
 
-    def __init__(self):
-        super().__init__()
-        self.specificity = Specificity(task="binary")
+    def __init__(self, **kwargs):
+        """
+        Initializes the FPR metric object.
+
+        Args:
+            **kwargs: Additional keyword arguments.
+        """
+        super().__init__(**kwargs)
+        self.add_state("false_positives", default=torch.tensor(0), dist_reduce_fx="sum")
+        self.add_state("total_negatives", default=torch.tensor(0), dist_reduce_fx="sum")
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Update the metric values based on the current batch of mask predictions and targets.
+        Updates the false positives and total negatives counts with a new batch of
+        predictions and targets. It assumes both predictions and targets are binary.
 
         Args:
-            preds (Tensor): Predicted masks.
-            target (Tensor): Ground truth masks.
+            preds (Tensor): The predictions from the model.
+                Expected to be a binary tensor.
+            target (Tensor): The ground truth labels. Expected to be a binary tensor.
+
+        Raises:
+            ValueError: If the shapes of predictions and targets do not match.
         """
-        self.specificity.update(preds, target)
+        if preds.shape != target.shape:
+            raise ValueError("preds and target must have the same shape")
+
+        self.false_positives += torch.sum((preds == 1) & (target == 0))
+        self.total_negatives += torch.sum(target == 0)
 
     def compute(self) -> Tensor:
         """
-        Compute the FPR based on the accumulated values.
+        Computes the False Positive Rate over all the batches.
+
+        Returns:
+            Tensor: The computed False Positive Rate. If the total number of negatives
+                    is zero, it returns 0.0 to avoid division by zero.
+
         """
-        tnr = self.specificity.compute()
-        return 1 - tnr
-
-    def reset(self) -> None:
-        """
-        Reset the metric values.
-        """
-        self.specificity.reset()
-
-        self._update_count = 0
-        self._forward_cache = None
-        self._computed = None
-
-        for attr, default in self._defaults.items():
-            current_val = getattr(self, attr)
-            if isinstance(default, Tensor):
-                setattr(self, attr, default.detach().clone().to(current_val.device))
-            else:
-                setattr(self, attr, [])
-
-        # reset internal states
-        self._cache = None
-        self._is_synced = False
+        false_positives = self.false_positives.float()
+        total_negatives = self.total_negatives.float()
+        return (
+            false_positives / total_negatives
+            if total_negatives != 0
+            else torch.tensor(0.0)
+        )
