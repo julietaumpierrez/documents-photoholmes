@@ -43,9 +43,9 @@ print(np.unique(np_image))
 noisesniffer = Noisesniffer()
 
 # %%
-mask, mapita = noisesniffer.predict(np_image)
+output = noisesniffer.predict(np_image)
 # %%
-plt.imshow(mask)
+plt.imshow(output["mask"], cmap="gray")
 # %%
 image_orig = Image.open("/Users/julietaumpierrez/Desktop/NoiseSniffer/output_mask.png")
 # %%

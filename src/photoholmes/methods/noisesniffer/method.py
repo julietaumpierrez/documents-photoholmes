@@ -1,7 +1,7 @@
 # Derived from code provided by Marina Gardella, please refer to
 # https://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000341 for an online demo
 
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -98,11 +98,11 @@ class Noisesniffer(BaseMethod):
 
         return V, S
 
-    def predict(self, image: NDArray) -> Tuple[NDArray, NDArray]:
+    def predict(self, image: NDArray) -> Dict[str, NDArray]:
         """
         Run Noisesniffer on an image.
         Input: Image to test.
-        Output: # TODO
+        Output: Dictionary containing 'mask' and 'img_paint'.
         """
         image = image.astype(float)
         valid_blocks_indices = compute_valid_blocks_indices(image, self.w)
@@ -126,4 +126,4 @@ class Noisesniffer(BaseMethod):
             S = np.concatenate((S, S_ch))
 
         mask, img_paint = compute_output(image, self.w, self.W, self.m, V, S)
-        return mask, img_paint
+        return {"mask": mask, "img_paint": img_paint}

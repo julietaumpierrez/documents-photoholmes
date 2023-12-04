@@ -8,3 +8,4 @@ class MethodName(Enum):
     SPLICEBUSTER = "splicebuster"
     CATNET = "catnet"
     CFANET = "cfanet"
+    NOISESNIFFER = "noisesniffer"
