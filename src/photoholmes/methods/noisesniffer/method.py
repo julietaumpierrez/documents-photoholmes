@@ -98,7 +98,7 @@ class Noisesniffer(BaseMethod):
 
         return V, S
 
-    def predict(self, image) -> Tuple[NDArray, NDArray]:
+    def predict(self, image: NDArray) -> Tuple[NDArray, NDArray]:
         """
         Run Noisesniffer on an image.
         Input: Image to test.

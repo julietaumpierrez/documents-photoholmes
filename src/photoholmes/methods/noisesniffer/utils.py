@@ -176,7 +176,7 @@ def update_samples_per_bin(b: int, num_blocks: int) -> int:
     See Alg. 4 in the paper
     """
     num_bins = int(round(num_blocks / b))
-    if not num_bins:
+    if num_bins == 0:
         num_bins = 1
     b_updated = int(num_blocks / num_bins)
     return b_updated
@@ -246,7 +246,10 @@ def bin_is_valid(b: int, n: float, m: float, stds_sorted_blocks: NDArray) -> boo
     See Alg. 9 in the paper
     """
     M = int(b * n * m)
-    return len(np.where(stds_sorted_blocks == 0)[0]) < M
+    if len(np.where(stds_sorted_blocks == 0)[0]) < M:
+        return True
+    else:
+        return False
 
 
 def compute_neighbour_blocks(index: List, img: NDArray, W: int) -> List:
@@ -257,23 +260,24 @@ def compute_neighbour_blocks(index: List, img: NDArray, W: int) -> List:
     Output: list of neighbour cells
     """
     neighbours = []
-
-    if index[0] >= 1 and index[0] < int(img.shape[0] / W):
+    if index[0] >= 1 and index[0] < int(
+        img.shape[0] / W
+    ):  # index[0] in range(1,int(img.shape[0] / W)):
         neighbours.append([index[0] + 1, index[1]])
         neighbours.append([index[0] - 1, index[1]])
-    elif index[0] == 0:
+    if index[0] == 0:
         neighbours.append([index[0] + 1, index[1]])
-    elif index[0] == int(img.shape[0] / W):
+    if index[0] == int(img.shape[0] / W):
         neighbours.append([index[0] - 1, index[1]])
-
-    if index[1] >= 1 and index[1] < int(img.shape[1] / W):
+    if index[1] >= 1 and index[1] < int(
+        img.shape[1] / W
+    ):  # index[1] in range(1,int(img.shape[1] / W)):
         neighbours.append([index[0], index[1] + 1])
         neighbours.append([index[0], index[1] - 1])
-    elif index[1] == 0:
+    if index[1] == 0:
         neighbours.append([index[0], index[1] + 1])
-    elif index[1] == int(img.shape[1] / W):
+    if index[1] == int(img.shape[1] / W):
         neighbours.append([index[0], index[1] - 1])
-
     return neighbours
 
 
@@ -300,7 +304,7 @@ def binom_tail(K: int, N: int, w: int, m: float) -> float:
     paper
     Output: Binomial Tail
     """
-    if not (1 - binom.cdf((np.floor(K / w**2)) - 1, np.ceil(N / w**2), m)):
+    if 1 - binom.cdf((np.floor(K / w**2)) - 1, np.ceil(N / w**2), m) != 0:
         return 1 - binom.cdf((np.floor(K / w**2)) - 1, np.ceil(N / w**2), m)
     else:
         list_probs = [
@@ -338,7 +342,10 @@ def seed_crit_satisfied(
         crit_seed = red_blocks[i, j] / all_blocks[i, j] - m
     else:
         crit_seed = 0
-    return crit_seed > 0 and mask[i, j] == 0
+    if crit_seed > 0 and mask[i, j] == 0:
+        return True
+    else:
+        return False
 
 
 def growing_crit_satisfied(
@@ -360,9 +367,12 @@ def growing_crit_satisfied(
     """
     N_B = all_blocks[neighbour[0], neighbour[1]]
     K_B = red_blocks[neighbour[0], neighbour[1]]
-    binom_of_region = binom_tail(K_R, N_R, w, m)
-    binom_of_region_plus_neighbour = binom_tail(K_R + K_B, N_R + N_B, w, m)
-    return binom_of_region / R_fin > 4 * binom_of_region_plus_neighbour / (R_fin + 1)
+    if binom_tail(K_R, N_R, w, m) / R_fin > 4 * binom_tail(
+        K_R + K_B, N_R + N_B, w, m
+    ) / (R_fin + 1):
+        return True
+    else:
+        return False
 
 
 def compute_save_NFA(
