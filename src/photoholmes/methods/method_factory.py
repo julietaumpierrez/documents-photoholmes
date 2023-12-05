@@ -11,7 +11,29 @@ class MethodFactory:
         method_name: Union[str, MethodName],
         config: Optional[Union[dict, str]] = None,
     ) -> Tuple[BaseMethod, PreProcessingPipeline]:
-        """Instantiates methods corresponding to the name passed, from config"""
+        """
+        Instantiates and returns a method object along with its preprocessing pipeline,
+        corresponding to the specified method name and configuration.
+
+        Args:
+            method_name (Union[str, MethodName]): The name of the method to load.
+                Can be a string or a MethodName enum instance.
+            config (Optional[Union[dict, str]]): The configuration for the method.
+                Can be a dictionary of parameters or a string path to a config file.
+
+        Returns:
+            Tuple[BaseMethod, PreProcessingPipeline]: A tuple containing an instance of
+                a subclass of photoholmes.methods.base.BaseMethod and its associated
+                PreProcessingPipeline.
+
+        Raises:
+            NotImplementedError: If the method name provided is not recognized or not
+                implemented.
+
+        Examples:
+            >>> method, preprocess = MethodFactory.load("naive")
+            >>> method, preprocess = MethodFactory.load(MethodName.CATNET, config_dict)
+        """
         if isinstance(method_name, str):
             method_name = MethodName(method_name.lower())
         match method_name:
@@ -45,5 +67,12 @@ class MethodFactory:
                 from photoholmes.methods.cfa import CFANet, cfanet_preprocessing
 
                 return CFANet.from_config(config), cfanet_preprocessing
+            case MethodName.NOISESNIFFER:
+                from photoholmes.methods.noisesniffer import (
+                    Noisesniffer,
+                    noisesniffer_preprocess,
+                )
+
+                return Noisesniffer.from_config(config), noisesniffer_preprocess
             case _:
                 raise NotImplementedError(f"Method '{method_name}' is not implemented.")

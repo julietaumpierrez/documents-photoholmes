@@ -9,3 +9,4 @@ class MethodName(Enum):
     CATNET = "catnet"
     EXIF_AS_LANGUAGE = "exif_as_language"
     CFANET = "cfanet"
+    NOISESNIFFER = "noisesniffer"
