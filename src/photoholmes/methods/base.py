@@ -52,7 +52,6 @@ class BaseMethod(ABC):
 
         if config is None:
             config = {}
-
         return cls(**config)
 
 

@@ -3,7 +3,13 @@ import pytest
 import torch
 from PIL import Image
 
-from photoholmes.preprocessing.image import RGBtoGray, ToNumpy, ToTensor
+from photoholmes.preprocessing.image import (
+    Normalize,
+    RGBtoGray,
+    ToNumpy,
+    ToTensor,
+    ZeroOneRange,
+)
 
 
 class TestToTensor:
@@ -201,4 +207,129 @@ class TestRGBtoGray:
         assert result["image"].shape == image_shape[:2]
 
 
-# TODO add tests for Normalize when EXIF is merged
+class TestNormalize:
+    @pytest.fixture
+    def normalize(self):
+        self.std = (0.5, 0.5, 0.5)
+        self.mean = (0.5, 0.5, 0.5)
+        return Normalize(mean=self.mean, std=self.std)
+
+    def test_normalize_tensor(self, normalize: Normalize):
+        # Create a torch tensor
+        image_shape = (3, 100, 100)
+        torch_image = torch.rand(image_shape)
+        extra = "passthrough"
+
+        # Apply the Normalize transform
+        result = normalize(torch_image, extra=extra)
+
+        # Check that the output is a dictionary with a torch tensor
+        assert isinstance(result, dict)
+        assert isinstance(result["image"], torch.Tensor)
+        assert result["image"].shape == image_shape
+        assert isinstance(
+            result["extra"], str
+        ), "Extra should be passed through unchanged"
+
+        # Check that the values in the array are in the range [-1, 1]
+        assert result["image"].min() >= -1
+        assert result["image"].max() <= 1
+
+    def test_normalize_numpy(self, normalize: Normalize):
+        # Create a numpy array
+        image_shape = (100, 100, 3)
+        np_image = np.random.rand(*image_shape).astype(np.float32)
+        extra = "passthrough"
+
+        # Apply the Normalize transform
+        result = normalize(np_image, extra=extra)
+
+        # Check that the output is a dictionary with a numpy array
+        assert isinstance(result, dict)
+        assert isinstance(result["image"], np.ndarray)
+        assert result["image"].shape == image_shape
+        assert isinstance(
+            result["extra"], str
+        ), "Extra should be passed through unchanged"
+
+        # Check that the values in the array are in the range [-1, 1]
+        assert result["image"].min() >= -1
+        assert result["image"].max() <= 1
+
+    def test_normalize_one_channel(self):
+        normalize = Normalize(mean=(0.5,), std=(0.5,))
+        image_shape = (100, 100)
+        torch_image = torch.rand(image_shape)
+
+        result = normalize(torch_image)
+
+        assert isinstance(result, dict)
+        assert isinstance(result["image"], torch.Tensor)
+        assert result["image"].shape == image_shape
+
+        # Check that the values in the array are in the range [-1, 1]
+        assert result["image"].min() >= -1
+        assert result["image"].max() <= 1
+
+
+class TestZeroOneRange:
+    @pytest.fixture
+    def zero_one_range(self):
+        return ZeroOneRange()
+
+    def test_zero_one_range_tensor(self, zero_one_range: ZeroOneRange):
+        # Create a torch tensor
+        image_shape = (3, 100, 100)
+        torch_image = torch.rand(image_shape)
+        extra = "passthrough"
+
+        # Apply the ZeroOneRange transform
+        result = zero_one_range(torch_image, extra=extra)
+
+        # Check that the output is a dictionary with a torch tensor
+        assert isinstance(result, dict)
+        assert isinstance(result["image"], torch.Tensor)
+        assert result["image"].shape == image_shape
+        assert isinstance(
+            result["extra"], str
+        ), "Extra should be passed through unchanged"
+
+        # Check that the values in the array are in the range [0, 1]
+        assert result["image"].min() >= 0
+        assert result["image"].max() <= 1
+
+    def test_zero_one_range_numpy(self, zero_one_range: ZeroOneRange):
+        # Create a numpy array
+        image_shape = (100, 100, 3)
+        np_image = np.random.rand(*image_shape).astype(np.float32)
+        extra = "passthrough"
+
+        # Apply the ZeroOneRange transform
+        result = zero_one_range(np_image, extra=extra)
+
+        # Check that the output is a dictionary with a numpy array
+        assert isinstance(result, dict)
+        assert isinstance(result["image"], np.ndarray)
+        assert result["image"].shape == image_shape
+        assert isinstance(
+            result["extra"], str
+        ), "Extra should be passed through unchanged"
+
+        # Check that the values in the array are in the range [0, 1]
+        assert result["image"].min() >= 0
+        assert result["image"].max() <= 1
+
+    def test_zero_one_range_one_channel(self):
+        zero_one_range = ZeroOneRange()
+        image_shape = (100, 100)
+        torch_image = torch.rand(image_shape)
+
+        result = zero_one_range(torch_image)
+
+        assert isinstance(result, dict)
+        assert isinstance(result["image"], torch.Tensor)
+        assert result["image"].shape == image_shape
+
+        # Check that the values in the array are in the range [0, 1]
+        assert result["image"].min() >= 0
+        assert result["image"].max() <= 1

@@ -7,5 +7,6 @@ class MethodName(Enum):
     DQ = "dq"
     SPLICEBUSTER = "splicebuster"
     CATNET = "catnet"
+    EXIF_AS_LANGUAGE = "exif_as_language"
     CFANET = "cfanet"
     NOISESNIFFER = "noisesniffer"

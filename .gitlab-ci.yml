@@ -18,7 +18,7 @@ lint:
       - $PRE_COMMIT_HOME
   script:
     - pip install pre-commit flake8 black isort
-    - pre-commit run --all-files
+    - pre-commit run --hook-stage pre-merge-commit --all-files
 
 test:
   cache:

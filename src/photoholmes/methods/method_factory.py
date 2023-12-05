@@ -56,6 +56,13 @@ class MethodFactory:
                 from photoholmes.methods.catnet import CatNet, catnet_preprocessing
 
                 return CatNet.from_config(config), catnet_preprocessing
+            case MethodName.EXIF_AS_LANGUAGE:
+                from photoholmes.methods.exif_as_language import (
+                    EXIFAsLanguage,
+                    exif_preprocessing,
+                )
+
+                return EXIFAsLanguage.from_config(config), exif_preprocessing
             case MethodName.CFANET:
                 from photoholmes.methods.cfa import CFANet, cfanet_preprocessing
 
