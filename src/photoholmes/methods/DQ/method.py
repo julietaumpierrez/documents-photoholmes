@@ -1,7 +1,9 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
+import torch
 from numpy.typing import NDArray
+from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
 from photoholmes.methods.DQ.utils import (
@@ -24,10 +26,11 @@ class DQ(BaseMethod):
         self.number_frecs = number_frecs
         self.alpha = alpha
 
-    def predict(self, dct_coefficients: NDArray) -> NDArray:
+    def predict(self, image: NDArray, dct_coefficients: NDArray) -> Dict[str, Tensor]:
         """
         Predict the BPPM upsampled values.
 
+        :param image: Input image.
         :param dct_coefficients: DCT coefficients.
         :return: BPPM upsampled values.
         """
@@ -39,7 +42,9 @@ class DQ(BaseMethod):
             )
         BPPM_norm = BPPM / len(dct_coefficients)
         BPPM_upsampled = upsample_heatmap(BPPM_norm, (M, N))
-        return BPPM_upsampled
+        BPPM_upsampled = BPPM_upsampled[: image.shape[0], : image.shape[1]]
+        BPPM_upsampled = torch.from_numpy(BPPM_upsampled)
+        return {"heatmap": BPPM_upsampled}
 
     def _detect_period(self, histogram: NDArray) -> int:
         """

@@ -8,5 +8,5 @@ class MethodName(Enum):
     SPLICEBUSTER = "splicebuster"
     CATNET = "catnet"
     EXIF_AS_LANGUAGE = "exif_as_language"
-    CFANET = "cfanet"
+    ADAPTIVE_CFA_NET = "adaptive_cfa_net"
     NOISESNIFFER = "noisesniffer"

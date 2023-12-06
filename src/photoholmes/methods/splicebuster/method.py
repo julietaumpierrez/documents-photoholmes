@@ -2,7 +2,9 @@
 from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
+import torch
 from numpy.typing import NDArray
+from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
 from photoholmes.postprocessing.resizing import upscale_mask
@@ -196,7 +198,7 @@ class Splicebuster(BaseMethod):
 
         return block_features, coords
 
-    def predict(self, image: NDArray) -> NDArray:
+    def predict(self, image: NDArray) -> Dict[str, Tensor]:
         """Run splicebuster on an image.
         Params:
             image: normalized image
@@ -236,7 +238,9 @@ class Splicebuster(BaseMethod):
 
         heatmap = heatmap / np.max(labels)
         heatmap = upscale_mask(coords, heatmap, (X, Y), method="linear", fill_value=0)
-        return heatmap
+        heatmap = torch.from_numpy(heatmap).float()
+
+        return {"heatmap": heatmap}
 
     @classmethod
     def from_config(cls, config: Optional[str | Dict[str, Any]]):

@@ -784,10 +784,10 @@ class CatNet(BaseTorchMethod):
             logger.warning("=> Cannot load pretrained DCT")
 
     @torch.no_grad()
-    def predict(self, x: Tensor, qtable: Tensor) -> Tensor:
+    def predict(self, x: Tensor, qtable: Tensor) -> Dict[str, Tensor]:
         pred = self.forward(x, qtable)
         pred = F.softmax(pred, dim=1)[:, 1]
-        return pred
+        return {"heatmap": pred}
 
     def load_weigths(self, weights: Union[str, Path, dict]):
         if isinstance(weights, (str, Path)):

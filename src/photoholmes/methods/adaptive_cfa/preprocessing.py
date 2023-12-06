@@ -7,7 +7,7 @@ from photoholmes.preprocessing.image import ToTensor
 from photoholmes.preprocessing.pipeline import PreProcessingPipeline
 
 
-class CFANetPreprocessing(PreprocessingTransform):
+class AdaptiveCFANetPreprocessing(PreprocessingTransform):
     def __init__(self):
         pass
 
@@ -22,4 +22,6 @@ class CFANetPreprocessing(PreprocessingTransform):
         return {"x": image}
 
 
-cfanet_preprocessing = PreProcessingPipeline([ToTensor(), CFANetPreprocessing()])
+adaptive_cfa_net_preprocessing = PreProcessingPipeline(
+    [ToTensor(), AdaptiveCFANetPreprocessing()]
+)

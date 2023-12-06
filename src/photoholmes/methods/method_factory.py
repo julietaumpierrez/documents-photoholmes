@@ -63,10 +63,16 @@ class MethodFactory:
                 )
 
                 return EXIFAsLanguage.from_config(config), exif_preprocessing
-            case MethodName.CFANET:
-                from photoholmes.methods.cfa import CFANet, cfanet_preprocessing
+            case MethodName.ADAPTIVE_CFA_NET:
+                from photoholmes.methods.adaptive_cfa import (
+                    AdaptiveCFANet,
+                    adaptive_cfa_net_preprocessing,
+                )
 
-                return CFANet.from_config(config), cfanet_preprocessing
+                return (
+                    AdaptiveCFANet.from_config(config),
+                    adaptive_cfa_net_preprocessing,
+                )
             case MethodName.NOISESNIFFER:
                 from photoholmes.methods.noisesniffer import (
                     Noisesniffer,

@@ -137,14 +137,16 @@ class EXIFAsLanguage(BaseMethod):
             out_pca[:, :, i] = cv2.resize(
                 pred_pca_map[:, :, i], (width, height), interpolation=cv2.INTER_LINEAR
             )
+        score = pred_maps.mean()
+        affinity_matrix = self.generate_afinity_matrix(patch_features)
 
         return {
-            "pred_maps": pred_maps,
-            "ms": out_ms,
+            "heatmap": pred_maps,
+            "mask": out_ms,
+            "score": score,
             "ncuts": out_ncuts,
-            "score": pred_maps.mean(),
             "pca": out_pca,
-            "affinity_matrix": self.generate_afinity_matrix(patch_features),
+            "affinity_matrix": affinity_matrix,
         }
 
     def init_img(self, img: Tensor) -> PatchedImage:

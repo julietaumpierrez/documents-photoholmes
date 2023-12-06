@@ -7,15 +7,15 @@
 
 import logging
 from pathlib import Path
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 import numpy as np
 import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
+from photoholmes.methods.adaptive_cfa.config import AdaptiveCFAConfig
 from photoholmes.methods.base import BaseTorchMethod
-from photoholmes.methods.cfa.config import CFAConfig
 from photoholmes.utils.generic import load_yaml
 
 logger = logging.getLogger(__name__)
@@ -117,7 +117,7 @@ class Pixelwise(nn.Module):
         return x4
 
 
-class CFANet(BaseTorchMethod):
+class AdaptiveCFANet(BaseTorchMethod):
     """
     Input image: (1, 3, 2Y, 2X)
     ⮟First module: Spatial convolutions, without pooling
@@ -195,7 +195,7 @@ class CFANet(BaseTorchMethod):
         return x
 
     @torch.no_grad()
-    def predict(self, x: Tensor) -> Tensor:
+    def predict(self, x: Tensor) -> Dict[str, Tensor]:
         Y_o, X_o = x.shape[-2:]
         pred = self.forward(x).cpu()
         pred = torch.exp(pred)
@@ -218,7 +218,8 @@ class CFANet(BaseTorchMethod):
         output[
             : upscaled_heatmap.shape[0], : upscaled_heatmap.shape[1]
         ] = upscaled_heatmap
-        return output
+        output = torch.from_numpy(output).float()
+        return {"heatmap": output}
 
     def load_weigths(self, weights: Union[str, Path, dict]):
         if isinstance(weights, (str, Path)):
@@ -232,11 +233,11 @@ class CFANet(BaseTorchMethod):
         self.load_state_dict(weights)  # type: ignore
 
     @classmethod
-    def from_config(cls, config: Optional[Union[CFAConfig, str, Path, dict]]):
+    def from_config(cls, config: Optional[Union[AdaptiveCFAConfig, str, Path, dict]]):
         if isinstance(config, (str, Path)):
             config = load_yaml(str(config))
 
-        if isinstance(config, CFAConfig):
+        if isinstance(config, AdaptiveCFAConfig):
             config = config.__dict__
 
         if config is None:
