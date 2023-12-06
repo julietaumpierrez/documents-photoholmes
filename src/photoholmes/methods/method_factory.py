@@ -35,8 +35,12 @@ class MethodFactory:
 
                 return CatNet.from_config(config), catnet_preprocessing
             case MethodName.CFANET:
-                from photoholmes.models.cfa import CFANet, cfanet_preprocessing
+                from photoholmes.methods.cfa import CFANet, cfanet_preprocessing
 
                 return CFANet.from_config(config), cfanet_preprocessing
+            case MethodName.PSCCNET:
+                from photoholmes.methods.psccnet import PSCCNet, psccnet_preprocessing
+
+                return PSCCNet.from_config(config), psccnet_preprocessing
             case _:
                 raise NotImplementedError(f"Method '{method_name}' is not implemented.")
