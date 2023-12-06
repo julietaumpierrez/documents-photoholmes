@@ -1,4 +1,4 @@
-from typing import Union
+from typing import List, Union
 
 from torchmetrics import Metric
 
@@ -9,10 +9,6 @@ class MetricFactory:
     """
     MetricFactory class responsible for creating metric instances.
 
-    Methods:
-        load(metric_name: Union[str, MetricName]) -> Metric:
-            Instantiates and returns a metric object based on the specified metric name.
-
     Supported Metrics:
         - AUROC (Area Under the Receiver Operating Characteristic curve)
         - FPR (False Positive Rate)
@@ -22,67 +18,82 @@ class MetricFactory:
         - ROC (Receiver Operating Characteristic curve)
         - TPR (True Positive Rate, synonymous with Recall)
 
-    Examples:
-        To create an AUROC metric:
-        >>> metric = MetricFactory.load("auroc")
-
-        To create a Precision metric using the MetricName enum:
-        >>> metric = MetricFactory.load(MetricName.PRECISION)
+    Methods:
+        load(metric_names: List[Union[str, MetricName]]) -> List[Metric]:
+            Instantiates and returns a list of metric objects corresponding to the
+            specified metric names.
     """
 
     @staticmethod
-    def load(metric_name: Union[str, MetricName]) -> Metric:
+    def load(metric_names: List[Union[str, MetricName]]) -> List[Metric]:
         """
-        Instantiates and returns a metric object corresponding to the specified
-        metric name.
+        Instantiates and returns a list of metric objects corresponding to the specified
+        metric names.
 
         Args:
-            metric_name (Union[str, MetricName]): The name of the metric to load.
-                Can be a string or a MetricName enum instance.
+            metric_names (List[Union[str, MetricName]]): A list of the names of the
+                metrics to load.
+                These can be strings representing the metric names or instances of the
+                MetricName enum.
 
         Returns:
-            BaseMetric: An instance of a subclass of photoholmes.metrics.base.BaseMetric
-                corresponding to the provided metric name.
+            List[Metric]: A list of metric objects corresponding to the provided metric
+                names.
+                The order of the metric objects in the list will correspond to the
+                order of names provided.
 
         Raises:
-            NotImplementedError: If the metric name provided is not recognized or not
-                implemented.
+            ValueError: If the 'metric_names' list is empty, indicating that no metric
+                names have been specified.
+            NotImplementedError: If any of the metric names provided are not recognized
+                or not implemented in the PhotoHolmes library.
 
         Examples:
-            >>> metric = MetricFactory.load("auroc")
-            >>> metric = MetricFactory.load(MetricName.PRECISION)
+            Loading a single metric:
+            >>> metrics = MetricFactory.load(["auroc"])
+
+            Loading multiple metrics:
+            >>> metrics = MetricFactory.load(["auroc", MetricName.PRECISION])
+
         """
-        if isinstance(metric_name, str):
-            metric_name = MetricName(metric_name.lower())
+        if not metric_names:
+            raise ValueError("metric_names cannot be empty.")
+        metrics = []
+        for metric_name in metric_names:
+            if isinstance(metric_name, str):
+                metric_name = MetricName(metric_name.lower())
+            # TODO: Add mAP metric
+            match metric_name:
+                case MetricName.AUROC:
+                    from torchmetrics import AUROC
 
-        match metric_name:
-            case MetricName.AUROC:
-                from torchmetrics import AUROC
+                    metrics.append(AUROC(task="binary"))
+                case MetricName.FPR:
+                    from photoholmes.metrics.FPR import FPR
 
-                return AUROC(task="binary")
-            case MetricName.FPR:
-                from photoholmes.metrics.FPR import FPR
+                    metrics.append(FPR())
+                case MetricName.IoU:
+                    from torchmetrics import JaccardIndex as IoU
 
-                return FPR()
-            case MetricName.IoU:
-                from torchmetrics import JaccardIndex as IoU
+                    metrics.append(IoU(task="binary"))
+                case MetricName.MCC:
+                    from torchmetrics import MatthewsCorrCoef
 
-                return IoU(task="binary")
-            case MetricName.MCC:
-                from torchmetrics import MatthewsCorrCoef
+                    metrics.append(MatthewsCorrCoef(task="binary"))
+                case MetricName.Precision:
+                    from torchmetrics import Precision
 
-                return MatthewsCorrCoef(task="binary")
-            case MetricName.Precision:
-                from torchmetrics import Precision
+                    metrics.append(Precision(task="binary"))
+                case MetricName.ROC:
+                    from torchmetrics import ROC
 
-                return Precision(task="binary")
-            case MetricName.ROC:
-                from torchmetrics import ROC
+                    metrics.append(ROC(task="binary"))
+                case MetricName.TPR:
+                    from torchmetrics import Recall as TPR
 
-                return ROC(task="binary")
-            case MetricName.TPR:
-                from torchmetrics import Recall as TPR
-
-                return TPR(task="binary")
-            case _:
-                raise NotImplementedError(f"Metric '{metric_name}' is not implemented.")
+                    metrics.append(TPR(task="binary"))
+                case _:
+                    raise NotImplementedError(
+                        f"Metric '{metric_name}' is not implemented."
+                    )
+        return metrics

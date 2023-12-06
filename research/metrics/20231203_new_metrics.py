@@ -43,9 +43,15 @@ mask = torch.tensor(
     ]
 )
 # %%
-for metric_name in metric_names:
-    print(metric_name)
-    metric = MetricFactory.load(metric_name.value)
+metrics = [metric.value for metric in metric_names]
+
+metrics
+# %%
+metrics_objects = MetricFactory.load(metrics)
+metrics_objects
+# %%
+for metric in metrics_objects:
+    print(metric)
     metric.update(pred1, mask)
     metric.update(pred2, mask)
     metric.update(pred3, mask)
@@ -54,4 +60,7 @@ for metric_name in metric_names:
     print("-" * 80)
 # %%
 metric_names[0].value
+# %%
+metrics2 = []
+MetricFactory.load(metrics2)
 # %%
