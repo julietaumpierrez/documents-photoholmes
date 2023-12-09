@@ -38,9 +38,9 @@ class MethodFactory:
             method_name = MethodName(method_name.lower())
         match method_name:
             case MethodName.NAIVE:
-                from photoholmes.methods.naive.method import Naive
+                from photoholmes.methods.naive import Naive, naive_preprocessing
 
-                return Naive.from_config(config), PreProcessingPipeline([])
+                return Naive.from_config(config), naive_preprocessing
             case MethodName.DQ:
                 from photoholmes.methods.DQ import DQ, dq_preprocessing
 
