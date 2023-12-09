@@ -6,11 +6,10 @@ from numpy.typing import NDArray
 from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
-from photoholmes.methods.DQ.utils import (
-    ZIGZAG,
-    fft_period,
-    histogram_period,
-    upsample_heatmap,
+from photoholmes.methods.DQ.utils import ZIGZAG, fft_period, histogram_period
+from photoholmes.postprocessing.resizing import (
+    resize_heatmap_with_trim_and_pad,
+    simple_upscale_heatmap,
 )
 
 
@@ -26,7 +25,9 @@ class DQ(BaseMethod):
         self.number_frecs = number_frecs
         self.alpha = alpha
 
-    def predict(self, image: NDArray, dct_coefficients: NDArray) -> Dict[str, Tensor]:
+    def predict(
+        self, dct_coefficients: NDArray, original_image_size: Tuple[int, int]
+    ) -> Dict[str, Tensor]:
         """
         Predict the BPPM upsampled values.
 
@@ -34,16 +35,17 @@ class DQ(BaseMethod):
         :param dct_coefficients: DCT coefficients.
         :return: BPPM upsampled values.
         """
-        M, N = dct_coefficients.shape[1:]
+        M, N = dct_coefficients.shape[-2:]
         BPPM = np.zeros((M // 8, N // 8))
         for channel in range(dct_coefficients.shape[0]):
             BPPM += self._calculate_BPPM_channel(
                 dct_coefficients[channel], ZIGZAG[: self.number_frecs]
             )
-        BPPM_norm = BPPM / len(dct_coefficients)
-        BPPM_upsampled = upsample_heatmap(BPPM_norm, (M, N))
-        BPPM_upsampled = BPPM_upsampled[: image.shape[0], : image.shape[1]]
-        BPPM_upsampled = torch.from_numpy(BPPM_upsampled)
+        BPPM_norm = torch.from_numpy(BPPM / len(dct_coefficients))
+        BPPM_upsampled = simple_upscale_heatmap(BPPM_norm, 8)
+        BPPM_upsampled = resize_heatmap_with_trim_and_pad(
+            BPPM_upsampled, original_image_size
+        )
         return {"heatmap": BPPM_upsampled}
 
     def _detect_period(self, histogram: NDArray) -> int:
