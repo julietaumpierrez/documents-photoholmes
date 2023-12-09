@@ -28,6 +28,10 @@ from photoholmes.methods.catnet.config import (
     StageConfig,
     pretrained_arch,
 )
+from photoholmes.postprocessing.resizing import (
+    resize_heatmap_with_trim_and_pad,
+    simple_upscale_heatmap,
+)
 from photoholmes.utils.generic import load_yaml
 
 BatchNorm2d = nn.BatchNorm2d
@@ -784,10 +788,31 @@ class CatNet(BaseTorchMethod):
             logger.warning("=> Cannot load pretrained DCT")
 
     @torch.no_grad()
-    def predict(self, x: Tensor, qtable: Tensor) -> Dict[str, Tensor]:
+    def predict(
+        self, x: Tensor, qtable: Tensor, original_image_size=Tuple[int, int]
+    ) -> Dict[str, Tensor]:
+        add_batch_dim = x.ndim == 3
+        if add_batch_dim:
+            x = x.unsqueeze(0)
         pred = self.forward(x, qtable)
-        pred = F.softmax(pred, dim=1)[:, 1]
-        return {"heatmap": pred}
+        pred = F.softmax(pred, dim=1)
+        pred_tempered = pred[:, 1]
+        pred_authentic = pred[:, 0]
+
+        pred_authentic = simple_upscale_heatmap(pred_authentic, 4)
+        pred_tempered = simple_upscale_heatmap(pred_tempered, 4)
+
+        pred_authentic = resize_heatmap_with_trim_and_pad(
+            pred_authentic, original_image_size
+        )
+        pred_tempered = resize_heatmap_with_trim_and_pad(
+            pred_tempered, original_image_size
+        )
+
+        if add_batch_dim:
+            pred_tempered = pred_tempered.squeeze(0)
+            pred_authentic = pred_authentic.squeeze(0)
+        return {"heatmap": pred_tempered, "authentic_heatmap": pred_authentic}
 
     def load_weigths(self, weights: Union[str, Path, dict]):
         if isinstance(weights, (str, Path)):
