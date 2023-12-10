@@ -1,2 +1,2 @@
-weights: weights/adaptive_cfa/pretrained.pt
+weights: path_to_weights
 
