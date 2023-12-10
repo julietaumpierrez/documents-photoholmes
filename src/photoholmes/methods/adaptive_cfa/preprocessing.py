@@ -1,9 +1,8 @@
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 from torch import Tensor
 
 from photoholmes.preprocessing.base import PreprocessingTransform
-from photoholmes.preprocessing.image import ToTensor
 from photoholmes.preprocessing.pipeline import PreProcessingPipeline
 
 
@@ -11,17 +10,18 @@ class AdaptiveCFANetPreprocessing(PreprocessingTransform):
     def __init__(self):
         pass
 
-    def __call__(self, image: Tensor, **kwargs: Dict[str, Any]) -> Dict[str, Tensor]:
+    def __call__(
+        self,
+        image: Tensor,
+        original_image_size=Tuple[int, int],
+        **kwargs: Dict[str, Any],
+    ) -> Dict[str, Any]:
         C, Y_o, X_o = image.shape
         image = image[:C, : Y_o - Y_o % 2, : X_o - X_o % 2]
 
         image = image.float()
-        if image.ndim == 3:
-            image = image[None, :]
 
-        return {"x": image}
+        return {"image": image, "original_image_size": original_image_size}
 
 
-adaptive_cfa_net_preprocessing = PreProcessingPipeline(
-    [ToTensor(), AdaptiveCFANetPreprocessing()]
-)
+adaptive_cfa_net_preprocessing = PreProcessingPipeline([AdaptiveCFANetPreprocessing()])

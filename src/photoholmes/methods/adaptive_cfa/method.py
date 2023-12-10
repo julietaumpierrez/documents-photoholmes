@@ -7,15 +7,18 @@
 
 import logging
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Tuple, Union
 
-import numpy as np
 import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
 from photoholmes.methods.adaptive_cfa.config import AdaptiveCFAConfig
 from photoholmes.methods.base import BaseTorchMethod
+from photoholmes.postprocessing.resizing import (
+    resize_heatmap_with_trim_and_pad,
+    simple_upscale_heatmap,
+)
 from photoholmes.utils.generic import load_yaml
 
 logger = logging.getLogger(__name__)
@@ -195,9 +198,15 @@ class AdaptiveCFANet(BaseTorchMethod):
         return x
 
     @torch.no_grad()
-    def predict(self, x: Tensor) -> Dict[str, Tensor]:
-        Y_o, X_o = x.shape[-2:]
-        pred = self.forward(x).cpu()
+    def predict(
+        self, image: Tensor, original_image_size: Tuple[int, int]
+    ) -> Dict[str, Tensor]:
+        # TODO: chequear si esta bien el procesamiento del predict
+        # me parece que da resultdaos muy malos
+        if image.ndim == 3:
+            image = image.unsqueeze(0)
+
+        pred = self.forward(image).cpu()
         pred = torch.exp(pred)
 
         pred[:, 1] = pred[torch.tensor([1, 0, 3, 2]), 1]
@@ -211,14 +220,8 @@ class AdaptiveCFANet(BaseTorchMethod):
         confidence = torch.clamp(confidence, 0, 1)
         confidence[authentic] = 1
 
-        heatmap = confidence.numpy()
-
-        upscaled_heatmap = heatmap.repeat(32, axis=0).repeat(32, axis=1)
-        output = np.zeros((Y_o, X_o))
-        output[
-            : upscaled_heatmap.shape[0], : upscaled_heatmap.shape[1]
-        ] = upscaled_heatmap
-        output = torch.from_numpy(output).float()
+        upscaled_heatmap = simple_upscale_heatmap(confidence, 32)
+        output = resize_heatmap_with_trim_and_pad(upscaled_heatmap, original_image_size)
         return {"heatmap": output}
 
     def load_weigths(self, weights: Union[str, Path, dict]):
@@ -239,6 +242,7 @@ class AdaptiveCFANet(BaseTorchMethod):
 
         if isinstance(config, AdaptiveCFAConfig):
             config = config.__dict__
+        print(config)
 
         if config is None:
             config = {"weights": None}
