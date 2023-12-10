@@ -82,9 +82,10 @@ def simple_upscale_heatmap(
     new_width = current_width * width_scale
 
     # Upscale using interpolate
+    new_size = (new_height, new_width)
     upscaled_heatmap = F.interpolate(
         heatmap.unsqueeze(1),
-        size=(new_height, new_width),
+        size=new_size,
     ).squeeze(1)
 
     # Remove the batch dimension if it was added
