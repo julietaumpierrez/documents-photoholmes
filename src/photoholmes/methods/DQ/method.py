@@ -28,13 +28,7 @@ class DQ(BaseMethod):
     def predict(
         self, dct_coefficients: NDArray, original_image_size: Tuple[int, int]
     ) -> Dict[str, Tensor]:
-        """
-        Predict the BPPM upsampled values.
-
-        :param image: Input image.
-        :param dct_coefficients: DCT coefficients.
-        :return: BPPM upsampled values.
-        """
+        # TODO: Add docstring
         M, N = dct_coefficients.shape[-2:]
         BPPM = np.zeros((M // 8, N // 8))
         for channel in range(dct_coefficients.shape[0]):

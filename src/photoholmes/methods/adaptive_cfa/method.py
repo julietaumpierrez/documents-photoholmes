@@ -201,6 +201,7 @@ class AdaptiveCFANet(BaseTorchMethod):
     def predict(
         self, image: Tensor, original_image_size: Tuple[int, int]
     ) -> Dict[str, Tensor]:
+        # TODO: add docstring
         if image.ndim == 3:
             image = image.unsqueeze(0)
         pred = self.forward(image).cpu()

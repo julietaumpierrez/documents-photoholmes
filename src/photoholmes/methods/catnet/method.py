@@ -791,6 +791,7 @@ class CatNet(BaseTorchMethod):
     def predict(
         self, x: Tensor, qtable: Tensor, original_image_size=Tuple[int, int]
     ) -> Dict[str, Tensor]:
+        # TODO: add docstring
         add_batch_dim = x.ndim == 3
         if add_batch_dim:
             x = x.unsqueeze(0)
