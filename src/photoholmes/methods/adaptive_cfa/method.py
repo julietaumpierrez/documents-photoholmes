@@ -201,11 +201,8 @@ class AdaptiveCFANet(BaseTorchMethod):
     def predict(
         self, image: Tensor, original_image_size: Tuple[int, int]
     ) -> Dict[str, Tensor]:
-        # TODO: chequear si esta bien el procesamiento del predict
-        # me parece que da resultdaos muy malos
         if image.ndim == 3:
             image = image.unsqueeze(0)
-
         pred = self.forward(image).cpu()
         pred = torch.exp(pred)
 
@@ -219,8 +216,9 @@ class AdaptiveCFANet(BaseTorchMethod):
         confidence = 1 - torch.max(pred, dim=0).values
         confidence = torch.clamp(confidence, 0, 1)
         confidence[authentic] = 1
+        error_map = 1 - confidence
 
-        upscaled_heatmap = simple_upscale_heatmap(confidence, 32)
+        upscaled_heatmap = simple_upscale_heatmap(error_map, 32)
         output = resize_heatmap_with_trim_and_pad(upscaled_heatmap, original_image_size)
         return {"heatmap": output}
 
@@ -242,7 +240,6 @@ class AdaptiveCFANet(BaseTorchMethod):
 
         if isinstance(config, AdaptiveCFAConfig):
             config = config.__dict__
-        print(config)
 
         if config is None:
             config = {"weights": None}
