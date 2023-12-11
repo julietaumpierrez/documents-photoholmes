@@ -95,6 +95,17 @@ class DatasetFactory:
                     tampered_only=tampered_only,
                 )
 
+            case DatasetName.DSO1:
+                from photoholmes.datasets.dso1 import DSO1Dataset
+
+                return DSO1Dataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                    tampered_only=tampered_only,
+                )
+
             case _:
                 raise NotImplementedError(
                     f"Dataset '{dataset_name}' is not implemented."

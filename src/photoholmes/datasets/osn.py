@@ -27,7 +27,7 @@ class OSNDataset(BaseDataset):
     TAMPERED_INTENSITY_THRESHOLD = 125
 
     def _get_paths(
-        self, img_dir, tampered_only
+        self, img_dir: str, tampered_only: bool
     ) -> Tuple[List[str], List[str] | List[str | None]]:
         image_paths = []
         mask_paths = []

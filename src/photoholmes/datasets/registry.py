@@ -7,3 +7,4 @@ class DatasetName(Enum):
     OSN = "osn"
     COVERAGE = "coverage"
     REALISTIC_TAMPERING = "realistic_tampering"
+    DSO1 = "dso1"
