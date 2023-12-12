@@ -205,6 +205,8 @@ class Splicebuster(BaseMethod):
         Returns:
             heatmap: splicebuster output
         """
+        if image.ndim == 3:
+            image = image[:, :, 0]
         X, Y = image.shape[:2]
 
         features, coords = self.compute_features(image)
