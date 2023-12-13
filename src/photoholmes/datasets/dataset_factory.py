@@ -105,6 +105,57 @@ class DatasetFactory:
                     mask_transform=mask_transform,
                     tampered_only=tampered_only,
                 )
+            case DatasetName.CASIA1_COPY_MOVE:
+                from photoholmes.datasets.casia1 import Casia1CopyMoveDataset
+
+                return Casia1CopyMoveDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                    tampered_only=tampered_only,
+                )
+            case DatasetName.CASIA1_SPLICING:
+                from photoholmes.datasets.casia1 import Casia1SplicingDataset
+
+                return Casia1SplicingDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                    tampered_only=tampered_only,
+                )
+
+            case DatasetName.AUTOSPLICE100:
+                from photoholmes.datasets.autosplice import Autosplice100Dataset
+
+                return Autosplice100Dataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                    tampered_only=tampered_only,
+                )
+            case DatasetName.AUTOSPLICE90:
+                from photoholmes.datasets.autosplice import Autosplice90Dataset
+
+                return Autosplice90Dataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                    tampered_only=tampered_only,
+                )
+            case DatasetName.AUTOSPLICE75:
+                from photoholmes.datasets.autosplice import Autosplice75Dataset
+
+                return Autosplice75Dataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                    tampered_only=tampered_only,
+                )
 
             case _:
                 raise NotImplementedError(

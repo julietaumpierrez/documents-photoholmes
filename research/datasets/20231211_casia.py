@@ -22,7 +22,7 @@ from photoholmes.utils.image import plot_multiple
 
 # %%
 CASIA_PATH = "/Users/julietaumpierrez/Desktop/Datasets/CASIA 1.0 dataset/"
-dataset = Casia1CopyMoveDataset(CASIA_PATH, tampered_only=True)
+dataset = Casia1CopyMoveDataset(CASIA_PATH)
 print(len(dataset))
 ims = []
 mks = []
@@ -37,7 +37,7 @@ plot_multiple(mks, title="Máscaras Casia1")
 
 # %%
 CASIA_PATH = "/Users/julietaumpierrez/Desktop/Datasets/CASIA 1.0 dataset/"
-dataset = Casia1SplicingDataset(CASIA_PATH, tampered_only=True)
+dataset = Casia1SplicingDataset(CASIA_PATH)
 print(len(dataset))
 ims = []
 mks = []
@@ -51,7 +51,7 @@ plot_multiple(ims, title="Imágenes Casia1")
 plot_multiple(mks, title="Máscaras Casia1")
 # %%
 DSO1_PATH = "/Users/julietaumpierrez/Desktop/Datasets/tifs-database/"
-dataset = DSO1Dataset(DSO1_PATH, tampered_only=True)
+dataset = DSO1Dataset(DSO1_PATH)
 print(len(dataset))
 ims = []
 mks = []
@@ -79,3 +79,5 @@ for n in idxs:
 
 plot_multiple(ims, title="Imágenes DSO1")
 plot_multiple(mks, title="Máscaras DSO1")
+
+# %%
