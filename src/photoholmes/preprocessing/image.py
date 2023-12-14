@@ -129,7 +129,6 @@ class ToNumpy(PreprocessingTransform):
     ) -> Dict[str, NDArray]:
         t_image = None
         if isinstance(image, Tensor):
-            print(image.shape)
             t_image = image.permute(1, 2, 0).cpu().numpy()
         elif isinstance(image, np.ndarray):
             t_image = image.copy()
