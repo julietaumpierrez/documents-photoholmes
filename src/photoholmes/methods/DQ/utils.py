@@ -1,4 +1,3 @@
-import cv2
 import numpy as np
 from numpy.typing import NDArray
 from scipy.signal import find_peaks
@@ -49,20 +48,6 @@ def fft_period(dct_histogram: NDArray) -> int:
         period = 1
 
     return period
-
-
-def upsample_heatmap(heatmap: NDArray, image_shape: tuple) -> NDArray:
-    """
-    Upsample a heatmap to match the given image shape.
-
-    :param heatmap: Input heatmap.
-    :param image_shape: Desired output shape.
-    :return: Upsampled heatmap.
-    """
-    augmented_heatmap = cv2.resize(
-        heatmap, (image_shape[1], image_shape[0]), interpolation=0
-    )
-    return augmented_heatmap
 
 
 ZIGZAG = [

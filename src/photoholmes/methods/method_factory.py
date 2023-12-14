@@ -38,9 +38,9 @@ class MethodFactory:
             method_name = MethodName(method_name.lower())
         match method_name:
             case MethodName.NAIVE:
-                from photoholmes.methods.naive.method import Naive
+                from photoholmes.methods.naive import Naive, naive_preprocessing
 
-                return Naive.from_config(config), PreProcessingPipeline([])
+                return Naive.from_config(config), naive_preprocessing
             case MethodName.DQ:
                 from photoholmes.methods.DQ import DQ, dq_preprocessing
 
@@ -63,10 +63,16 @@ class MethodFactory:
                 )
 
                 return EXIFAsLanguage.from_config(config), exif_preprocessing
-            case MethodName.CFANET:
-                from photoholmes.methods.cfa import CFANet, cfanet_preprocessing
+            case MethodName.ADAPTIVE_CFA_NET:
+                from photoholmes.methods.adaptive_cfa import (
+                    AdaptiveCFANet,
+                    adaptive_cfa_net_preprocessing,
+                )
 
-                return CFANet.from_config(config), cfanet_preprocessing
+                return (
+                    AdaptiveCFANet.from_config(config),
+                    adaptive_cfa_net_preprocessing,
+                )
             case MethodName.NOISESNIFFER:
                 from photoholmes.methods.noisesniffer import (
                     Noisesniffer,

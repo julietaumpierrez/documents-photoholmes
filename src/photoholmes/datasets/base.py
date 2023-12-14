@@ -12,7 +12,9 @@ class BaseDataset(ABC, Dataset):
     def __init__(
         self,
         img_dir: str,
-        item_data: List[Literal["image", "dct_coefficients", "qtables"]] = ["image"],
+        item_data: List[
+            Literal["image", "dct_coefficients", "qtables", "original_image_size"]
+        ] = ["image", "dct_coefficients", "qtables", "original_image_size"],
         # TODO add typing for transforms
         transform=None,
         mask_transform=None,
@@ -26,6 +28,9 @@ class BaseDataset(ABC, Dataset):
         self.image_paths, self.mask_paths = self._get_paths(img_dir, tampered_only)
         self.jpeg_data = (
             "dct_coefficients" in self.item_data or "qtables" in self.item_data
+        )
+        self.image_data = (
+            "image" in self.item_data or "original_image_size" in self.item_data
         )
 
     @abstractmethod
@@ -54,8 +59,12 @@ class BaseDataset(ABC, Dataset):
         x = {}
 
         image_path = self.image_paths[idx]
-        if "image" in self.item_data:
-            x["image"] = read_image(image_path)
+        if self.image_data:
+            image = read_image(image_path)
+            if "image" in self.item_data:
+                x["image"] = image
+            if "original_image_size" in self.item_data:
+                x["original_image_size"] = image.shape[-2:]
         if self.jpeg_data:
             dct, qtables = read_jpeg_data(image_path)
             if "dct_coefficients" in self.item_data:

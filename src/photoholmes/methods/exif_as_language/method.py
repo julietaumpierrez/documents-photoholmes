@@ -1,6 +1,6 @@
 # Derived from https://github.com/hellomuffin/exif-as-language
 import random
-from typing import Literal, Optional
+from typing import Literal, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -71,12 +71,15 @@ class EXIFAsLanguage(BaseMethod):
     def predict(
         self,
         image: Tensor,
+        original_image_size: Tuple[int, int],
     ):
         """
         Parameters
         ----------
         img : torch.Tensor
             [C, H, W], range: [0, 1]
+        original_image_size : Tuple[int, int]
+            [H, W]
 
         Returns
         -------
@@ -90,7 +93,7 @@ class EXIFAsLanguage(BaseMethod):
         """
 
         # Initialize image and attributes
-        _, height, width = image.shape
+        height, width = original_image_size
         p_img = self.init_img(image)
         # Precompute features for each patch
         with torch.no_grad():
@@ -120,7 +123,7 @@ class EXIFAsLanguage(BaseMethod):
 
         # Run clustering to get localization map
         ncuts = normalized_cut(pred_maps)
-
+        # TODO: change resize to our own implementation
         out_ms = cv2.resize(ms, (width, height), interpolation=cv2.INTER_LINEAR)
         out_ncuts = cv2.resize(
             ncuts.astype(np.float32),
@@ -137,14 +140,16 @@ class EXIFAsLanguage(BaseMethod):
             out_pca[:, :, i] = cv2.resize(
                 pred_pca_map[:, :, i], (width, height), interpolation=cv2.INTER_LINEAR
             )
+        score = pred_maps.mean()
+        affinity_matrix = self.generate_afinity_matrix(patch_features)
 
         return {
+            "heatmap": out_ms,
+            "mask": out_ncuts,
+            "score": score,
             "pred_maps": pred_maps,
-            "ms": out_ms,
-            "ncuts": out_ncuts,
-            "score": pred_maps.mean(),
             "pca": out_pca,
-            "affinity_matrix": self.generate_afinity_matrix(patch_features),
+            "affinity_matrix": affinity_matrix,
         }
 
     def init_img(self, img: Tensor) -> PatchedImage:

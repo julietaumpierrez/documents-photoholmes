@@ -187,7 +187,7 @@ class TestRGBtoGray:
         assert isinstance(
             result["extra"], str
         ), "Extra should be passed through unchanged"
-        assert result["image"].shape == image_shape[1:]
+        assert result["image"].shape == (1, *image_shape[1:])
 
     def test_rgb_to_gray_numpy(self, rgb_to_gray: RGBtoGray):
         # Create a numpy array
@@ -204,7 +204,7 @@ class TestRGBtoGray:
         assert isinstance(
             result["extra"], str
         ), "Extra should be passed through unchanged"
-        assert result["image"].shape == image_shape[:2]
+        assert result["image"].shape == (*image_shape[:2], 1)
 
 
 class TestNormalize:
