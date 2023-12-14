@@ -6,6 +6,7 @@ from photoholmes.preprocessing.base import PreprocessingTransform
 from photoholmes.preprocessing.pipeline import PreProcessingPipeline
 
 
+# TODO: check if normalization is needed
 class AdaptiveCFANetPreprocessing(PreprocessingTransform):
     def __init__(self):
         pass
