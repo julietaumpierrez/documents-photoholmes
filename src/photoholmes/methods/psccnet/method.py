@@ -36,7 +36,7 @@ class PSCCNet(BaseTorchMethod):
         **kwargs,
     ):
         """
-        weights_paths = { #TODO: add weights paths decription
+        weights_paths = {
         """
         random.seed(seed)
         super().__init__(**kwargs)

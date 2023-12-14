@@ -4,8 +4,6 @@
 # Written by Ke Sun (sunk@mail.ustc.edu.cn)
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import logging
 import os
 
@@ -491,7 +489,7 @@ class HighResolutionNet(nn.Module):
 
         return x
 
-    def init_weights(self, pretrained="", device="cuda:0`"):
+    def init_weights(self, pretrained="", device="cuda:0"):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.normal_(m.weight, std=0.001)
