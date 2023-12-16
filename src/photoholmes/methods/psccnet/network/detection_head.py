@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type
 
 import torch
 import torch.nn as nn
@@ -80,7 +80,7 @@ class DetectionHead(nn.Module):
 
     def _make_layer(
         self,
-        block,
+        block: Type[Bottleneck],
         inplanes: int,
         planes: int,
         blocks: int,

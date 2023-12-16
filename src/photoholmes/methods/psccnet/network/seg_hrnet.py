@@ -6,7 +6,7 @@
 
 import logging
 import os
-from typing import List, Literal
+from typing import Dict, List, Literal, Type, Union
 
 import torch
 import torch._utils
@@ -105,7 +105,7 @@ class HighResolutionModule(nn.Module):
     def __init__(
         self,
         num_branches: int,
-        blocks,
+        blocks: Union[Type[BasicBlock], Type[Bottleneck]],
         num_blocks: List[int],
         num_inchannels: List[int],
         num_channels: List[int],
@@ -132,7 +132,7 @@ class HighResolutionModule(nn.Module):
     def _check_branches(
         self,
         num_branches: int,
-        blocks,
+        blocks: Union[Type[BasicBlock], Type[Bottleneck]],
         num_blocks: List[int],
         num_inchannels: List[int],
         num_channels: List[int],
@@ -158,7 +158,7 @@ class HighResolutionModule(nn.Module):
     def _make_one_branch(
         self,
         branch_index: int,
-        block,
+        block: Union[Type[BasicBlock], Type[Bottleneck]],
         num_blocks: List[int],
         num_channels: List[int],
         stride=1,
@@ -200,7 +200,11 @@ class HighResolutionModule(nn.Module):
         return nn.Sequential(*layers)
 
     def _make_branches(
-        self, num_branches: int, block, num_blocks: List[int], num_channels: List[int]
+        self,
+        num_branches: int,
+        block: Union[Type[BasicBlock], Type[Bottleneck]],
+        num_blocks: List[int],
+        num_channels: List[int],
     ) -> nn.ModuleList:
         branches = []
 
@@ -292,7 +296,7 @@ class HighResolutionModule(nn.Module):
 
         if self.fuse_layers is not None:
             for i in range(len(self.fuse_layers)):
-                y = x[0] if i == 0 else self.fuse_layers[i][0](x[0])
+                y = x[0] if i == 0 else self.fuse_layers[i][0](x[0])  # type: ignore
                 for j in range(1, self.num_branches):
                     if i == j:
                         y = y + x[j]
@@ -300,19 +304,22 @@ class HighResolutionModule(nn.Module):
                         width_output = x[i].shape[-1]
                         height_output = x[i].shape[-2]
                         y = y + F.interpolate(
-                            self.fuse_layers[i][j](x[j]),
+                            self.fuse_layers[i][j](x[j]),  # type: ignore
                             size=[height_output, width_output],
                             mode="bilinear",
                             align_corners=True,
                         )
                     else:
-                        y = y + self.fuse_layers[i][j](x[j])
+                        y = y + self.fuse_layers[i][j](x[j])  # type: ignore
                 x_fuse.append(self.relu(y))
 
         return x_fuse
 
 
-blocks_dict = {"BASIC": BasicBlock, "BOTTLENECK": Bottleneck}
+blocks_dict: Dict[str, Union[Type[BasicBlock], Type[Bottleneck]]] = {
+    "BASIC": BasicBlock,
+    "BOTTLENECK": Bottleneck,
+}
 
 
 class HighResolutionNet(nn.Module):
