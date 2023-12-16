@@ -1,10 +1,14 @@
+from typing import List, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from photoholmes.methods.psccnet.config import PSCCArchConfig
+
 
 class NonLocalMask(nn.Module):
-    def __init__(self, in_channels, reduce_scale):
+    def __init__(self, in_channels: int, reduce_scale: int):
         super(NonLocalMask, self).__init__()
 
         self.r = reduce_scale
@@ -72,7 +76,7 @@ class NonLocalMask(nn.Module):
             ),
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         inputs :
             x : input feature maps( B X C X H X W)
@@ -130,7 +134,11 @@ class NonLocalMask(nn.Module):
 
 
 class NLCDetection(nn.Module):
-    def __init__(self, config, crop_size):
+    def __init__(self, config: PSCCArchConfig, crop_size: List[int]):
+        """Localization head of PSCCNet.
+        Args:
+           config (PSCCArchConfig): PSCCNet architecture config.
+           crop_size (List[int]): feature map crop size."""
         super(NLCDetection, self).__init__()
 
         self.crop_size = crop_size
@@ -141,7 +149,9 @@ class NLCDetection(nn.Module):
         self.getmask2 = NonLocalMask(feat2_num, 2)
         self.getmask1 = NonLocalMask(feat1_num, 4)
 
-    def forward(self, feat):
+    def forward(
+        self, feat: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         inputs :
             feat : a list contains features from s1, s2, s3, s4

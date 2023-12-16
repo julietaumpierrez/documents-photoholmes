@@ -1,5 +1,11 @@
+from typing import List, Optional, Tuple
+
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
+
+from photoholmes.methods.psccnet.config import PSCCArchConfig
 
 BN_MOMENTUM = 0.01
 
@@ -7,7 +13,13 @@ BN_MOMENTUM = 0.01
 class Bottleneck(nn.Module):
     expansion = 2
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None):
+    def __init__(
+        self,
+        inplanes: int,
+        planes: int,
+        stride: int = 1,
+        downsample: Optional[nn.Module] = None,
+    ):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
@@ -23,7 +35,7 @@ class Bottleneck(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         residual = x
 
         out = self.conv1(x)
@@ -47,7 +59,11 @@ class Bottleneck(nn.Module):
 
 
 class DetectionHead(nn.Module):
-    def __init__(self, config, crop_size):
+    def __init__(self, config: PSCCArchConfig, crop_size: List[int]):
+        """Detection head for PSCCNet
+             Args:
+        config (PSCCArchConfig): PSCCNet architecture config.
+        crop_size (List[int]): feature map crop size."""
         super(DetectionHead, self).__init__()
         self.crop_size = crop_size
 
@@ -62,7 +78,24 @@ class DetectionHead(nn.Module):
             nn.Linear(128, 16), nn.ReLU(inplace=True), nn.Linear(16, 2)
         )
 
-    def _make_layer(self, block, inplanes, planes, blocks, stride=1):
+    def _make_layer(
+        self,
+        block,
+        inplanes: int,
+        planes: int,
+        blocks: int,
+        stride=1,
+    ) -> nn.Module:
+        """Creates a layer of blocks for the head.
+        Args:
+            block (nn.Module class, not instanced): block to use.
+            inplanes (int): number of input channels.
+            planes (int): number of output channels.
+            blocks (int): number of blocks to use.
+            stride (int): stride to use.
+        Returns:
+            nn.Module: layer of blocks.
+        """
         downsample = None
         if stride != 1 or inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -84,7 +117,9 @@ class DetectionHead(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _make_head(self, pre_stage_channels):
+    def _make_head(
+        self, pre_stage_channels: List[int]
+    ) -> Tuple[nn.ModuleList, nn.ModuleList, nn.Module]:
         head_block = Bottleneck
         head_channels = pre_stage_channels
 
@@ -131,7 +166,7 @@ class DetectionHead(nn.Module):
 
         return incre_modules, downsamp_modules, final_layer
 
-    def forward(self, feat):
+    def forward(self, feat: Tuple[Tensor, Tensor, Tensor, Tensor]) -> Tensor:
         s1, s2, s3, s4 = feat
 
         if s1.shape[2:] == self.crop_size:
