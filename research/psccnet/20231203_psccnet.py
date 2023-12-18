@@ -1,9 +1,6 @@
 # %%
 import os
 
-from cv2 import transform
-from sympy import Abs, plot
-
 from photoholmes.methods.DQ import method
 
 if "research" in os.path.abspath("."):
