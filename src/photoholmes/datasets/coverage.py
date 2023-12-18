@@ -4,10 +4,10 @@ from typing import List, Optional, Tuple
 
 from torch import Tensor
 
-from .abstract import AbstractDataset
+from .base import BaseDataset
 
 
-class CoverageDataset(AbstractDataset):
+class CoverageDataset(BaseDataset):
     """
     Directory structure:
     img_dir (COVERAGE)

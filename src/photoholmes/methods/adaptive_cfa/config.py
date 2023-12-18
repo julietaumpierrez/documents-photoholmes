@@ -4,5 +4,5 @@ from typing import Optional, Union
 
 
 @dataclass
-class CFAConfig:
+class AdaptiveCFAConfig:
     weights: Optional[Union[str, Path, dict]]

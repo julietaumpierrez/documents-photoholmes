@@ -7,5 +7,7 @@ class MethodName(Enum):
     DQ = "dq"
     SPLICEBUSTER = "splicebuster"
     CATNET = "catnet"
-    CFANET = "cfanet"
+    EXIF_AS_LANGUAGE = "exif_as_language"
+    ADAPTIVE_CFA_NET = "adaptive_cfa_net"
+    NOISESNIFFER = "noisesniffer"
     PSCCNET = "psccnet"

@@ -38,3 +38,9 @@ class PreProcessingPipeline:
             kwargs = t(**kwargs)
 
         return kwargs
+
+    def add(self, transform: PreprocessingTransform):
+        self.transforms.append(transform)
+
+    def insert(self, transform: PreprocessingTransform, index: int):
+        self.transforms.insert(index, transform)

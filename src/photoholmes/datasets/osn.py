@@ -4,10 +4,10 @@ from typing import List, Tuple
 
 from torch import Tensor
 
-from .abstract import AbstractDataset
+from .base import BaseDataset
 
 
-class OSNDataset(AbstractDataset):
+class OSNDataset(BaseDataset):
     """
     Directory structure:
     img_dir (ImageForgeriesOSN_Dataset)

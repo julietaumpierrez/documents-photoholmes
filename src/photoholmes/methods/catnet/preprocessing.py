@@ -1,11 +1,10 @@
 from random import randint
-from typing import Dict
+from typing import Dict, Tuple, Union
 
 import torch
 from torch import Tensor
 
 from photoholmes.preprocessing.base import PreprocessingTransform
-from photoholmes.preprocessing.image import ToTensor
 from photoholmes.preprocessing.pipeline import PreProcessingPipeline
 
 
@@ -29,9 +28,14 @@ class CatnetPreprocessing(PreprocessingTransform):
         self.T = T
 
     def __call__(
-        self, image: Tensor, dct_coefficients: Tensor, qtables: Tensor, **kwargs
-    ) -> Dict[str, Tensor]:
-        h, w = image.shape[1:]
+        self,
+        image: Tensor,
+        dct_coefficients: Tensor,
+        qtables: Tensor,
+        original_image_size: Tuple[int, int],
+        **kwargs,
+    ) -> Dict[str, Union[Tensor, Tuple[int, int]]]:
+        h, w = image.shape[-2:]
 
         crop_size = ((h // 8) * 8, (w // 8) * 8)
         if h < crop_size[0] or w < crop_size[1]:
@@ -55,23 +59,15 @@ class CatnetPreprocessing(PreprocessingTransform):
         s_r = (randint(0, max(h - crop_size[0], 0)) // 8) * 8
         s_c = (randint(0, max(w - crop_size[1], 0)) // 8) * 8
         image = image[:, s_r : s_r + crop_size[0], s_c : s_c + crop_size[1]]
-        for i in range(self.n_dct_channels):
-            dct_coefficients[i] = dct_coefficients[i][
-                s_r : s_r + crop_size[0], s_c : s_c + crop_size[1]
-            ]
-
+        dct_coefficients = dct_coefficients[
+            : self.n_dct_channels, s_r : s_r + crop_size[0], s_c : s_c + crop_size[1]
+        ]
         image = (image - 127.5) / 127.5
         t_dct_vols = get_binary_volume(dct_coefficients, T=self.T)
 
         x = torch.concatenate((image, t_dct_vols))
 
-        if x.ndim == 3:
-            x = x[None, :]
-            qtables = qtables[None, :]
-
-        return {"x": x, "qtable": qtables}
+        return {"x": x, "qtable": qtables, "original_image_size": original_image_size}
 
 
-catnet_preprocessing = PreProcessingPipeline(
-    transforms=[ToTensor(), CatnetPreprocessing()]
-)
+catnet_preprocessing = PreProcessingPipeline(transforms=[CatnetPreprocessing()])

@@ -1,0 +1,45 @@
+# Noisesniffer: Image forgery detection based on noise inspection: analysis and refinement of the Noisesniffer method
+
+This is the implementation of the [Noisesniffer](https://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000341) paper. The original implementation could be found [here](https://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000341). # FIXME: Link to article
+
+
+## Description
+
+The method exploits the consequences that the acquisition pipeline have on the noise model of a digital image. It estimates an stochastic model for said noise and detects noise anomalies using an a-contrario approach evaluating the number of false alarms (NFA). In order to get the suspected region of the forgery the authors of Noisesniffer use a region growing algorithm that detects the anomalous region according to the evaluation of the NFA. 
+
+## Full overview
+
+The input images is divided in overlapping blocks of size $N \times N$ and the blocks that contain saturated pixels are discarded in order to avoid unreliable noise estimations. Then, for each channel, blocks are grouped in bins of a fixed size according to their mean intensity. Afterwards a channel is chosen and in that channel a bin is chosen to be processed according to the following steps: first, for each block of each bin, the DCT type II described in~\ref{Chapter:Introduction} is computed, for each block the variance is computed using the low and medium frequencies of the DCT. In each bin, blocks are arranged in an ascending order according to the variance computed in the previous step and only a percentile of them is kept. The blocks kept in that step are the most homogeneous ones. After that, the variances of each of those blocks are computed and the blocks are ordered in an ascending order from which only the ones with the lowest variance are kept. If more than a certain amount of blocks have zero variance the bin is declared invalid. At the end, this part of the method obtains $L$, a group of blocks that are the most homogeneous and $V$ conformed by the blocks of $L$ that have the lowest variance. 
+
+The authors of~\cite{Noisesniffer} exploit the fact that the variance of the most homogeneous regions is explained by noise, which as a consequence,in the absence of tampering means that the spatial distribution of blocks of $V$ and $L$ should be the same, however some fluctuations in that spatial distribution are bound to happen due to randomness, the question that needs to be answered is whether the spatial distribution of blocks can be observed by chance or not. If the answer is the latter, that region could have been tampered with. 
+
+In order establish which regions are forgeries a region growing algorithm is used. This algorithm starts from a square tessellation of the image. Firstly, the authors describe a criterion in order to establish which of those cells could be meaningful, those cells are used as the initialization of the algorithm. From those cells, the algorithm iteratively adds contiguous cells that make the region more meaningful in the sense of the NFA. 
+
+Finally, the heatmap is produced by studying the relation between the Mahalanobis distance of the block's feature histogram and each of the models.
+
+## Usage
+
+Add later usage of method 
+
+## Results on benchmarking dataset
+
+Add results of all metrics in our own benchmarking dataset
+
+## Results on common datasets
+
+Add results on common datasets 
+
+## Citation
+
+# FIXME add correct citationg
+
+```tex
+@INPROCEEDINGS{7368565,
+  author={Cozzolino, Davide and Poggi, Giovanni and Verdoliva, Luisa},
+  booktitle={2015 IEEE International Workshop on Information Forensics and Security (WIFS)}, 
+  title={Splicebuster: A new blind image splicing detector}, 
+  year={2015},
+  pages={1-6},
+  doi={10.1109/WIFS.2015.7368565}
+}
+```
