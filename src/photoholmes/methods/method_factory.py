@@ -80,5 +80,9 @@ class MethodFactory:
                 )
 
                 return Noisesniffer.from_config(config), noisesniffer_preprocess
+            case MethodName.PSCCNET:
+                from photoholmes.methods.psccnet import PSCCNet, psccnet_preprocessing
+
+                return PSCCNet.from_config(config), psccnet_preprocessing
             case _:
                 raise NotImplementedError(f"Method '{method_name}' is not implemented.")

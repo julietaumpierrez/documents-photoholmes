@@ -29,7 +29,7 @@ test:
     - pip install -r requirements-cpu.txt
     - pip install pytest
     - pip install .
-    - pytest --junitxml=junit.xml
+    - pytest tests --junitxml=junit.xml
   artifacts:
     reports:
       junit: junit.xml

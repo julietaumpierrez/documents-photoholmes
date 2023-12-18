@@ -1,0 +1,7 @@
+arch_config: pretrained
+weights_paths:
+  pretrained: weights/pscc/hrnet_w18_small_v2.pth
+  FENet: weights/pscc/HRNet.pth
+  SegNet: weights/pscc/NLCDetection.pth
+  ClsNet: weights/pscc/DetectionHead.pth
+device: cpu
