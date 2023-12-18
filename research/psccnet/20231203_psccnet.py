@@ -68,7 +68,7 @@ for x in list(loader):
 print(scores)
 ims_to_plot = ims + mks_pred
 titles = [None] * len(ims) + [f"Score: {s.item():.2f}" for s in scores]
-plot_multiple(ims_to_plot, titles=titles, title="Imágenes Columbia")
+plot_multiple(ims_to_plot, titles=titles, title="Imágenes Sample PSCC-Net")
 
 # %%
 # Columbia Test
