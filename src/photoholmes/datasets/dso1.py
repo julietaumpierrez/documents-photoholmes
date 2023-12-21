@@ -43,7 +43,6 @@ class DSO1Dataset(BaseDataset):
             self._get_mask_path(image_path) if self._is_tampered(image_path) else None
             for image_path in image_paths
         ]
-        print(mask_paths)
         return image_paths, mask_paths
 
     def _is_tampered(self, image_path: str) -> bool:

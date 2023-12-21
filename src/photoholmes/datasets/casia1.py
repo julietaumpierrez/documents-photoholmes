@@ -17,12 +17,12 @@ class Casia1SplicingDataset(BaseDataset):
     │   ├── CM
     │   │   └── [Copy Move images in jpg]
     |   ├── Sp
-    |   |   └── [Spliced images in jpg]
+    |       └── [Spliced images in jpg]
     ├── CASIA 1.0 groundtruth
     │   ├── CM
     │   │   └── [Copy Move masks in png]
     |   ├── Sp
-    |   |   └── [Spliced masks in png]
+    |       └── [Spliced masks in png]
     └── Possibly more files
     """
 
