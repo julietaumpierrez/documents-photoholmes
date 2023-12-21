@@ -49,10 +49,13 @@ class DQ(BaseMethod):
         :param histogram: Input histogram.
         :return: Detected period.
         """
-        p_H = histogram_period(histogram, self.alpha)
-        p_fft = fft_period(histogram)
-        p = min(p_H, p_fft)
-        return p
+        if len(histogram) < 2:
+            return 1
+        else:
+            p_H = histogram_period(histogram, self.alpha)
+            p_fft = fft_period(histogram)
+            p = min(p_H, p_fft)
+            return p
 
     def _calculate_Pu(
         self, coefficients_f: NDArray, histogram: NDArray, period: int
