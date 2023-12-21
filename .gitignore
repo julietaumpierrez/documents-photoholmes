@@ -19,3 +19,6 @@ out/
 
 #Private
 private
+
+# MAC files
+.DS_Store

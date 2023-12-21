@@ -37,7 +37,8 @@ class BaseDataset(ABC, Dataset):
     def _get_paths(
         self, img_dir, tampered_only
     ) -> Tuple[List[str], List[str] | List[str | None]]:
-        """Abstract method that returns image and mask paths. Should make use of tampered_only attribute."""
+        """Abstract method that returns image and mask paths. Should make use of
+        tampered_only attribute."""
         pass
 
     @abstractmethod
