@@ -16,12 +16,15 @@ from abc import ABC, abstractmethod
 import torch
 from torch.utils.data import DataLoader
 
-from photoholmes.datasets.trace import TraceHybridEndoDataset, TraceHybridExoDataset
+from photoholmes.datasets.trace.trace_hybrid import (
+    TraceHybridEndoDataset,
+    TraceHybridExoDataset,
+)
 from photoholmes.utils.image import plot_multiple
 
 # %%
 TRACE_PATH = "/Users/julietaumpierrez/Desktop/Datasets/trace/images"
-dataset = TraceHybridExoDataset(TRACE_PATH)
+dataset = TraceHybridEndoDataset(TRACE_PATH)
 print(len(dataset))
 ims = []
 mks = []
