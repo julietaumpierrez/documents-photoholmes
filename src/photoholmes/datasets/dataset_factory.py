@@ -160,6 +160,135 @@ class DatasetFactory:
                     tampered_only=tampered_only,
                 )
 
+            case DatasetName.TRACE_NOISE_EXO:
+                from photoholmes.datasets.trace.trace_noise import TraceNoiseExoDataset
+
+                return TraceNoiseExoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+            case DatasetName.TRACE_NOISE_ENDO:
+                from photoholmes.datasets.trace.trace_noise import TraceNoiseEndoDataset
+
+                return TraceNoiseEndoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+            case DatasetName.TRACE_CFA_ALG_EXO:
+                from photoholmes.datasets.trace.trace_cfa_alg import (
+                    TraceCFAAlgExoDataset,
+                )
+
+                return TraceCFAAlgExoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+            case DatasetName.TRACE_CFA_ALG_ENDO:
+                from photoholmes.datasets.trace.trace_cfa_alg import (
+                    TraceCFAAlgEndoDataset,
+                )
+
+                return TraceCFAAlgEndoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+            case DatasetName.TRACE_CFA_GRID_EXO:
+                from photoholmes.datasets.trace.trace_cfa_grid import (
+                    TraceCFAGridExoDataset,
+                )
+
+                return TraceCFAGridExoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+            case DatasetName.TRACE_CFA_GRID_ENDO:
+                from photoholmes.datasets.trace.trace_cfa_grid import (
+                    TraceCFAGridEndoDataset,
+                )
+
+                return TraceCFAGridEndoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+            case DatasetName.TRACE_JPEG_GRID_EXO:
+                from photoholmes.datasets.trace.trace_jpeg_grid import (
+                    TraceJPEGGridExoDataset,
+                )
+
+                return TraceJPEGGridExoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+            case DatasetName.TRACE_JPEG_GRID_ENDO:
+                from photoholmes.datasets.trace.trace_jpeg_grid import (
+                    TraceJPEGGridEndoDataset,
+                )
+
+                return TraceJPEGGridEndoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+            case DatasetName.TRACE_JPEG_QUALITY_EXO:
+                from photoholmes.datasets.trace.trace_jpeg_quality import (
+                    TraceJPEGQualityExoDataset,
+                )
+
+                return TraceJPEGQualityExoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+            case DatasetName.TRACE_JPEG_QUALITY_ENDO:
+                from photoholmes.datasets.trace.trace_jpeg_quality import (
+                    TraceJPEGQualityEndoDataset,
+                )
+
+                return TraceJPEGQualityEndoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+            case DatasetName.TRACE_HYBRID_EXO:
+                from photoholmes.datasets.trace.trace_hybrid import (
+                    TraceHybridExoDataset,
+                )
+
+                return TraceHybridExoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+            case DatasetName.TRACE_HYBRID_ENDO:
+                from photoholmes.datasets.trace.trace_hybrid import (
+                    TraceHybridEndoDataset,
+                )
+
+                return TraceHybridEndoDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                )
+
             case _:
                 raise NotImplementedError(
                     f"Dataset '{dataset_name}' is not implemented."
