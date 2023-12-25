@@ -1,46 +1,47 @@
-import argparse
-
+import typer
 from model import Benchmark
 
+from photoholmes.datasets.registry import DatasetName
+from photoholmes.methods.registry import MethodName
+from photoholmes.metrics.registry import MetricName
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Run the Benchmark for image tampering detection."
-    )
-    parser.add_argument(
-        "--method_name", type=str, required=True, help="Name of the method to use."
-    )
-    parser.add_argument(
-        "--dataset_name", type=str, required=True, help="Name of the dataset."
-    )
-    parser.add_argument(
-        "--dataset_path", type=str, required=True, help="Path to the dataset."
-    )
-    parser.add_argument(
-        "--tampered_only", action="store_true", help="Process tampered images only."
-    )
-    parser.add_argument(
-        "--metrics", nargs="+", type=str, required=True, help="List of metrics to use."
-    )
-    parser.add_argument("--save_output", action="store_true", help="Save the output.")
-    parser.add_argument(
-        "--output_path", type=str, default="output/", help="Path to save the outputs."
-    )
+# TODO: add a command to list the available methods, datasets and metrics
+# TODO: add documentation for the CLI
+app = typer.Typer()
 
-    args = parser.parse_args()
+
+@app.command()
+def main(
+    method_name: MethodName = typer.Option(..., help="Name of the method to use."),
+    dataset_name: DatasetName = typer.Option(..., help="Name of the dataset."),
+    dataset_path: str = typer.Option(..., help="Path to the dataset."),
+    metrics: str = typer.Option(
+        ..., "--metrics", help="Space-separated list of metrics to use."
+    ),
+    tampered_only: bool = typer.Option(False, help="Process tampered images only."),
+    save_output: bool = typer.Option(False, help="Save the output."),
+    output_path: str = typer.Option("output/", help="Path to save the outputs."),
+    device: str = typer.Option("cpu", help="Device to use."),
+):
+    """
+    Run the Benchmark for image tampering detection.
+    """
+    metrics_list = metrics.split()
+    metrics_names = [MetricName(metric) for metric in metrics_list]
 
     benchmark = Benchmark(
-        method_name=args.method_name,
-        dataset_name=args.dataset_name,
-        dataset_path=args.dataset_path,
-        tampered_only=args.tampered_only,
-        metrics_names=args.metrics,
-        save_output=args.save_output,
-        output_path=args.output_path,
+        method_name=method_name,
+        dataset_name=dataset_name,
+        dataset_path=dataset_path,
+        tampered_only=tampered_only,
+        metrics_names=metrics_names,
+        save_output=save_output,
+        output_path=output_path,
+        device=device,
     )
 
     benchmark.run()
 
 
 if __name__ == "__main__":
-    main()
+    app()
