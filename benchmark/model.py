@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import Optional, Union
 
 import numpy as np
 import torch
@@ -23,6 +24,7 @@ class Benchmark:
     def __init__(
         self,
         method_name: MethodName,
+        method_config: Optional[Union[dict, str]],
         dataset_name: DatasetName,
         dataset_path: str,
         tampered_only: bool,
@@ -32,7 +34,9 @@ class Benchmark:
         device: str = "cpu",
     ):
         # TODO: add a method to send the method to the device
-        self.method, self.preprocessing = MethodFactory.load(method_name=method_name)
+        self.method, self.preprocessing = MethodFactory.load(
+            method_name=method_name, config=method_config, device=device
+        )
         self.dataset = DatasetFactory.load(
             dataset_name=dataset_name,
             dataset_dir=dataset_path,
@@ -49,7 +53,13 @@ class Benchmark:
         self.mask_metrics_names = metrics_names
         self.method_name = method_name
         self.dataset_name = dataset_name
+        if device.startswith("cuda") and not torch.cuda.is_available():
+            log.warning(
+                f"Requested device '{device}' is not available. Falling back to 'cpu'."
+            )
+            device = "cpu"
         self.device = torch.device(device)
+        log.info(f"Using device: {self.device}")
 
         # TODO: set an attribute "output_keys" in the method class and use that
         # to determine whether to save the mask and heatmap or not
