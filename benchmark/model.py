@@ -33,7 +33,6 @@ class Benchmark:
         output_path: str = "output/",
         device: str = "cpu",
     ):
-        # TODO: add a method to send the method to the device
         self.method_config = method_config
         self.method, self.preprocessing = MethodFactory.load(
             method_name=method_name, config=method_config, device=device
@@ -74,7 +73,6 @@ class Benchmark:
         log.info("Benchmark configuration:")
         log.info(f"    Method: {self.method_name.value}")
         log.info(f"    Method config: {self.method_config}")
-
         log.info(f"    Dataset: {self.dataset_name.value}")
         log.info(f"    Metrics: {[metric.value for metric in self.mask_metrics_names]}")
         log.info(f"    Output path: {self.output_path}")
