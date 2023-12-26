@@ -13,6 +13,9 @@ app = typer.Typer()
 @app.command()
 def main(
     method_name: MethodName = typer.Option(..., help="Name of the method to use."),
+    method_config: str = typer.Option(
+        None, help="Path to the configuration file for the method."
+    ),
     dataset_name: DatasetName = typer.Option(..., help="Name of the dataset."),
     dataset_path: str = typer.Option(..., help="Path to the dataset."),
     metrics: str = typer.Option(
@@ -31,6 +34,7 @@ def main(
 
     benchmark = Benchmark(
         method_name=method_name,
+        method_config=method_config,
         dataset_name=dataset_name,
         dataset_path=dataset_path,
         tampered_only=tampered_only,
