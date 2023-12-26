@@ -20,8 +20,8 @@ from .utils import cosine_similarity, mean_shift, normalized_cut
 class EXIFAsLanguage(BaseMethod):
     def __init__(
         self,
-        transformer: Literal["distilbert"],
-        visual: Literal["resnet50"],
+        transformer: Literal["distilbert"] = "distilbert",
+        visual: Literal["resnet50"] = "resnet50",
         patch_size: int = 128,
         num_per_dim: int = 30,
         feat_batch_size: int = 32,
@@ -32,6 +32,7 @@ class EXIFAsLanguage(BaseMethod):
         pooling: Literal["cls", "mean"] = "mean",
         state_dict_path: Optional[str] = None,
         seed: int = 44,
+        **kwargs,
     ):
         """
         Parameters
@@ -66,7 +67,7 @@ class EXIFAsLanguage(BaseMethod):
         self.net = clipNet
 
         self.net.eval()
-        self.net.to(device)
+        self.model_to_device()
 
     def predict(
         self,
@@ -151,6 +152,10 @@ class EXIFAsLanguage(BaseMethod):
             "pca": out_pca,
             "affinity_matrix": affinity_matrix,
         }
+
+    def model_to_device(self):
+        """Move model to device"""
+        self.net.to(self.device)
 
     def init_img(self, img: Tensor) -> PatchedImage:
         # Initialize image and attributes

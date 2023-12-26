@@ -24,6 +24,7 @@ class DQ(BaseMethod):
         super().__init__(**kwargs)
         self.number_frecs = number_frecs
         self.alpha = alpha
+        self.model_to_device()
 
     def predict(
         self, dct_coefficients: NDArray, original_image_size: Tuple[int, int]

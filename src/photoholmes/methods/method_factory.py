@@ -10,6 +10,7 @@ class MethodFactory:
     def load(
         method_name: Union[str, MethodName],
         config: Optional[Union[dict, str]] = None,
+        device: Optional[str] = "cpu",
     ) -> Tuple[BaseMethod, PreProcessingPipeline]:
         """
         Instantiates and returns a method object along with its preprocessing pipeline,
@@ -40,29 +41,29 @@ class MethodFactory:
             case MethodName.NAIVE:
                 from photoholmes.methods.naive import Naive, naive_preprocessing
 
-                return Naive.from_config(config), naive_preprocessing
+                return Naive.from_config(config, device), naive_preprocessing
             case MethodName.DQ:
                 from photoholmes.methods.DQ import DQ, dq_preprocessing
 
-                return DQ.from_config(config), dq_preprocessing
+                return DQ.from_config(config, device), dq_preprocessing
             case MethodName.SPLICEBUSTER:
                 from photoholmes.methods.splicebuster import (
                     Splicebuster,
                     splicebuster_preprocess,
                 )
 
-                return Splicebuster.from_config(config), splicebuster_preprocess
+                return Splicebuster.from_config(config, device), splicebuster_preprocess
             case MethodName.CATNET:
                 from photoholmes.methods.catnet import CatNet, catnet_preprocessing
 
-                return CatNet.from_config(config), catnet_preprocessing
+                return CatNet.from_config(config, device), catnet_preprocessing
             case MethodName.EXIF_AS_LANGUAGE:
                 from photoholmes.methods.exif_as_language import (
                     EXIFAsLanguage,
                     exif_preprocessing,
                 )
 
-                return EXIFAsLanguage.from_config(config), exif_preprocessing
+                return EXIFAsLanguage.from_config(config, device), exif_preprocessing
             case MethodName.ADAPTIVE_CFA_NET:
                 from photoholmes.methods.adaptive_cfa import (
                     AdaptiveCFANet,
@@ -70,7 +71,7 @@ class MethodFactory:
                 )
 
                 return (
-                    AdaptiveCFANet.from_config(config),
+                    AdaptiveCFANet.from_config(config, device),
                     adaptive_cfa_net_preprocessing,
                 )
             case MethodName.NOISESNIFFER:
@@ -79,7 +80,7 @@ class MethodFactory:
                     noisesniffer_preprocess,
                 )
 
-                return Noisesniffer.from_config(config), noisesniffer_preprocess
+                return Noisesniffer.from_config(config, device), noisesniffer_preprocess
             case MethodName.PSCCNET:
                 from photoholmes.methods.psccnet import PSCCNet, psccnet_preprocessing
 

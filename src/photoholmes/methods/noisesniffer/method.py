@@ -25,7 +25,13 @@ from .utils import (
 
 class Noisesniffer(BaseMethod):
     def __init__(
-        self, w: int = 3, b: int = 20000, n: float = 0.1, m: float = 0.5, W: int = 100
+        self,
+        w: int = 3,
+        b: int = 20000,
+        n: float = 0.1,
+        m: float = 0.5,
+        W: int = 100,
+        **kwargs,
     ):
         """
         Noisesniffer implementation.
@@ -43,6 +49,7 @@ class Noisesniffer(BaseMethod):
         self.n = n
         self.m = m
         self.W = W
+        self.model_to_device()
 
     def do_one_channel(
         self,
