@@ -1,5 +1,4 @@
 import torch
-from regex import F
 from torch import Tensor
 from torchmetrics import Metric
 
