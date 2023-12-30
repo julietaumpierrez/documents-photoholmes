@@ -5,7 +5,7 @@ from torchmetrics import Metric
 
 class F1_weighted_metric(Metric):
     """
-    The F! weighted (F1 score weighted) metric calculates the F1 score taking
+    The F1 weighted (F1 score weighted) metric calculates the F1 score taking
     into account the value of the heatmap as a probability and uses weighted true
     positives, weighted false positives, weighted true negatives and weighted false
     negatives to calculate the F1 score.
@@ -18,18 +18,18 @@ class F1_weighted_metric(Metric):
         __init__(**kwargs): Initializes the F1 score weighted metric object.
         update(preds: Tensor, target: Tensor): Updates the states with a new batch of
                                                predictions and targets.
-        compute() -> Tensor: Computes the IoU weighted over all batches.
+        compute() -> Tensor: Computes the F1 score weighted over all batches.
 
     Example:
         >>> F1_weighted_metric = F1_weighted()
         >>> for preds_batch, targets_batch in data_loader:
         >>>     F1_weighted_metric.update(preds_batch, targets_batch)
-        >>> F1_weighted = IoU_weighted_metric.compute()
+        >>> F1_weighted = F1_weighted_metric.compute()
     """
 
     def __init__(self, **kwargs):
         """
-        Initializes the IoU weighted metric object.
+        Initializes the F1 score weighted metric object.
 
         Args:
             **kwargs: Additional keyword arguments.
@@ -41,7 +41,7 @@ class F1_weighted_metric(Metric):
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
         Updates the F1 score weighted counts with a new batch of
-        predictions and targets. It assumes both predictions as heatmap or binarty
+        predictions and targets. It assumes both predictions as heatmap or binary
         and binary targets.
 
         Args:

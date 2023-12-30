@@ -41,7 +41,7 @@ class IoU_weighted_metric(Metric):
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
         Updates the IoU weighted counts with a new batch of
-        predictions and targets. It assumes both predictions as heatmap or binarty
+        predictions and targets. It assumes both predictions as heatmap or binary
         and binary targets.
 
         Args:
