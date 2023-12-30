@@ -12,3 +12,4 @@ class MetricName(Enum):
     TPR = "tpr"
     IoU_WEIGHTED = "iou_weighted"
     F1_WEIGHTED = "f1_weighted"
+    MCC_WEIGHTED = "mcc_weighted"

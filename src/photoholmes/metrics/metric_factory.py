@@ -100,6 +100,10 @@ class MetricFactory:
                     from photoholmes.metrics.F1_weighted import F1_weighted_metric
 
                     metrics.append(F1_weighted_metric())
+                case MetricName.MCC_WEIGHTED:
+                    from photoholmes.metrics.MCC_weighted import MCC_weighted_metric
+
+                    metrics.append(MCC_weighted_metric())
                 case _:
                     raise NotImplementedError(
                         f"Metric '{metric_name}' is not implemented."
