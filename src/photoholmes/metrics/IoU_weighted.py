@@ -35,12 +35,8 @@ class IoU_weighted_metric(Metric):
             **kwargs: Additional keyword arguments.
         """
         super().__init__(**kwargs)
-        self.add_state(
-            "IoU_weighted", default=torch.tensor(0), dist_reduce_fx="sum"
-        )  # Que hace el dist ese?
-        self.add_state(
-            "total_images", default=torch.tensor(0), dist_reduce_fx="sum"
-        )  # Esto esta mal no?
+        self.add_state("IoU_weighted", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.add_state("total_images", default=torch.tensor(0.0), dist_reduce_fx="sum")
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
