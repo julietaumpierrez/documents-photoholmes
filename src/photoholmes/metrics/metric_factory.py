@@ -92,10 +92,14 @@ class MetricFactory:
                     from torchmetrics import Recall as TPR
 
                     metrics.append(TPR(task="binary"))
-                case MetricName.IoU_weighted:
+                case MetricName.IoU_WEIGHTED:
                     from photoholmes.metrics.IoU_weighted import IoU_weighted_metric
 
                     metrics.append(IoU_weighted_metric())
+                case MetricName.F1_WEIGHTED:
+                    from photoholmes.metrics.F1_weighted import F1_weighted_metric
+
+                    metrics.append(F1_weighted_metric())
                 case _:
                     raise NotImplementedError(
                         f"Metric '{metric_name}' is not implemented."

@@ -10,4 +10,5 @@ class MetricName(Enum):
     Precision = "precision"
     ROC = "roc"
     TPR = "tpr"
-    IoU_weighted = "iou_weighted"
+    IoU_WEIGHTED = "iou_weighted"
+    F1_WEIGHTED = "f1_weighted"
