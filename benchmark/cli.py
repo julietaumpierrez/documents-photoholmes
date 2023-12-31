@@ -1,9 +1,11 @@
 import typer
 from model import Benchmark
 
+from photoholmes.datasets.dataset_factory import DatasetFactory
 from photoholmes.datasets.registry import DatasetName
+from photoholmes.methods.method_factory import MethodFactory
 from photoholmes.methods.registry import MethodName
-from photoholmes.metrics.registry import MetricName
+from photoholmes.metrics.metric_factory import MetricFactory
 
 # TODO: add a command to list the available methods, datasets and metrics
 # TODO: add documentation for the CLI
@@ -29,22 +31,36 @@ def main(
     """
     Run the Benchmark for image tampering detection.
     """
-    metrics_list = metrics.split()
-    metrics_names = [MetricName(metric) for metric in metrics_list]
+    # Load method and preprocessing
+    method, preprocessing = MethodFactory.load(
+        method_name=method_name, config=method_config, device=device
+    )
 
-    benchmark = Benchmark(
-        method_name=method_name,
-        method_config=method_config,
+    # Load dataset
+    dataset = DatasetFactory.load(
         dataset_name=dataset_name,
-        dataset_path=dataset_path,
+        dataset_dir=dataset_path,
         tampered_only=tampered_only,
-        metrics_names=metrics_names,
+        transform=preprocessing,
+    )
+
+    # Load metrics
+    metrics_list = metrics.split()
+    metrics_objects = MetricFactory.load(metrics_list)
+
+    # Create Benchmark
+    benchmark = Benchmark(
         save_output=save_output,
         output_path=output_path,
         device=device,
     )
 
-    benchmark.run()
+    # Run Benchmark
+    benchmark.run(
+        method=method,
+        dataset=dataset,
+        metrics=metrics_objects,
+    )
 
 
 if __name__ == "__main__":
