@@ -69,9 +69,11 @@ class BaseMethod(ABC):
 
     def model_to_device(self):
         """Send the model to the device."""
-        log.info(f"Device wanted to be set to: {self.device}")
-        log.info("Model does not implement 'model_to_device' method.")
-        log.info("Falling back to 'cpu' device.")
+        log.warning(
+            f"Device wanted to be set to: `{self.device}`. "
+            "Model does not implement 'model_to_device' method.\n"
+            "Falling back to 'cpu' device."
+        )
 
 
 class BaseTorchMethod(BaseMethod, Module):
