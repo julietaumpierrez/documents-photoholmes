@@ -74,6 +74,7 @@ class BaseMethod(ABC):
             "Model does not implement 'model_to_device' method.\n"
             "Falling back to 'cpu' device."
         )
+        self.device = torch.device("cpu")
 
 
 class BaseTorchMethod(BaseMethod, Module):
