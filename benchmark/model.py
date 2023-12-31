@@ -1,21 +1,17 @@
 import json
 import logging
 import os
-from typing import Optional, Union
 
 import numpy as np
 import torch
+from torchmetrics import MetricCollection
 from tqdm import tqdm
 
-from photoholmes.datasets.dataset_factory import DatasetFactory
-from photoholmes.datasets.registry import DatasetName
-from photoholmes.methods.method_factory import MethodFactory
-from photoholmes.methods.registry import MethodName
-from photoholmes.metrics.metric_factory import MetricFactory
-from photoholmes.metrics.registry import MetricName
+from photoholmes.datasets.base import BaseDataset
+from photoholmes.methods.base import BaseMethod
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
-log = logging.getLogger("benchmark.model.Benchmark")
+log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
@@ -23,37 +19,13 @@ class Benchmark:
     # Add documentation to class and methods
     def __init__(
         self,
-        method_name: MethodName,
-        method_config: Optional[Union[dict, str]],
-        dataset_name: DatasetName,
-        dataset_path: str,
-        tampered_only: bool,
-        metrics_names: list[MetricName],
         save_output: bool = False,
         output_path: str = "output/",
         device: str = "cpu",
     ):
-        self.method_config = method_config
-        self.method, self.preprocessing = MethodFactory.load(
-            method_name=method_name, config=method_config, device=device
-        )
-
-        self.dataset = DatasetFactory.load(
-            dataset_name=dataset_name,
-            dataset_dir=dataset_path,
-            tampered_only=tampered_only,
-            transform=self.preprocessing,
-        )
-        self.mask_metrics = MetricFactory.load(metrics_names)
-        self.heatmap_metrics = MetricFactory.load(metrics_names)
         self.save_output = save_output
-        self.output_path = os.path.join(
-            output_path, method_name.value, dataset_name.value
-        )
+        self.output_path = output_path
 
-        self.mask_metrics_names = metrics_names
-        self.method_name = method_name
-        self.dataset_name = dataset_name
         if device.startswith("cuda") and not torch.cuda.is_available():
             log.warning(
                 f"Requested device '{device}' is not available. Falling back to 'cpu'."
@@ -66,36 +38,69 @@ class Benchmark:
         # to determine whether to save the mask and heatmap or not
         self.save_mask = False
         self.save_heatmap = False
+        self.save_detection = False
 
-    def run(self):
+    def run(self, method: BaseMethod, dataset: BaseDataset, metrics: MetricCollection):
+        if method.device != self.device:
+            raise ValueError(
+                f"Method device '{method.device}' does not match benchmark device '{self.device}'."
+            )
+        output_path = os.path.join(
+            self.output_path,
+            method.__class__.__name__.lower(),
+            dataset.__class__.__name__.lower(),
+        )
         log.info("-" * 80)
         log.info("Running the benchmark")
         log.info("Benchmark configuration:")
-        log.info(f"    Method: {self.method_name.value}")
-        log.info(f"    Method config: {self.method_config}")
-        log.info(f"    Dataset: {self.dataset_name.value}")
-        log.info(f"    Metrics: {[metric.value for metric in self.mask_metrics_names]}")
-        log.info(f"    Output path: {self.output_path}")
+        log.info(f"    Method: {method.__class__.__name__}")
+        log.info(f"    Dataset: {dataset.__class__.__name__}")
+        log.info(f"    Metrics: {[metric for metric in metrics]}")
+        log.info(f"    Output path: {output_path}")
         log.info(f"    Save output: {self.save_output}")
         log.info(f"    Device: {self.device}")
         log.info("-" * 80)
 
-        for data, mask, image_name in tqdm(self.dataset, desc="Processing Images"):
+        heatmap_metrics = metrics.clone(prefix="heatmap")
+        mask_metrics = metrics.clone(prefix="mask")
+        detection_metrics = metrics.clone(prefix="detection")
+
+        for data, mask, image_name in tqdm(dataset, desc="Processing Images"):
             # TODO: make a cleaner way to move the data to the device
             # (conditioned to the method or something)
             data_on_device = self.move_to_device(data)
 
-            output = self.method.predict(**data_on_device)
+            output = method.predict(**data_on_device)
 
-            self.update_metrics(output, mask)
+            if "detection" in output:
+                detection_metrics.update(output["detection"], mask)
+                self.save_detection = True
+            if "mask" in output:
+                mask_metrics.update(output["mask"], mask)
+                self.save_mask = True
+            if "heatmap" in output:
+                heatmap_metrics.update(output["heatmap"], mask)
+                self.save_heatmap = True
 
             if self.save_output:
-                self.save_pred_output(image_name, output)
+                self.save_pred_output(output_path, image_name, output)
 
         log.info("-" * 80)
-        log.info("Saving metrics")
-        self.save_metrics()
-        log.info("Metrics saved")
+        if self.save_heatmap:
+            log.info("     - Saving heatmap metrics")
+            self.save_metrics(output_path, heatmap_metrics)
+        else:
+            log.info("     - No heatmap metrics to save")
+        if self.save_mask:
+            log.info("     - Saving mask metrics")
+            self.save_metrics(output_path, mask_metrics)
+        else:
+            log.info("     - No mask metrics to save")
+        if self.save_detection:
+            log.info("     - Saving detection metrics")
+            self.save_metrics(output_path, detection_metrics)
+        else:
+            log.info("     - No detection metrics to save")
         log.info("-" * 80)
         log.info("Benchmark finished")
         log.info("-" * 80)
@@ -107,60 +112,23 @@ class Benchmark:
             for key, value in data.items()
         }
 
-    def update_metrics(self, output, mask):
-        if isinstance(mask, torch.Tensor):
-            mask = mask.to(self.device)
-
-        if "mask" in output:
-            self.mask_metrics.update(output["mask"], mask)
-            # TODO: delete next line when the "output_keys" attribute is set
-            # in the method class and use that to determine whether to save the mask
-            # or not
-            self.save_mask = True
-
-        if "heatmap" in output:
-            self.heatmap_metrics.update(output["heatmap"], mask)
-            # TODO: delete next line when the "output_keys" attribute is set
-            # in the method class and use that to determine whether to save the heatmap
-            # or not
-            self.save_heatmap = True
-
-    def save_metrics(self):
-        metrics_path = os.path.join(self.output_path, "metrics")
+    def save_metrics(self, output_path, metrics):
+        metrics_path = os.path.join(output_path, "metrics")
         os.makedirs(metrics_path, exist_ok=True)
 
-        if self.save_mask:
-            log.info("     Saving mask metrics")
-            mask_metrics_report = self.mask_metrics.compute()
-            torch.save(
-                self.mask_metrics.state_dict(),
-                os.path.join(metrics_path, "mask_state.pt"),
-            )
-            mask_metrics_report = {
-                key: float(value) for key, value in mask_metrics_report.items()
-            }
-            with open(os.path.join(metrics_path, "mask_report.json"), "w") as f:
-                json.dump(mask_metrics_report, f)
-        else:
-            log.info("     No mask metrics to save")
+        metric_report = metrics.compute()
+        torch.save(
+            metrics.state_dict(),
+            os.path.join(metrics_path, f"{metrics.prefix}_state.pt"),
+        )
+        metric_report = {key: float(value) for key, value in metric_report.items()}
+        with open(
+            os.path.join(metrics_path, f"{metrics.prefix}_report.json"), "w"
+        ) as f:
+            json.dump(metric_report, f)
 
-        if self.save_heatmap:
-            log.info("     Saving heatmap metrics")
-            heatmap_metrics_report = self.heatmap_metrics.compute()
-            torch.save(
-                self.heatmap_metrics.state_dict(),
-                os.path.join(metrics_path, "heatmap_state.pt"),
-            )
-            heatmap_metrics_report = {
-                key: float(value) for key, value in heatmap_metrics_report.items()
-            }
-            with open(os.path.join(metrics_path, "heatmap_report.json"), "w") as f:
-                json.dump(heatmap_metrics_report, f)
-        else:
-            log.info("     No heatmap metrics to save")
-
-    def save_pred_output(self, image_name, output):
-        image_save_path = os.path.join(self.output_path, "outputs", image_name)
+    def save_pred_output(self, output_path, image_name, output):
+        image_save_path = os.path.join(output_path, "outputs", image_name)
         os.makedirs(image_save_path, exist_ok=True)
 
         array_like_dict = {}
