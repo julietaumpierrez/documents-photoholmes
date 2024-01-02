@@ -61,15 +61,18 @@ class Benchmark:
         log.info(f"    Device: {self.device}")
         log.info("-" * 80)
 
-        heatmap_metrics = metrics.clone(prefix="heatmap")
-        mask_metrics = metrics.clone(prefix="mask")
-        detection_metrics = metrics.clone(prefix="detection")
+        metrics_on_device = metrics.to(self.device)
+
+        heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
+        mask_metrics = metrics_on_device.clone(prefix="mask")
+        detection_metrics = metrics_on_device.clone(prefix="detection")
 
         for data, mask, image_name in tqdm(dataset, desc="Processing Images"):
             # TODO: make a cleaner way to move the data to the device
             # (conditioned to the method or something)
             data_on_device = self.move_to_device(data)
 
+            mask = mask.to(self.device)
             output = method.predict(**data_on_device)
 
             if "detection" in output:
@@ -135,7 +138,9 @@ class Benchmark:
         non_array_like_dict = {}
 
         for key, value in output.items():
-            if isinstance(value, (torch.Tensor, list, np.ndarray)):
+            if isinstance(value, (torch.Tensor)):
+                array_like_dict[key] = value.cpu()
+            elif isinstance(value, (list, np.ndarray)):
                 array_like_dict[key] = value
             else:
                 non_array_like_dict[key] = value
