@@ -147,8 +147,7 @@ class TruFor(BaseTorchMethod):
             assert False
 
         if cfg.pretrained is not None:
-            weights = torch.load(cfg.pretrained, map_location=self.device)
-            self.load_state_dict(weights["state_dict"])
+            self.load_weigths(cfg.pretrained)
         else:
             self.init_weights()
 
