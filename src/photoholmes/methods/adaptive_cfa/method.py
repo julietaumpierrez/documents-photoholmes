@@ -175,9 +175,9 @@ class AdaptiveCFANet(BaseTorchMethod):
         )
         self.grids = SeparateAndPermutate()
         self.padding = self.spatial.padding
-        self.device = device
+        self.device = torch.device(device)
 
-        self.model_to_device()
+        self.method_to_device(device=device)
 
         if weights is not None:
             self.load_weigths(weights)
@@ -257,5 +257,5 @@ class AdaptiveCFANet(BaseTorchMethod):
 
         return cls(**config)
 
-    def model_to_device(self):
-        self.to(self.device)
+    def metho_to_device(self, device: str):
+        self.to(device)

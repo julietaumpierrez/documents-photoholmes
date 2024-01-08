@@ -49,7 +49,8 @@ class Noisesniffer(BaseMethod):
         self.n = n
         self.m = m
         self.W = W
-        self.model_to_device()
+
+        self.method_to_device("cpu")
 
     def do_one_channel(
         self,

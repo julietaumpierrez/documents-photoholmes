@@ -482,7 +482,7 @@ class CatNet(BaseTorchMethod):
 
         self.load_model(arch_config)
 
-        self.model_to_device()
+        self.method_to_device(device=device)
 
         if weights is not None:
             self.load_weights(weights)
@@ -859,5 +859,5 @@ class CatNet(BaseTorchMethod):
 
         return cls(arch_config=arch, **config)
 
-    def model_to_device(self):
-        self.to(self.device)
+    def method_to_device(self, device: str):
+        self.to(device)

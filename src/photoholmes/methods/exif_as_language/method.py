@@ -67,7 +67,7 @@ class EXIFAsLanguage(BaseMethod):
         self.net = clipNet
 
         self.net.eval()
-        self.model_to_device()
+        self.method_to_device(device=device)
 
     def predict(
         self,
@@ -153,9 +153,9 @@ class EXIFAsLanguage(BaseMethod):
             "affinity_matrix": affinity_matrix,
         }
 
-    def model_to_device(self):
-        """Move model to device"""
-        self.net.to(self.device)
+    def method_to_device(self, device: str):
+        """Move method to device"""
+        self.net.to(device)
 
     def init_img(self, img: Tensor) -> PatchedImage:
         # Initialize image and attributes

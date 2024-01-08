@@ -13,7 +13,7 @@ class Naive(BaseMethod):
     def __init__(self, sigma: float = 1, **kwargs):
         super().__init__(**kwargs)
         self.sigma = sigma
-        self.model_to_device()
+        self.method_to_device("cpu")
 
     def predict(
         self, original_image_size=Tuple[int, int], **kwargs

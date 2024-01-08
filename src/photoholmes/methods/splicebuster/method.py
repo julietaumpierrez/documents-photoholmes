@@ -63,7 +63,7 @@ class Splicebuster(BaseMethod):
 
         self.mixture = mixture
 
-        self.model_to_device()
+        self.method_to_device("cpu")
 
     def filter_and_encode(
         self, image: NDArray

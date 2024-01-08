@@ -67,10 +67,10 @@ class BaseMethod(ABC):
         config["device"] = device
         return cls(**config)
 
-    def model_to_device(self):
+    def method_to_device(self, device: str):
         """Send the model to the device."""
         log.warning(
-            f"Device wanted to be set to: `{self.device}`. "
+            f"Device wanted to be set to: `{device}`. "
             "Model does not implement 'model_to_device' method.\n"
             "Falling back to 'cpu' device."
         )
