@@ -156,6 +156,7 @@ class EXIFAsLanguage(BaseMethod):
     def method_to_device(self, device: str):
         """Move method to device"""
         self.net.to(device)
+        self.device = torch.device(device)
 
     def init_img(self, img: Tensor) -> PatchedImage:
         # Initialize image and attributes

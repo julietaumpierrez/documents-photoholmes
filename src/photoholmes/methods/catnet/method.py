@@ -861,3 +861,4 @@ class CatNet(BaseTorchMethod):
 
     def method_to_device(self, device: str):
         self.to(device)
+        self.device = torch.device(device)

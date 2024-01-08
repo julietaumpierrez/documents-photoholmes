@@ -67,7 +67,7 @@ class PSCCNet(BaseTorchMethod):
         return net.module.to(self.device)
 
     def method_to_device(self, device: str):
-        self.device = device
+        self.device = torch.device(device)
         self.FENet = self.FENet.to(device)
         self.SegNet = self.SegNet.to(device)
         self.ClsNet = self.ClsNet.to(device)

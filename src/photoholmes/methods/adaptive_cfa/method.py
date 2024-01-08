@@ -257,5 +257,6 @@ class AdaptiveCFANet(BaseTorchMethod):
 
         return cls(**config)
 
-    def metho_to_device(self, device: str):
+    def method_to_device(self, device: str):
         self.to(device)
+        self.device = torch.device(device)
