@@ -66,6 +66,17 @@ class PSCCNet(BaseTorchMethod):
         load_network_weight(net, weights_path, self.device)
         return net.module.to(self.device)
 
+    def method_to_device(self, device: str):
+        self.device = device
+        self.FENet = self.FENet.to(device)
+        self.SegNet = self.SegNet.to(device)
+        self.ClsNet = self.ClsNet.to(device)
+
+        if self.device_ids is not None:
+            self.FENet = nn.DataParallel(self.FENet, device_ids=self.device_ids)
+            self.SegNet = nn.DataParallel(self.SegNet, device_ids=self.device_ids)
+            self.ClsNet = nn.DataParallel(self.ClsNet, device_ids=self.device_ids)
+
     @torch.no_grad()
     def predict(self, image: torch.Tensor) -> Dict[str, torch.Tensor]:
         self.FENet.eval()
