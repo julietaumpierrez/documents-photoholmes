@@ -42,9 +42,12 @@ class Benchmark:
 
     def run(self, method: BaseMethod, dataset: BaseDataset, metrics: MetricCollection):
         if method.device != self.device:
-            raise ValueError(
-                f"Method device '{method.device}' does not match benchmark device '{self.device}'."
+            log.warning(
+                f"Method device '{method.device}' does not match benchmark device '{self.device}'. "
+                f"Moving method to '{self.device}'"
             )
+            method.method_to_device(self.device)
+
         output_path = os.path.join(
             self.output_path,
             method.__class__.__name__.lower(),
