@@ -1,5 +1,4 @@
 import torch
-from sympy import denom
 from torch import Tensor
 from torchmetrics import Metric
 
