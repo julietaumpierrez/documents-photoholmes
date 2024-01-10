@@ -1,4 +1,5 @@
 import torch
+from sympy import denom
 from torch import Tensor
 from torchmetrics import Metric
 
@@ -60,7 +61,9 @@ class IoU_weighted_metric(Metric):
         TPw = torch.sum(pred_flat * target_flat)
         FPw = torch.sum((1 - pred_flat) * target_flat)
         FNw = torch.sum(pred_flat * (1 - target_flat))
-        self.IoU_weighted += TPw / (TPw + FNw + FPw)
+        denominator = TPw + FPw + FNw
+        if denominator != 0:
+            self.IoU_weighted += TPw / denominator
         self.total_images += torch.tensor(1)
 
     def compute(self) -> Tensor:
@@ -72,7 +75,6 @@ class IoU_weighted_metric(Metric):
             Tensor: The computed IoU weighted over the full dataset.
                     If the total number of images is zero,
                     it returns 0.0 to avoid division by zero.
-
         """
         IoU_weighted = self.IoU_weighted.float()
         total_images = self.total_images.float()

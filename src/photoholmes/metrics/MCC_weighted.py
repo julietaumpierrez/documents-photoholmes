@@ -61,9 +61,10 @@ class MCC_weighted_metric(Metric):
         FPw = torch.sum((1 - pred_flat) * target_flat)
         TNw = torch.sum((1 - pred_flat) * (1 - target_flat))
         FNw = torch.sum(pred_flat * (1 - target_flat))
-        self.MCC_weighted += (TPw * TNw - FPw * FNw) / torch.sqrt(
-            (TPw + FPw) * (TPw + FNw) * (TNw + FPw) * (TNw + FNw)
-        )
+        denominator = torch.sqrt((TPw + FPw) * (TPw + FNw) * (TNw + FPw) * (TNw + FNw))
+        if denominator != 0:
+            self.MCC_weighted += (TPw * TNw - FPw * FNw) / denominator
+
         self.total_images += torch.tensor(1)
 
     def compute(self) -> Tensor:
@@ -75,7 +76,6 @@ class MCC_weighted_metric(Metric):
             Tensor: The computed MCC weighted over the full dataset.
                     If the total number of images is zero,
                     it returns 0.0 to avoid division by zero.
-
         """
         MCC_weighted = self.MCC_weighted.float()
         total_images = self.total_images.float()

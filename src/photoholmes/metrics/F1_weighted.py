@@ -1,4 +1,5 @@
 import torch
+from sympy import denom
 from torch import Tensor
 from torchmetrics import Metric
 
@@ -60,7 +61,9 @@ class F1_weighted_metric(Metric):
         TPw = torch.sum(pred_flat * target_flat)
         FPw = torch.sum((1 - pred_flat) * target_flat)
         FNw = torch.sum(pred_flat * (1 - target_flat))
-        self.F1_weighted += 2 * TPw / (2 * TPw + FNw + FPw)
+        denominator = 2 * TPw + FNw + FPw
+        if denominator != 0:
+            self.F1_weighted += 2 * TPw / denominator
         self.total_images += torch.tensor(1)
 
     def compute(self) -> Tensor:
@@ -72,7 +75,6 @@ class F1_weighted_metric(Metric):
             Tensor: The computed F1 weighted over the full dataset.
                     If the total number of images is zero,
                     it returns 0.0 to avoid division by zero.
-
         """
         F1_weighted = self.F1_weighted.float()
         total_images = self.total_images.float()
