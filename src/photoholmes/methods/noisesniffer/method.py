@@ -33,6 +33,7 @@ class Noisesniffer(BaseMethod):
         n: float = 0.1,
         m: float = 0.5,
         W: int = 100,
+        device: str = "cpu",
         **kwargs,
     ):
         """
@@ -52,7 +53,8 @@ class Noisesniffer(BaseMethod):
         self.m = m
         self.W = W
 
-        self.method_to_device("cpu")
+        self.device = torch.device(device)
+        self.method_to_device(device=device)
 
     def do_one_channel(
         self,
