@@ -68,11 +68,11 @@ class MCC_weighted_metric(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the IoU weighted over all the batches averaging all the
+        Computes the MCC weighted over all the batches averaging all the
         IoU wighted of each image.
 
         Returns:
-            Tensor: The computed IoU weighted over the full dataset.
+            Tensor: The computed MCC weighted over the full dataset.
                     If the total number of images is zero,
                     it returns 0.0 to avoid division by zero.
 
