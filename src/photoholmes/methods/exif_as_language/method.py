@@ -148,6 +148,8 @@ class EXIFAsLanguage(BaseMethod):
         out_ncuts = torch.from_numpy(out_ncuts).to(self.device)
         score = torch.tensor(score).to(self.device)
         out_pca = torch.from_numpy(out_pca).float().to(self.device)
+        pred_maps = torch.from_numpy(pred_maps).to(self.device)
+        affinity_matrix = affinity_matrix.to(self.device)
         return {
             "heatmap": out_ms,
             "mask": out_ncuts,
