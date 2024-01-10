@@ -1,6 +1,6 @@
 # Derived from https://github.com/hellomuffin/exif-as-language
 import random
-from typing import Literal, Optional, Tuple
+from typing import Dict, Literal, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -26,7 +26,7 @@ class EXIFAsLanguage(BaseMethod):
         num_per_dim: int = 30,
         feat_batch_size: int = 32,
         pred_batch_size: int = 1024,
-        device: str = "cuda:0",
+        device: str = "cpu",
         ms_window: int = 10,
         ms_iter: int = 5,
         pooling: Literal["cls", "mean"] = "mean",
@@ -73,7 +73,7 @@ class EXIFAsLanguage(BaseMethod):
         self,
         image: Tensor,
         original_image_size: Tuple[int, int],
-    ):
+    ) -> Dict[str, Tensor]:
         """
         Parameters
         ----------
@@ -144,13 +144,17 @@ class EXIFAsLanguage(BaseMethod):
         score = pred_maps.mean()
         affinity_matrix = self.generate_afinity_matrix(patch_features)
 
+        out_ms = torch.from_numpy(out_ms).to(self.device)
+        out_ncuts = torch.from_numpy(out_ncuts).to(self.device)
+        score = torch.tensor(score).to(self.device)
+        out_pca = torch.from_numpy(out_pca).float().to(self.device)
         return {
             "heatmap": out_ms,
             "mask": out_ncuts,
             "score": score,
-            "pred_maps": pred_maps,
-            "pca": out_pca,
+            "output_pca": out_pca,
             "affinity_matrix": affinity_matrix,
+            "pred_maps": pred_maps,
         }
 
     def method_to_device(self, device: str):
