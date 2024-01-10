@@ -4,8 +4,10 @@
 from typing import Dict, List, Tuple
 
 import numpy as np
+import torch
 from numpy.typing import NDArray
 from skimage.util import view_as_windows
+from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
 
@@ -106,7 +108,7 @@ class Noisesniffer(BaseMethod):
 
         return V, S
 
-    def predict(self, image: NDArray) -> Dict[str, NDArray]:
+    def predict(self, image: NDArray) -> Dict[str, Tensor]:
         """
         Run Noisesniffer on an image.
         Input: Image to test.
@@ -134,4 +136,6 @@ class Noisesniffer(BaseMethod):
             S = np.concatenate((S, S_ch))
 
         mask, img_paint = compute_output(image, self.w, self.W, self.m, V, S)
+        mask = torch.from_numpy(mask)
+        img_paint = torch.from_numpy(img_paint)
         return {"mask": mask, "img_paint": img_paint}
