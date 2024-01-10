@@ -9,3 +9,4 @@ weights:
   high_th: 252
   opening_kernel_radius: 3
   dilation_kernel_size: 9
+device: cpu

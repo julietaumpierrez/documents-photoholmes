@@ -14,7 +14,9 @@ from photoholmes.postprocessing.resizing import (
 
 
 class DQ(BaseMethod):
-    def __init__(self, number_frecs: int = 8, alpha: float = 1.0, **kwargs) -> None:
+    def __init__(
+        self, number_frecs: int = 8, alpha: float = 1.0, device: str = "cpu", **kwargs
+    ) -> None:
         """
         Initialize the DQ class.
 
@@ -24,7 +26,8 @@ class DQ(BaseMethod):
         super().__init__(**kwargs)
         self.number_frecs = number_frecs
         self.alpha = alpha
-        self.method_to_device("cpu")
+        self.device = torch.device(device)
+        self.method_to_device(device)
 
     def predict(
         self, dct_coefficients: NDArray, original_image_size: Tuple[int, int]

@@ -10,10 +10,11 @@ from photoholmes.methods.base import BaseMethod
 class Naive(BaseMethod):
     """A random method to test the program structure"""
 
-    def __init__(self, sigma: float = 1, **kwargs):
+    def __init__(self, sigma: float = 1, device: str = "cpu", **kwargs):
         super().__init__(**kwargs)
         self.sigma = sigma
-        self.method_to_device("cpu")
+        self.device = torch.device(device)
+        self.method_to_device(device)
 
     def predict(
         self, original_image_size=Tuple[int, int], **kwargs

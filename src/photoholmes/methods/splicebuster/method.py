@@ -33,6 +33,7 @@ class Splicebuster(BaseMethod):
         pca_dim: int = 25,
         mixture: Literal["uniform", "gaussian"] = "uniform",
         weights: Union[WeightConfig, Literal["original"], None] = None,
+        device: str = "cpu",
         **kwargs,
     ):
         """
@@ -62,8 +63,8 @@ class Splicebuster(BaseMethod):
             self.weight_params = weights
 
         self.mixture = mixture
-
-        self.method_to_device("cpu")
+        self.device = torch.device(device)
+        self.method_to_device(device)
 
     def filter_and_encode(
         self, image: NDArray

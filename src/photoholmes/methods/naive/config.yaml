@@ -1,2 +1,3 @@
 default_kwargs: 
   threshold: 0.5
+  device: cpu
