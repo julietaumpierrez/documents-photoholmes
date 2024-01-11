@@ -84,7 +84,7 @@ class PSCCNet(BaseTorchMethod):
     ) -> Dict[str, torch.Tensor]:
         image = image.to(self.device)
         add_batch_dim = image.ndim == 3
-        if image.ndim == 3:
+        if add_batch_dim:
             image = image.unsqueeze(0)
         self.FENet.eval()
         feat = self.FENet(image)
