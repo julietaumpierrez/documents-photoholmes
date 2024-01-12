@@ -3,7 +3,7 @@ from torch import Tensor
 from torchmetrics import Metric
 
 
-class F1_weighted_metric(Metric):
+class F1_weighted(Metric):
     """
     The F1 weighted (F1 score weighted) metric calculates the F1 score taking
     into account the value of the heatmap as a probability and uses weighted true
@@ -24,7 +24,7 @@ class F1_weighted_metric(Metric):
         >>> F1_weighted_metric = F1_weighted()
         >>> for preds_batch, targets_batch in data_loader:
         >>>     F1_weighted_metric.update(preds_batch, targets_batch)
-        >>> F1_weighted = F1_weighted_metric.compute()
+        >>> f1_weighted = F1_weighted_metric.compute()
     """
 
     def __init__(self, **kwargs):
@@ -68,13 +68,13 @@ class F1_weighted_metric(Metric):
     def compute(self) -> Tensor:
         """
         Computes the F1 weighted over all the batches averaging all the
-        IoU wighted of each image.
+        F1 wighted of each image.
 
         Returns:
             Tensor: The computed F1 weighted over the full dataset.
                     If the total number of images is zero,
                     it returns 0.0 to avoid division by zero.
         """
-        F1_weighted = self.F1_weighted.float()
+        f1_weighted = self.F1_weighted.float()
         total_images = self.total_images.float()
-        return F1_weighted / total_images if total_images != 0 else torch.tensor(0.0)
+        return f1_weighted / total_images if total_images != 0 else torch.tensor(0.0)

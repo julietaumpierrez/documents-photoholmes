@@ -3,7 +3,7 @@ from torch import Tensor
 from torchmetrics import Metric
 
 
-class IoU_weighted_metric(Metric):
+class IoU_weighted(Metric):
     """
     The IoU weighted (Intersection over Union weighted) metric calculates the IoU taking
     into account the value of the heatmap as a probability and uses weighted true
@@ -24,7 +24,7 @@ class IoU_weighted_metric(Metric):
         >>> IoU_weighted_metric = IoU_weighted()
         >>> for preds_batch, targets_batch in data_loader:
         >>>     IoU_weighted_metric.update(preds_batch, targets_batch)
-        >>> IoU_weighted = IoU_weighted_metric.compute()
+        >>> iou_weighted = IoU_weighted_metric.compute()
     """
 
     def __init__(self, **kwargs):

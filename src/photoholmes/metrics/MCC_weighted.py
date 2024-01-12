@@ -3,7 +3,7 @@ from torch import Tensor
 from torchmetrics import Metric
 
 
-class MCC_weighted_metric(Metric):
+class MCC_weighted(Metric):
     """
     The MCC weighted (Mathews Correlation Coefficient weighted) metric calculates the
     F1 score taking into account the value of the heatmap as a probability and uses
@@ -24,7 +24,7 @@ class MCC_weighted_metric(Metric):
         >>> MCC_weighted_metric = MCC_weighted()
         >>> for preds_batch, targets_batch in data_loader:
         >>>     MCC_weighted_metric.update(preds_batch, targets_batch)
-        >>> MCC_weighted = MCC_weighted_metric.compute()
+        >>> mcc_weighted = MCC_weighted_metric.compute()
     """
 
     def __init__(self, **kwargs):
@@ -70,13 +70,13 @@ class MCC_weighted_metric(Metric):
     def compute(self) -> Tensor:
         """
         Computes the MCC weighted over all the batches averaging all the
-        IoU wighted of each image.
+        MCC wighted of each image.
 
         Returns:
             Tensor: The computed MCC weighted over the full dataset.
                     If the total number of images is zero,
                     it returns 0.0 to avoid division by zero.
         """
-        MCC_weighted = self.MCC_weighted.float()
+        mcc_weighted = self.MCC_weighted.float()
         total_images = self.total_images.float()
-        return MCC_weighted / total_images if total_images != 0 else torch.tensor(0.0)
+        return mcc_weighted / total_images if total_images != 0 else torch.tensor(0.0)
