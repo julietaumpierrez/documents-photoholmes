@@ -1,6 +1,6 @@
 import typer
-from model import Benchmark
 
+from photoholmes.benchmark.model import Benchmark
 from photoholmes.datasets.dataset_factory import DatasetFactory
 from photoholmes.datasets.registry import DatasetName
 from photoholmes.methods.method_factory import MethodFactory
