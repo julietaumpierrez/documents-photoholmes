@@ -36,7 +36,7 @@ dataset = DatasetFactory.load(
 metrics = MetricFactory.load(["precision", "FPR"])
 
 # %%
-from benchmark.model import Benchmark
+from photoholmes.benchmark.model import Benchmark
 # %%
 benchmark = Benchmark(
     save_output=True,
