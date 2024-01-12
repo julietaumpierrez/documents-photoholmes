@@ -3,6 +3,7 @@ from typing import Any, Dict, Tuple
 from torch import Tensor
 
 from photoholmes.preprocessing.base import PreprocessingTransform
+from photoholmes.preprocessing.image import ZeroOneRange
 from photoholmes.preprocessing.pipeline import PreProcessingPipeline
 
 
@@ -25,4 +26,6 @@ class AdaptiveCFANetPreprocessing(PreprocessingTransform):
         return {"image": image, "original_image_size": original_image_size}
 
 
-adaptive_cfa_net_preprocessing = PreProcessingPipeline([AdaptiveCFANetPreprocessing()])
+adaptive_cfa_net_preprocessing = PreProcessingPipeline(
+    [ZeroOneRange(), AdaptiveCFANetPreprocessing()]
+)

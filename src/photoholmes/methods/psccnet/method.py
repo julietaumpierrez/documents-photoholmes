@@ -1,4 +1,5 @@
-# code extracted from https://github.com/mjkwon2021/CAT-Net/blob/f1716b0849eb4d94687a02c25bf97229b495bf9e/lib/models/network_CAT.py#L286
+# code extracted from https://github.com/mjkwon2021/CAT-Net/blob/f1716b0849eb4d94687a02
+# c25bf97229b495bf9e / lib / models / network_CAT.py  # L286
 # ------------------------------------------------------------------------------
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
@@ -10,7 +11,7 @@ mjkwon2021@gmail.com
 Aug 22, 2020
 """
 import random
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -66,8 +67,25 @@ class PSCCNet(BaseTorchMethod):
         load_network_weight(net, weights_path, self.device)
         return net.module.to(self.device)
 
+    def method_to_device(self, device: str):
+        self.device = torch.device(device)
+        self.FENet.to(device)
+        self.SegNet.to(device)
+        self.ClsNet.to(device)
+
+        if self.device_ids is not None:
+            self.FENet = nn.DataParallel(self.FENet, device_ids=self.device_ids)
+            self.SegNet = nn.DataParallel(self.SegNet, device_ids=self.device_ids)
+            self.ClsNet = nn.DataParallel(self.ClsNet, device_ids=self.device_ids)
+
     @torch.no_grad()
-    def predict(self, image: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def predict(
+        self, image: torch.Tensor, original_image_size=Tuple[int, int]
+    ) -> Dict[str, torch.Tensor]:
+        image = image.to(self.device)
+        add_batch_dim = image.ndim == 3
+        if add_batch_dim:
+            image = image.unsqueeze(0)
         self.FENet.eval()
         feat = self.FENet(image)
 
@@ -81,7 +99,11 @@ class PSCCNet(BaseTorchMethod):
             mode="bilinear",
             align_corners=True,
         )
-
+        if add_batch_dim:
+            heatmap = heatmap.squeeze(0)
+            heatmap = heatmap.squeeze(0)
+        else:
+            heatmap = heatmap.squeeze(1)
         # classification head
         self.ClsNet.eval()
         pred_logit = self.ClsNet(feat)

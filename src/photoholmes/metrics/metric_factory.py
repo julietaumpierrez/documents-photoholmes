@@ -1,11 +1,12 @@
 from typing import List, Union
 
-from torchmetrics import Metric
+from torchmetrics import MetricCollection
 
 from photoholmes.metrics.registry import MetricName
 
 
 class MetricFactory:
+    # TODO: redo docstring
     """
     MetricFactory class responsible for creating metric instances.
 
@@ -25,7 +26,8 @@ class MetricFactory:
     """
 
     @staticmethod
-    def load(metric_names: List[Union[str, MetricName]]) -> List[Metric]:
+    def load(metric_names: List[Union[str, MetricName]]) -> MetricCollection:
+        # TODO: redo docstring
         """
         Instantiates and returns a list of metric objects corresponding to the specified
         metric names.
@@ -96,4 +98,5 @@ class MetricFactory:
                     raise NotImplementedError(
                         f"Metric '{metric_name}' is not implemented."
                     )
-        return metrics
+
+        return MetricCollection(metrics)

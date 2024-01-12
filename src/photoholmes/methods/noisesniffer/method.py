@@ -4,8 +4,10 @@
 from typing import Dict, List, Tuple
 
 import numpy as np
+import torch
 from numpy.typing import NDArray
 from skimage.util import view_as_windows
+from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
 
@@ -25,7 +27,13 @@ from .utils import (
 
 class Noisesniffer(BaseMethod):
     def __init__(
-        self, w: int = 3, b: int = 20000, n: float = 0.1, m: float = 0.5, W: int = 100
+        self,
+        w: int = 3,
+        b: int = 20000,
+        n: float = 0.1,
+        m: float = 0.5,
+        W: int = 100,
+        **kwargs,
     ):
         """
         Noisesniffer implementation.
@@ -36,8 +44,9 @@ class Noisesniffer(BaseMethod):
             0.1)
             -m: Percentile of blocks with the lowest standard deviation (default: 0.5)
             -W: Cell size for NFA computation (region growing) (default: 100)
+            -kwargs: Additional arguments to pass to the base class.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.w = w
         self.b = b
         self.n = n
@@ -98,7 +107,7 @@ class Noisesniffer(BaseMethod):
 
         return V, S
 
-    def predict(self, image: NDArray) -> Dict[str, NDArray]:
+    def predict(self, image: NDArray) -> Dict[str, Tensor]:
         """
         Run Noisesniffer on an image.
         Input: Image to test.
@@ -126,4 +135,6 @@ class Noisesniffer(BaseMethod):
             S = np.concatenate((S, S_ch))
 
         mask, img_paint = compute_output(image, self.w, self.W, self.m, V, S)
+        mask = torch.from_numpy(mask)
+        img_paint = torch.from_numpy(img_paint)
         return {"mask": mask, "img_paint": img_paint}

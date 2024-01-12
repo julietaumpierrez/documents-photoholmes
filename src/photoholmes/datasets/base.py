@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Literal, Tuple
 
+import numpy as np
 import torch
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -13,8 +14,18 @@ class BaseDataset(ABC, Dataset):
         self,
         img_dir: str,
         item_data: List[
-            Literal["image", "dct_coefficients", "qtables", "original_image_size"]
-        ] = ["image", "dct_coefficients", "qtables", "original_image_size"],
+            Literal[
+                "image",
+                "dct_coefficients",
+                "qtables",
+                "original_image_size",
+            ]
+        ] = [
+            "image",
+            "dct_coefficients",
+            "qtables",
+            "original_image_size",
+        ],
         # TODO add typing for transforms
         transform=None,
         mask_transform=None,
@@ -48,41 +59,42 @@ class BaseDataset(ABC, Dataset):
     def __len__(self) -> int:
         return len(self.image_paths)
 
-    def __getitem__(self, idx: int) -> Tuple[Dict, Tensor]:
-        x, mask = self._get_data(idx)
+    def __getitem__(self, idx: int) -> Tuple[Dict, Tensor, str]:
+        x, mask, image_name = self._get_data(idx)
         if self.transform:
             x = self.transform(**x)
         if self.mask_transform:
             mask = self.mask_transform(mask)
-        return x, mask
+        return x, mask, image_name
 
-    def _get_data(self, idx: int) -> Tuple[Dict, Tensor]:
+    def _get_data(self, idx: int) -> Tuple[Dict, Tensor, str]:
         x = {}
 
         image_path = self.image_paths[idx]
-        if self.image_data:
+        image_name = image_path.split("/")[-1].split(".")[0]
+
+        if self.image_data or self.mask_paths[idx] is None:
             image = read_image(image_path)
             if "image" in self.item_data:
                 x["image"] = image
-            if "original_image_size" in self.item_data:
+            if "original_image_size" in self.item_data or self.mask_paths[idx] is None:
                 x["original_image_size"] = image.shape[-2:]
         if self.jpeg_data:
             dct, qtables = read_jpeg_data(image_path)
             if "dct_coefficients" in self.item_data:
                 x["dct_coefficients"] = torch.tensor(dct)
             if "qtables" in self.item_data:
-                x["qtables"] = torch.tensor(qtables)
+                x["qtables"] = torch.tensor(np.array(qtables))
 
         if self.mask_paths[idx] is None:
-            arbitrary_element = list(x.values())[0]
-            mask = torch.zeros_like(arbitrary_element[0, :, :])
+            mask = torch.zeros(x["original_image_size"], dtype=torch.bool)
         else:
             mask_im = read_image(self.mask_paths[idx])
             mask = self._binarize_mask(mask_im)
 
-        return x, mask
+        return x, mask, image_name
 
     def _binarize_mask(self, mask_image: Tensor) -> Tensor:
         """Overideable method for binarizing mask images."""
         assert (mask_image <= 1).all()
-        return mask_image == 1
+        return (mask_image == 1).float()

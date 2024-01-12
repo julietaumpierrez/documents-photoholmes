@@ -11,8 +11,20 @@ class DatasetFactory:
         dataset_name: Union[str, DatasetName],
         dataset_dir: str,
         item_data: List[
-            Literal["image", "dct_coefficients", "qtables", "original_image_size"]
-        ] = ["image", "dct_coefficients", "qtables", "original_image_size"],
+            Literal[
+                "image_name",
+                "image",
+                "dct_coefficients",
+                "qtables",
+                "original_image_size",
+            ]
+        ] = [
+            "image_name",
+            "image",
+            "dct_coefficients",
+            "qtables",
+            "original_image_size",
+        ],
         transform: Optional[PreProcessingPipeline] = None,
         mask_transform: Optional[PreProcessingPipeline] = None,
         tampered_only: bool = False,
@@ -25,9 +37,9 @@ class DatasetFactory:
             dataset_name (Union[str, DatasetName]): The name of the dataset to load.
                 Can be a string or a DatasetName enum instance.
             dataset_dir (str): The directory path where the dataset is stored.
-            item_data (List[Literal["image", "dct_coefficients", "qtables",
-                "original_image_size"]]): A list specifying the type of data items to
-                be returned by the dataset.
+            item_data (List[Literal["image_name", "image", "dct_coefficients",
+                "qtables", "original_image_size"]]): A list specifying the type of data
+                items to be returned by the dataset.
             transform (Optional[PreProcessingPipeline]): An optional callable that
                 takes an input and returns a transformed version. Applied to the
                 dataset items.
