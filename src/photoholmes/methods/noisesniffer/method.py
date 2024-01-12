@@ -33,7 +33,6 @@ class Noisesniffer(BaseMethod):
         n: float = 0.1,
         m: float = 0.5,
         W: int = 100,
-        device: str = "cpu",
         **kwargs,
     ):
         """
@@ -45,16 +44,14 @@ class Noisesniffer(BaseMethod):
             0.1)
             -m: Percentile of blocks with the lowest standard deviation (default: 0.5)
             -W: Cell size for NFA computation (region growing) (default: 100)
+            -kwargs: Additional arguments to pass to the base class.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.w = w
         self.b = b
         self.n = n
         self.m = m
         self.W = W
-
-        self.device = torch.device(device)
-        self.method_to_device(device=device)
 
     def do_one_channel(
         self,
