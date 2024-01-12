@@ -45,8 +45,8 @@ pred4 = torch.tensor(
 )
 mask = torch.tensor(
     [
-        [0.0, 0.0, 0.0],
-        [0.0, 1.0, 1.0],
+        [0, 0, 0],
+        [0, 1, 1],
     ]
 )
 # %%
@@ -57,7 +57,7 @@ metrics
 metrics_objects = MetricFactory.load(metrics)
 metrics_objects
 # %%
-metric = metrics_objects[-1]
+metric = metrics_objects
 print(metric)
 metric.update(pred1, mask)
 print(metric.MCC_weighted)
