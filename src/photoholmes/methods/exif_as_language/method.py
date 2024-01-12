@@ -32,7 +32,6 @@ class EXIFAsLanguage(BaseMethod):
         pooling: Literal["cls", "mean"] = "mean",
         state_dict_path: Optional[str] = None,
         seed: int = 44,
-        **kwargs,
     ):
         """
         Parameters
@@ -66,7 +65,6 @@ class EXIFAsLanguage(BaseMethod):
         self.ms_window, self.ms_iter = ms_window, ms_iter
         self.net = clipNet
 
-        self.net.eval()
         self.method_to_device(device=device)
 
     def predict(
@@ -92,7 +90,7 @@ class EXIFAsLanguage(BaseMethod):
             score : float
                 Prediction score, higher indicates existence of manipulation
         """
-
+        self.net.eval()
         # Initialize image and attributes
         height, width = original_image_size
         p_img = self.init_img(image)
