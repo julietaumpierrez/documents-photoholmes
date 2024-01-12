@@ -164,10 +164,8 @@ class RGBtoGray(PreprocessingTransform):
     """
 
     def __call__(self, image: T, **kwargs) -> Dict[str, T]:
-        print(image.shape)
         if isinstance(image, Tensor):
             image = 0.299 * image[0] + 0.587 * image[1] + 0.114 * image[2]
-            print(image.shape)
             image = image.unsqueeze(0)
         else:
             image = (
