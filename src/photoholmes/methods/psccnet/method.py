@@ -69,9 +69,9 @@ class PSCCNet(BaseTorchMethod):
 
     def method_to_device(self, device: str):
         self.device = torch.device(device)
-        self.FENet = self.FENet.to(device)
-        self.SegNet = self.SegNet.to(device)
-        self.ClsNet = self.ClsNet.to(device)
+        self.FENet.to(device)
+        self.SegNet.to(device)
+        self.ClsNet.to(device)
 
         if self.device_ids is not None:
             self.FENet = nn.DataParallel(self.FENet, device_ids=self.device_ids)
@@ -102,6 +102,8 @@ class PSCCNet(BaseTorchMethod):
         if add_batch_dim:
             heatmap = heatmap.squeeze(0)
             heatmap = heatmap.squeeze(0)
+        else:
+            heatmap = heatmap.squeeze(1)
         # classification head
         self.ClsNet.eval()
         pred_logit = self.ClsNet(feat)
