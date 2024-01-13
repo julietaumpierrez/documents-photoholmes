@@ -78,14 +78,9 @@ class Benchmark:
             mask = mask.to(self.device)
             output = method.predict(**data_on_device)
 
-            if torch.any(mask) is True:
-                mask_result = 1
-            else:
-                mask_result = 0
-            mask_result = torch.tensor(mask_result).unsqueeze(0)
-            # print(mask_result)
             if "detection" in output:
-                detection_metrics.update(output["detection"], mask_result)
+                detection_gt = torch.tensor(int(torch.any(mask))).unsqueeze(0)
+                detection_metrics.update(output["detection"], detection_gt)
                 self.save_detection = True
             if "mask" in output:
                 mask_metrics.update(output["mask"], mask)
@@ -133,11 +128,22 @@ class Benchmark:
             metrics.state_dict(),
             os.path.join(metrics_path, f"{metrics.prefix}_state.pt"),
         )
-        metric_report = {key: float(value) for key, value in metric_report.items()}
+
+        json_report = {}
+        for key, value in metric_report.items():
+            if isinstance(value, torch.Tensor) and value.dim() == 0:
+                json_report[key] = float(value)
+            elif isinstance(value, tuple) and all(
+                isinstance(v, torch.Tensor) for v in value
+            ):
+                json_report[key] = [v.tolist() for v in value]
+            else:
+                log.warning(f"Skipping metric '{key}' of type '{type(value)}'")
+
         with open(
             os.path.join(metrics_path, f"{metrics.prefix}_report.json"), "w"
         ) as f:
-            json.dump(metric_report, f)
+            json.dump(json_report, f)
 
     def save_pred_output(self, output_path, image_name, output):
         image_save_path = os.path.join(output_path, "outputs", image_name)
