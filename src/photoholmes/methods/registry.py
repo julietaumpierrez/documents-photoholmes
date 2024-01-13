@@ -11,3 +11,4 @@ class MethodName(Enum):
     ADAPTIVE_CFA_NET = "adaptive_cfa_net"
     NOISESNIFFER = "noisesniffer"
     PSCCNET = "psccnet"
+    TRUFOR = "trufor"

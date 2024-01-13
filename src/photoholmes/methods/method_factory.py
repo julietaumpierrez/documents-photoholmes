@@ -84,5 +84,9 @@ class MethodFactory:
                 from photoholmes.methods.psccnet import PSCCNet, psccnet_preprocessing
 
                 return PSCCNet.from_config(config), psccnet_preprocessing
+            case MethodName.TRUFOR:
+                from photoholmes.methods.trufor import TruFor, trufor_preprocessing
+
+                return TruFor.from_config(config), trufor_preprocessing
             case _:
                 raise NotImplementedError(f"Method '{method_name}' is not implemented.")

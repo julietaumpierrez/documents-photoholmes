@@ -5,13 +5,14 @@ Edited in September 2022
 """
 
 import logging
-from typing import Literal, Optional
+from typing import Any, Dict, Literal, Optional, Type
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from photoholmes.methods.base import BaseTorchMethod
+from photoholmes.utils.generic import load_yaml
 
 from .config import PRETRAINED_CONFIG, TruForConfig
 from .models.DnCNN import ActivationOptions, make_net
@@ -29,7 +30,7 @@ def preprc_imagenet_torch(x):
     return x
 
 
-def create_backbone(typ: Literal["mit_b2"], norm_layer):
+def create_backbone(typ: Literal["mit_b2"], norm_layer: Type[nn.Module]):
     """
     Create backbone for trufor method.
     """
@@ -229,3 +230,17 @@ class TruFor(BaseTorchMethod):
         sum_maps = torch.sum(out, dim=[-1, -2])
         heatmap = out[:, torch.argmin(sum_maps[0, :]), :, :]
         return {"heatmap": heatmap, "confidence": conf, "detection": det}
+
+    @classmethod
+    def from_config(cls, config: Optional[str | Dict[str, Any]]):
+        if isinstance(config, str):
+            config = load_yaml(config)
+
+        if config is None:
+            trufor_config = PRETRAINED_CONFIG
+        else:
+            trufor_config = TruForConfig(**config)
+
+        return cls(
+            cfg=trufor_config,
+        )

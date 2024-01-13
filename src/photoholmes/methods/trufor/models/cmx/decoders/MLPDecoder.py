@@ -1,4 +1,6 @@
 # extracted from https://github.com/grip-unina/TruFor/blob/main/test_docker/src/models/cmx/decoders/MLPDecoder.py
+from typing import List
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,7 +11,7 @@ class MLP(nn.Module):
     Linear Embedding:
     """
 
-    def __init__(self, input_dim=2048, embed_dim=768):
+    def __init__(self, input_dim: int = 2048, embed_dim: int = 768):
         super().__init__()
         self.proj = nn.Linear(input_dim, embed_dim)
 
@@ -22,11 +24,11 @@ class MLP(nn.Module):
 class DecoderHead(nn.Module):
     def __init__(
         self,
-        in_channels=[64, 128, 320, 512],
-        num_classes=40,
-        dropout_ratio=0.1,
+        in_channels: List[int] = [64, 128, 320, 512],
+        num_classes: int = 40,
+        dropout_ratio: float = 0.1,
         norm_layer=nn.BatchNorm2d,
-        embed_dim=768,
+        embed_dim: int = 768,
         align_corners=False,
     ):
         super(DecoderHead, self).__init__()
@@ -64,7 +66,7 @@ class DecoderHead(nn.Module):
 
         self.linear_pred = nn.Conv2d(embedding_dim, self.num_classes, kernel_size=1)
 
-    def forward(self, inputs, return_feats=False):
+    def forward(self, inputs, return_feats: bool = False):
         # len=4, 1/4,1/8,1/16,1/32
         c1, c2, c3, c4 = inputs
 

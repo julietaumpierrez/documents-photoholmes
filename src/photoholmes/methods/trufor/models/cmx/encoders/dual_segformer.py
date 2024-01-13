@@ -1,9 +1,7 @@
 # extracted from https://github.com/grip-unina/TruFor/blob/main/test_docker/src/models/cmx/decoders/MLPDecoder.py
-import logging as logger
 import math
-import time
 from functools import partial
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -14,7 +12,6 @@ from photoholmes.methods.trufor.models.utils.net import DropPath
 from photoholmes.methods.trufor.models.utils.net import FeatureFusionModule as FFM
 from photoholmes.methods.trufor.models.utils.net import FeatureRectifyModule as FRM
 
-# logger = get_logger()
 to_2tuple: Callable[[int], Tuple[int, int]] = _ntuple(2)  # type: ignore
 
 
@@ -587,7 +584,7 @@ class RGBXTransformer(nn.Module):
 
         self.apply(self._init_weights)
 
-    def _init_weights(self, m):
+    def _init_weights(self, m: nn.Module):
         if isinstance(m, nn.Linear):
             trunc_normal_(m.weight, std=0.02)
             if isinstance(m, nn.Linear) and m.bias is not None:
@@ -602,13 +599,7 @@ class RGBXTransformer(nn.Module):
             if m.bias is not None:
                 m.bias.data.zero_()
 
-    def init_weights(self, pretrained: Optional[str] = None):
-        if isinstance(pretrained, str):
-            load_dualpath_model(self, pretrained)
-        else:
-            raise TypeError("pretrained must be a str or None")
-
-    def forward_features(self, x_rgb, x_e):
+    def forward_features(self, x_rgb: torch.Tensor, x_e: torch.Tensor):
         """
         x_rgb: B x N x H x W
         """
@@ -682,45 +673,9 @@ class RGBXTransformer(nn.Module):
 
         return outs
 
-    def forward(self, x_rgb, x_e):
+    def forward(self, x_rgb: torch.Tensor, x_e: torch.Tensor):
         out = self.forward_features(x_rgb, x_e)
         return out
-
-
-def load_dualpath_model(model: nn.Module, model_file: Union[str, dict]):
-    # load raw state_dict
-    t_start = time.time()
-    if isinstance(model_file, str):
-        raw_state_dict = torch.load(model_file, map_location=torch.device("cpu"))
-        # raw_state_dict = torch.load(model_file)
-        if "model" in raw_state_dict.keys():
-            raw_state_dict = raw_state_dict["model"]
-    else:
-        raw_state_dict = model_file
-
-    state_dict = {}
-    for k, v in raw_state_dict.items():
-        if k.find("patch_embed") >= 0:
-            state_dict[k] = v
-            state_dict[k.replace("patch_embed", "extra_patch_embed")] = v
-        elif k.find("block") >= 0:
-            state_dict[k] = v
-            state_dict[k.replace("block", "extra_block")] = v
-        elif k.find("norm") >= 0:
-            state_dict[k] = v
-            state_dict[k.replace("norm", "extra_norm")] = v
-
-    t_ioend = time.time()
-
-    model.load_state_dict(state_dict, strict=False)
-    del state_dict
-
-    t_end = time.time()
-    logger.info(
-        "Load model, Time usage:\n\tIO: {}, initialize parameters: {}".format(
-            t_ioend - t_start, t_end - t_ioend
-        )
-    )
 
 
 class mit_b0(RGBXTransformer):

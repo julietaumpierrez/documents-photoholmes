@@ -4,11 +4,22 @@
 # @Author  : yuchangqian
 # @Contact : changqian_yu@163.com
 # @File    : init_func.py.py
+from typing import Callable, List, Union
+
 import torch.nn as nn
+from torch import Tensor
+from torch.nn import Module
 
 
-def __init_weight(feature, conv_init, norm_layer, bn_eps, bn_momentum, **kwargs):
-    for name, m in feature.named_modules():
+def __init_weight(
+    feature: nn.Module,
+    conv_init: Callable[..., Tensor],
+    norm_layer: type[Module],
+    bn_eps: float,
+    bn_momentum: float,
+    **kwargs,
+):
+    for _, m in feature.named_modules():
         if isinstance(m, (nn.Conv1d, nn.Conv2d, nn.Conv3d)):
             conv_init(m.weight, **kwargs)
         elif isinstance(m, norm_layer):
@@ -18,7 +29,14 @@ def __init_weight(feature, conv_init, norm_layer, bn_eps, bn_momentum, **kwargs)
             nn.init.constant_(m.bias, 0)
 
 
-def init_weight(module_list, conv_init, norm_layer, bn_eps, bn_momentum, **kwargs):
+def init_weight(
+    module_list: Union[Module, List[Module]],
+    conv_init: Callable[..., Tensor],
+    norm_layer: type[Module],
+    bn_eps: float,
+    bn_momentum: float,
+    **kwargs,
+):
     if isinstance(module_list, list):
         for feature in module_list:
             __init_weight(feature, conv_init, norm_layer, bn_eps, bn_momentum, **kwargs)
