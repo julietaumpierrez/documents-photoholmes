@@ -135,6 +135,8 @@ class Noisesniffer(BaseMethod):
             S = np.concatenate((S, S_ch))
 
         mask, img_paint = compute_output(image, self.w, self.W, self.m, V, S)
+        detection = 1.0 if np.any(mask == 1.0) else 0.0
+        detection = torch.from_numpy(np.array(detection)).unsqueeze(0)
         mask = torch.from_numpy(mask)
         img_paint = torch.from_numpy(img_paint)
-        return {"mask": mask, "img_paint": img_paint}
+        return {"mask": mask, "detection": detection, "img_paint": img_paint}

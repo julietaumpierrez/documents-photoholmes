@@ -45,8 +45,8 @@ pred4 = torch.tensor(
 )
 mask = torch.tensor(
     [
-        [0, 0, 0],
-        [0, 1, 1],
+        [False, False, False],
+        [False, True, True],
     ]
 )
 # %%

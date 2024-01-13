@@ -55,6 +55,7 @@ class F1_weighted(Metric):
         if preds.shape != target.shape:
             raise ValueError("preds and target must have the same shape")
 
+        target = target.to(torch.int)
         pred_flat = preds.flatten()
         target_flat = target.flatten()
         TPw = torch.sum(pred_flat * target_flat)

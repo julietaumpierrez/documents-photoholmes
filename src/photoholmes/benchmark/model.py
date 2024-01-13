@@ -79,7 +79,10 @@ class Benchmark:
             output = method.predict(**data_on_device)
 
             if "detection" in output:
-                detection_metrics.update(output["detection"], mask)
+                mask_result = 1 if torch.any(mask == True) else 0
+                mask_result = torch.tensor(mask_result).unsqueeze(0)
+                # print(mask_result)
+                detection_metrics.update(output["detection"], mask_result)
                 self.save_detection = True
             if "mask" in output:
                 mask_metrics.update(output["mask"], mask)
