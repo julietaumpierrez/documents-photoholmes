@@ -44,7 +44,7 @@ def conv_with_padding(
 
 
 def conv_init(conv: nn.Conv2d):
-    r"""
+    """
     Reproduces conv initialization from DnCNN
     """
     n = conv.kernel_size[0] * conv.kernel_size[1] * conv.out_channels
@@ -52,7 +52,7 @@ def conv_init(conv: nn.Conv2d):
 
 
 def batchnorm_init(m: nn.BatchNorm2d, kernelsize: int = 3):
-    r"""
+    """
     Reproduces batchnorm initialization from DnCNN
     """
     n = kernelsize**2 * m.num_features
@@ -97,7 +97,7 @@ def make_net(
     bn_momentum: float = 0.1,
     padding: Optional[int] = None,
 ):
-    r"""
+    """
     :param nplanes_in: number of of input feature channels
     :param kernels: list of kernel size for convolution layers
     :param features: list of hidden layer feature channels
@@ -142,7 +142,7 @@ def make_net(
 
 
 class DnCNN(nn.Module):
-    r"""
+    """
     Implements a DnCNN network
     """
 
@@ -160,7 +160,7 @@ class DnCNN(nn.Module):
         bn_momentum: float = 0.10,
         padding: Optional[int] = None,
     ):
-        r"""
+        """
         :param nplanes_in: number of of input feature channels
         :param nplanes_out: number of of output feature channels
         :param features: number of of hidden layer feature channels
@@ -222,21 +222,3 @@ class DnCNN(nn.Module):
             )
 
         return x
-
-
-def add_commandline_networkparams(
-    parser, name, features, depth, kernel, activation, bn
-):
-    parser.add_argument("--{}.{}".format(name, "features"), type=int, default=features)
-    parser.add_argument("--{}.{}".format(name, "depth"), type=int, default=depth)
-    parser.add_argument("--{}.{}".format(name, "kernel"), type=int, default=kernel)
-    parser.add_argument(
-        "--{}.{}".format(name, "activation"), type=str, default=activation
-    )
-
-    bnarg = "{}.{}".format(name, "bn")
-    parser.add_argument("--" + bnarg, action="store_true", dest=bnarg)
-    parser.add_argument(
-        "--{}.{}".format(name, "no-bn"), action="store_false", dest=bnarg
-    )
-    parser.set_defaults(**{bnarg: bn})

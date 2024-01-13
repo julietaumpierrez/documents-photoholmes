@@ -6,7 +6,7 @@ The code contained in this library was adapted from the [original implementation
 ## Description
 
 The paper presents a novel approach to detect and localize image forgeries. The method
-extracts bopth high-level and low-level features through a transformer-based architecture
+extracts both high-level and low-level features through a transformer-based architecture
 that combines the RGB image and a learned noise-sensitive fingerprint. The latter one
 is a re-train of the noiseprint method [[2]](https://ieeexplore.ieee.org/document/8713484),
 dubbed noiseprint++. The forgeries are detected as deviations from the expected regular pattern

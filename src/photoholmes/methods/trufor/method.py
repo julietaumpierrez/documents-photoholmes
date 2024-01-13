@@ -204,7 +204,7 @@ class TruFor(BaseTorchMethod):
 
         return out, conf, det
 
-    def forward(self, rgb):
+    def forward(self, rgb: torch.Tensor):
         # Noiseprint++ extraction
         if "NP++" in self.mods:
             modal_x = self.dncnn(rgb)
