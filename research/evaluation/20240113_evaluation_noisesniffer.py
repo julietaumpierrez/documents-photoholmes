@@ -34,7 +34,18 @@ dataset = DatasetFactory.load(
 
 # %%
 metrics = MetricFactory.load(
-    ["auroc", "fpr", "iou", "mcc", "precision", "roc", "tpr", "f1_weighted"]
+    [
+        "auroc",
+        "fpr",
+        "iou",
+        "mcc",
+        "precision",
+        "roc",
+        "tpr",
+        "f1_weighted",
+        "iou_weighted",
+        "mcc_weighted",
+    ]
 )
 
 # %%
