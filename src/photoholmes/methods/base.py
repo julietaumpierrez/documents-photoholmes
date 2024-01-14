@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, Optional, TypeVar, Union
@@ -9,6 +10,11 @@ from torch.nn import Module
 
 from photoholmes.utils.generic import load_yaml
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
+log = logging.getLogger("methods")
+log.setLevel(logging.INFO)
+
+
 T = TypeVar("T", NDArray, Tensor)
 
 
@@ -16,12 +22,14 @@ class BaseMethod(ABC):
     """Abstract class as a base for the methods"""
 
     @abstractmethod
-    def __init__(self, threshold: float = 0.5) -> None:
+    def __init__(self, threshold: float = 0.5, device: str = "cpu") -> None:
         """Initialization.
         he heatmap theshold value sets the default parameter for converting
         predicted heatmaps to masks in the "predict_mask" method.
         """
         self.threshold = threshold
+        self.device = torch.device(device)
+        self.method_to_device(device)
 
     @abstractmethod
     def predict(self, image: T) -> T:
@@ -41,20 +49,34 @@ class BaseMethod(ABC):
         return class_name[:-2]
 
     @classmethod
-    def from_config(cls, config: Optional[str | Dict[str, Any]]):
+    def from_config(
+        cls, config: Optional[str | Dict[str, Any]], device: Optional[str] = "cpu"
+    ):
         """
         Instantiate the model from configuration dictionary or yaml.
 
         Params:
             config: path to the yaml configuration or a dictionary with
                     the parameters for the model.
+            device: device to use for the model.
         """
         if isinstance(config, str):
             config = load_yaml(config)
 
         if config is None:
             config = {}
+
+        config["device"] = device
         return cls(**config)
+
+    def method_to_device(self, device: str):
+        """Send the model to the device."""
+        log.warning(
+            f"Device wanted to be set to: `{device}`. "
+            "Model does not implement 'model_to_device' method.\n"
+            "Falling back to 'cpu' device."
+        )
+        self.device = torch.device("cpu")
 
 
 class BaseTorchMethod(BaseMethod, Module):

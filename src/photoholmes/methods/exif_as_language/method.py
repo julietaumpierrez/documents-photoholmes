@@ -1,6 +1,6 @@
 # Derived from https://github.com/hellomuffin/exif-as-language
 import random
-from typing import Literal, Optional, Tuple
+from typing import Dict, Literal, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -20,13 +20,13 @@ from .utils import cosine_similarity, mean_shift, normalized_cut
 class EXIFAsLanguage(BaseMethod):
     def __init__(
         self,
-        transformer: Literal["distilbert"],
-        visual: Literal["resnet50"],
+        transformer: Literal["distilbert"] = "distilbert",
+        visual: Literal["resnet50"] = "resnet50",
         patch_size: int = 128,
         num_per_dim: int = 30,
         feat_batch_size: int = 32,
         pred_batch_size: int = 1024,
-        device: str = "cuda:0",
+        device: str = "cpu",
         ms_window: int = 10,
         ms_iter: int = 5,
         pooling: Literal["cls", "mean"] = "mean",
@@ -65,14 +65,13 @@ class EXIFAsLanguage(BaseMethod):
         self.ms_window, self.ms_iter = ms_window, ms_iter
         self.net = clipNet
 
-        self.net.eval()
-        self.net.to(device)
+        self.method_to_device(device=device)
 
     def predict(
         self,
         image: Tensor,
         original_image_size: Tuple[int, int],
-    ):
+    ) -> Dict[str, Tensor]:
         """
         Parameters
         ----------
@@ -91,7 +90,7 @@ class EXIFAsLanguage(BaseMethod):
             score : float
                 Prediction score, higher indicates existence of manipulation
         """
-
+        self.net.eval()
         # Initialize image and attributes
         height, width = original_image_size
         p_img = self.init_img(image)
@@ -143,14 +142,25 @@ class EXIFAsLanguage(BaseMethod):
         score = pred_maps.mean()
         affinity_matrix = self.generate_afinity_matrix(patch_features)
 
+        out_ms = torch.from_numpy(out_ms).to(self.device)
+        out_ncuts = torch.from_numpy(out_ncuts).to(self.device)
+        score = torch.tensor(score).to(self.device)
+        out_pca = torch.from_numpy(out_pca).float().to(self.device)
+        pred_maps = torch.from_numpy(pred_maps).to(self.device)
+        affinity_matrix = affinity_matrix.to(self.device)
         return {
             "heatmap": out_ms,
             "mask": out_ncuts,
             "score": score,
-            "pred_maps": pred_maps,
-            "pca": out_pca,
+            "output_pca": out_pca,
             "affinity_matrix": affinity_matrix,
+            "pred_maps": pred_maps,
         }
+
+    def method_to_device(self, device: str):
+        """Move method to device"""
+        self.net.to(device)
+        self.device = torch.device(device)
 
     def init_img(self, img: Tensor) -> PatchedImage:
         # Initialize image and attributes

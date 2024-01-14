@@ -129,7 +129,6 @@ class ToNumpy(PreprocessingTransform):
     ) -> Dict[str, NDArray]:
         t_image = None
         if isinstance(image, Tensor):
-            print(image.shape)
             t_image = image.permute(1, 2, 0).cpu().numpy()
         elif isinstance(image, np.ndarray):
             t_image = image.copy()
@@ -165,10 +164,8 @@ class RGBtoGray(PreprocessingTransform):
     """
 
     def __call__(self, image: T, **kwargs) -> Dict[str, T]:
-        print(image.shape)
         if isinstance(image, Tensor):
             image = 0.299 * image[0] + 0.587 * image[1] + 0.114 * image[2]
-            print(image.shape)
             image = image.unsqueeze(0)
         else:
             image = (

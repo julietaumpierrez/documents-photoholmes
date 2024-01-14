@@ -245,7 +245,9 @@ class Splicebuster(BaseMethod):
         return {"heatmap": heatmap}
 
     @classmethod
-    def from_config(cls, config: Optional[str | Dict[str, Any]]):
+    def from_config(
+        cls, config: Optional[str | Dict[str, Any]], device: Optional[str] = "cpu"
+    ):
         """
         Instantiate the model from configuration dictionary or yaml.
 
@@ -261,5 +263,7 @@ class Splicebuster(BaseMethod):
 
         if "weights" in config:
             config["weights"] = WeightConfig(**config["weights"])
+
+        config["device"] = device
 
         return cls(**config)

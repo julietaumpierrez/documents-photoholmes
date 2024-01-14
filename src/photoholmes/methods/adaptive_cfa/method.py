@@ -144,6 +144,7 @@ class AdaptiveCFANet(BaseTorchMethod):
     def __init__(
         self,
         weights: Optional[Union[str, Path, dict]] = None,
+        device: str = "cpu",
         **kwargs,
     ):
         """
@@ -174,11 +175,15 @@ class AdaptiveCFANet(BaseTorchMethod):
         )
         self.grids = SeparateAndPermutate()
         self.padding = self.spatial.padding
+        self.device = torch.device(device)
+
+        self.method_to_device(device=device)
 
         if weights is not None:
             self.load_weigths(weights)
         else:
             self.init_weights()
+        self.eval()
 
     def init_weights(self):
         logger.info("=> init weights from normal distribution")
@@ -202,9 +207,10 @@ class AdaptiveCFANet(BaseTorchMethod):
         self, image: Tensor, original_image_size: Tuple[int, int]
     ) -> Dict[str, Tensor]:
         # TODO: add docstring
+        image = image.to(self.device)
         if image.ndim == 3:
             image = image.unsqueeze(0)
-        pred = self.forward(image).cpu()
+        pred = self.forward(image)
         pred = torch.exp(pred)
 
         pred[:, 1] = pred[torch.tensor([1, 0, 3, 2]), 1]
@@ -225,9 +231,7 @@ class AdaptiveCFANet(BaseTorchMethod):
 
     def load_weigths(self, weights: Union[str, Path, dict]):
         if isinstance(weights, (str, Path)):
-            weights = torch.load(
-                weights, map_location=next(self.parameters())[0].device
-            )
+            weights = torch.load(weights, map_location=self.device)
 
         if isinstance(weights, dict) and "state_dict" in weights.keys():
             weights = weights["state_dict"]
@@ -235,7 +239,11 @@ class AdaptiveCFANet(BaseTorchMethod):
         self.load_state_dict(weights)  # type: ignore
 
     @classmethod
-    def from_config(cls, config: Optional[Union[AdaptiveCFAConfig, str, Path, dict]]):
+    def from_config(
+        cls,
+        config: Optional[Union[AdaptiveCFAConfig, str, Path, dict]],
+        device: Optional[str] = "cpu",
+    ):
         if isinstance(config, (str, Path)):
             config = load_yaml(str(config))
 
@@ -244,4 +252,11 @@ class AdaptiveCFANet(BaseTorchMethod):
 
         if config is None:
             config = {"weights": None}
+
+        config["device"] = device
+
         return cls(**config)
+
+    def method_to_device(self, device: str):
+        self.to(device)
+        self.device = torch.device(device)

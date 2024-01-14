@@ -46,6 +46,17 @@ noisesniffer = Noisesniffer()
 output = noisesniffer.predict(np_image)
 # %%
 plt.imshow(output["mask"], cmap="gray")
+print(output["detection"])
+
+# %%
+output["mask"].unique()
+# %%
+np_image = np.zeros((10, 10, 3))
+output = noisesniffer.predict(np_image)
+# %%
+plt.imshow(output["mask"], cmap="gray")
+print(output["detection"])
+
 # %%
 image_orig = Image.open("/Users/julietaumpierrez/Desktop/NoiseSniffer/output_mask.png")
 # %%

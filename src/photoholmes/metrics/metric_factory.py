@@ -1,11 +1,13 @@
 from typing import List, Union
 
-from torchmetrics import Metric
+import numpy as np
+from torchmetrics import MetricCollection
 
 from photoholmes.metrics.registry import MetricName
 
 
 class MetricFactory:
+    # TODO: redo docstring
     """
     MetricFactory class responsible for creating metric instances.
 
@@ -25,7 +27,8 @@ class MetricFactory:
     """
 
     @staticmethod
-    def load(metric_names: List[Union[str, MetricName]]) -> List[Metric]:
+    def load(metric_names: List[Union[str, MetricName]]) -> MetricCollection:
+        # TODO: redo docstring
         """
         Instantiates and returns a list of metric objects corresponding to the specified
         metric names.
@@ -87,13 +90,28 @@ class MetricFactory:
                 case MetricName.ROC:
                     from torchmetrics import ROC
 
-                    metrics.append(ROC(task="binary"))
+                    metrics.append(
+                        ROC(task="binary", thresholds=list(np.linspace(0, 1, 200)))
+                    )
                 case MetricName.TPR:
                     from torchmetrics import Recall as TPR
 
                     metrics.append(TPR(task="binary"))
+                case MetricName.IoU_WEIGHTED:
+                    from photoholmes.metrics.IoU_weighted import IoU_weighted
+
+                    metrics.append(IoU_weighted())
+                case MetricName.F1_WEIGHTED:
+                    from photoholmes.metrics.F1_weighted import F1_weighted
+
+                    metrics.append(F1_weighted())
+                case MetricName.MCC_WEIGHTED:
+                    from photoholmes.metrics.MCC_weighted import MCC_weighted
+
+                    metrics.append(MCC_weighted())
                 case _:
                     raise NotImplementedError(
                         f"Metric '{metric_name}' is not implemented."
                     )
-        return metrics
+
+        return MetricCollection(metrics)

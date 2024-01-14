@@ -468,6 +468,7 @@ class CatNet(BaseTorchMethod):
         self,
         arch_config: Union[CatnetArchConfig, Literal["pretrained"]] = "pretrained",
         weights: Optional[Union[str, Path, dict]] = None,
+        device: str = "cpu",
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -477,11 +478,18 @@ class CatNet(BaseTorchMethod):
 
         self.bn_momentum = arch_config.bn_momentum
 
+        self.device = torch.device(device)
+
         self.load_model(arch_config)
+
+        self.method_to_device(device=device)
+
         if weights is not None:
-            self.load_weigths(weights)
+            self.load_weights(weights)
         else:
             self.init_weights()
+
+        self.eval()
 
     def load_model(self, arch_config: CatnetArchConfig):
         # RGB branch
@@ -792,6 +800,7 @@ class CatNet(BaseTorchMethod):
         self, x: Tensor, qtable: Tensor, original_image_size: Tuple[int, int]
     ) -> Dict[str, Tensor]:
         # TODO: add docstring
+        x, qtable = x.to(self.device), qtable.to(self.device)
         add_batch_dim = x.ndim == 3
         if add_batch_dim:
             x = x.unsqueeze(0)
@@ -816,7 +825,11 @@ class CatNet(BaseTorchMethod):
         return {"heatmap": pred_tempered, "authentic_heatmap": pred_authentic}
 
     @classmethod
-    def from_config(cls, config: Optional[CatnetConfig | dict | str | Path]):
+    def from_config(
+        cls,
+        config: Optional[CatnetConfig | dict | str | Path],
+        device: Optional[str] = "cpu",
+    ):
         if isinstance(config, CatnetConfig):
             return cls(**config.__dict__)
 
@@ -832,4 +845,10 @@ class CatNet(BaseTorchMethod):
         elif arch == "pretrained":
             arch = pretrained_arch
 
+        config["device"] = device
+
         return cls(arch_config=arch, **config)
+
+    def method_to_device(self, device: str):
+        self.to(device)
+        self.device = torch.device(device)

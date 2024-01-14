@@ -414,7 +414,7 @@ def compute_save_NFA(
                 if NFA_region < thresh:
                     cells = []
                     for index in R:
-                        mask_LR[index[0], index[1]] = 255
+                        mask_LR[index[0], index[1]] = 1  # It was 255
                         cells.append([W * index[0], W * index[1]])
 
     mask_resized = np.zeros((Nx_LR * W, Ny_LR * W))

@@ -28,7 +28,7 @@ class ColumbiaDataset(BaseDataset):
     TAMPERED_COLOR_INDEX = 1  # Green
 
     def _get_paths(
-        self, img_dir, tampered_only
+        self, img_dir: str, tampered_only: bool
     ) -> Tuple[List[str], List[str] | List[str | None]]:
         image_paths = glob.glob(
             os.path.join(img_dir, self.TAMP_DIR, f"*{self.IMAGE_EXTENSION}")

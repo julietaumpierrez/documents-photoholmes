@@ -16,6 +16,9 @@ __pycache__/
 /extra/
 weights/
 out/
-
+output/
 #Private
 private
+
+# MAC files
+.DS_Store
