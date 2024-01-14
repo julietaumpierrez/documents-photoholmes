@@ -121,6 +121,10 @@ class MetricFactory:
                     from photoholmes.metrics.MCC_weighted_v2 import MCC_weighted_v2
 
                     metrics.append(MCC_weighted_v2())
+                case MetricName.F1:
+                    from torchmetrics import F1Score
+
+                    metrics.append(F1Score(task="binary"))
                 case _:
                     raise NotImplementedError(
                         f"Metric '{metric_name}' is not implemented."

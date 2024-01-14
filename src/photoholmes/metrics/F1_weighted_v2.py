@@ -86,5 +86,4 @@ class F1_weighted_v2(Metric):
         FPw = self.FPw.float()
         denominator = 2 * TPw + FNw + FPw
         f1_weighted = 2 * TPw / denominator if denominator != 0 else torch.tensor(0.0)
-        f1_weighted /= self.total_images
         return f1_weighted

@@ -85,5 +85,4 @@ class IoU_weighted_v2(Metric):
         FPw = self.FPw.float()
         denominator = TPw + FPw + FNw
         IoU_weighted = TPw / denominator if denominator != 0 else torch.tensor(0.0)
-        IoU_weighted /= self.total_images
         return IoU_weighted

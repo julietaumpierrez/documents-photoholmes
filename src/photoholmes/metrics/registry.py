@@ -16,3 +16,4 @@ class MetricName(Enum):
     IoU_WEIGHTED_V2 = "iou_weighted_v2"
     F1_WEIGHTED_V2 = "f1_weighted_v2"
     MCC_WEIGHTED_V2 = "mcc_weighted_v2"
+    F1 = "f1"

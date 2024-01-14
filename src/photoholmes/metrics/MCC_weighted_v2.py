@@ -89,5 +89,4 @@ class MCC_weighted_v2(Metric):
         TNw = self.TNw.float()
         denominator = torch.sqrt((TPw + FPw) * (TPw + FNw) * (TNw + FPw) * (TNw + FNw))
         MCC_weighted = (TPw * TNw - FPw * FNw) / denominator if denominator != 0 else 0
-        MCC_weighted /= self.total_images
         return MCC_weighted
