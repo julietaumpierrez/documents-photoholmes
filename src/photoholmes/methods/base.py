@@ -81,8 +81,8 @@ class BaseMethod(ABC):
 
 class BaseTorchMethod(BaseMethod, Module):
     def __init__(self, threshold: float = 0.5, *args, **kwargs) -> None:
-        BaseMethod.__init__(self, threshold=threshold)
         Module.__init__(self, *args, **kwargs)
+        BaseMethod.__init__(self, threshold=threshold)
 
     def load_weigths(self, weights: Union[str, Path, dict]):
         if isinstance(weights, (str, Path)):
