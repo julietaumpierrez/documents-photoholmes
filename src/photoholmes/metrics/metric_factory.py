@@ -97,18 +97,34 @@ class MetricFactory:
                     from torchmetrics import Recall as TPR
 
                     metrics.append(TPR(task="binary"))
-                case MetricName.IoU_WEIGHTED:
-                    from photoholmes.metrics.IoU_weighted import IoU_weighted
+                case MetricName.IoU_WEIGHTED_V1:
+                    from photoholmes.metrics.IoU_weighted_v1 import IoU_weighted_v1
 
-                    metrics.append(IoU_weighted())
-                case MetricName.F1_WEIGHTED:
-                    from photoholmes.metrics.F1_weighted import F1_weighted
+                    metrics.append(IoU_weighted_v1())
+                case MetricName.F1_WEIGHTED_V1:
+                    from photoholmes.metrics.F1_weighted_v1 import F1_weighted_v1
 
-                    metrics.append(F1_weighted())
-                case MetricName.MCC_WEIGHTED:
-                    from photoholmes.metrics.MCC_weighted import MCC_weighted
+                    metrics.append(F1_weighted_v1())
+                case MetricName.MCC_WEIGHTED_V1:
+                    from photoholmes.metrics.MCC_weighted_v1 import MCC_weighted_v1
 
-                    metrics.append(MCC_weighted())
+                    metrics.append(MCC_weighted_v1())
+                case MetricName.IoU_WEIGHTED_V2:
+                    from photoholmes.metrics.IoU_weighted_v2 import IoU_weighted_v2
+
+                    metrics.append(IoU_weighted_v2())
+                case MetricName.F1_WEIGHTED_V2:
+                    from photoholmes.metrics.F1_weighted_v2 import F1_weighted_v2
+
+                    metrics.append(F1_weighted_v2())
+                case MetricName.MCC_WEIGHTED_V2:
+                    from photoholmes.metrics.MCC_weighted_v2 import MCC_weighted_v2
+
+                    metrics.append(MCC_weighted_v2())
+                case MetricName.F1:
+                    from torchmetrics import F1Score
+
+                    metrics.append(F1Score(task="binary"))
                 case _:
                     raise NotImplementedError(
                         f"Metric '{metric_name}' is not implemented."
