@@ -797,7 +797,7 @@ class CatNet(BaseTorchMethod):
 
     @torch.no_grad()
     def predict(
-        self, x: Tensor, qtable: Tensor, original_image_size=Tuple[int, int]
+        self, x: Tensor, qtable: Tensor, original_image_size: Tuple[int, int]
     ) -> Dict[str, Tensor]:
         # TODO: add docstring
         x, qtable = x.to(self.device), qtable.to(self.device)
@@ -823,16 +823,6 @@ class CatNet(BaseTorchMethod):
             pred_tempered = pred_tempered.squeeze(0)
             pred_authentic = pred_authentic.squeeze(0)
         return {"heatmap": pred_tempered, "authentic_heatmap": pred_authentic}
-
-    def load_weights(self, weights: Union[str, Path, dict]):
-        if isinstance(weights, (str, Path)):
-            # Load weights to the same device as the model
-            weights = torch.load(weights, map_location=self.device)
-
-        if isinstance(weights, dict) and "state_dict" in weights.keys():
-            weights = weights["state_dict"]
-
-        self.load_state_dict(weights)  # type: ignore
 
     @classmethod
     def from_config(

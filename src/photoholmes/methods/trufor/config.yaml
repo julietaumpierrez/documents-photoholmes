@@ -1,0 +1,13 @@
+backbone: mit_b2
+decoder: MLPDecoder
+num_classes: 2
+decoder_embed_dim: 512
+preprocess: imagenet
+bn_eps: 0.001
+bn_momentum: 0.01
+detection: confpool
+confidence: True
+mods: 
+  - NP++
+  - RGB
+pretrained: <path_to_weigths>

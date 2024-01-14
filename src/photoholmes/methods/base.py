@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, TypeVar
+from pathlib import Path
+from typing import Any, Dict, Optional, TypeVar, Union
 
 import torch
 from numpy.typing import NDArray
@@ -82,3 +83,17 @@ class BaseTorchMethod(BaseMethod, Module):
     def __init__(self, threshold: float = 0.5, *args, **kwargs) -> None:
         BaseMethod.__init__(self, threshold=threshold)
         Module.__init__(self, *args, **kwargs)
+
+    def load_weigths(self, weights: Union[str, Path, dict]):
+        if isinstance(weights, (str, Path)):
+            # trick to get current device
+            weights_ = torch.load(
+                weights, map_location=next(self.parameters())[0].device
+            )
+        else:
+            weights_ = weights
+
+        if "state_dict" in weights_.keys():
+            weights_ = weights_["state_dict"]
+
+        self.load_state_dict(weights_)
