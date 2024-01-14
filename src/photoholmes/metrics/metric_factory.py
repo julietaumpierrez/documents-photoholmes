@@ -1,5 +1,6 @@
 from typing import List, Union
 
+import numpy as np
 from torchmetrics import MetricCollection
 
 from photoholmes.metrics.registry import MetricName
@@ -89,7 +90,9 @@ class MetricFactory:
                 case MetricName.ROC:
                     from torchmetrics import ROC
 
-                    metrics.append(ROC(task="binary"))
+                    metrics.append(
+                        ROC(task="binary", thresholds=list(np.linspace(0, 1, 200)))
+                    )
                 case MetricName.TPR:
                     from torchmetrics import Recall as TPR
 
