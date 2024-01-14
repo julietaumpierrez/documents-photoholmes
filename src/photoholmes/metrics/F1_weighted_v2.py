@@ -3,7 +3,7 @@ from torch import Tensor
 from torchmetrics import Metric
 
 
-class F1_weighted(Metric):
+class F1_weighted_v2(Metric):
     """
     The F1 weighted (F1 score weighted) metric calculates the F1 score taking
     into account the value of the heatmap as a probability and uses weighted true
@@ -11,8 +11,9 @@ class F1_weighted(Metric):
     negatives to calculate the F1 score.
 
     Attributes:
-        F1 score weighted (torch.Tensor): A tensor that accumulates the count of F1
-                                        score weighted across batches.
+        TPw (torch.Tensor): A tensor that accumulates the count of weighted true positives.
+        FNw (torch.Tensor): A tensor that accumulates the count of weighted false negatives.
+        FPw (torch.Tensor): A tensor that accumulates the count of weighted false positives.
 
     Methods:
         __init__(**kwargs): Initializes the F1 score weighted metric object.
@@ -35,7 +36,9 @@ class F1_weighted(Metric):
             **kwargs: Additional keyword arguments.
         """
         super().__init__(**kwargs)
-        self.add_state("F1_weighted", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.add_state("TPw", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.add_state("FNw", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.add_state("FPw", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("total_images", default=torch.tensor(0.0), dist_reduce_fx="sum")
 
     def update(self, preds: Tensor, target: Tensor) -> None:
@@ -61,21 +64,27 @@ class F1_weighted(Metric):
         TPw = torch.sum(pred_flat * target_flat)
         FPw = torch.sum((1 - pred_flat) * target_flat)
         FNw = torch.sum(pred_flat * (1 - target_flat))
-        denominator = 2 * TPw + FNw + FPw
-        if denominator != 0:
-            self.F1_weighted += 2 * TPw / denominator
+        self.TPw += TPw
+        self.FNw += FNw
+        self.FPw += FPw
         self.total_images += torch.tensor(1)
 
     def compute(self) -> Tensor:
         """
         Computes the F1 weighted over all the batches averaging all the
-        F1 wighted of each image.
+        F1 weighted of each image.
 
         Returns:
             Tensor: The computed F1 weighted over the full dataset.
-                    If the total number of images is zero,
+                    If the total number of true positives is zero,
                     it returns 0.0 to avoid division by zero.
         """
-        f1_weighted = self.F1_weighted.float()
-        total_images = self.total_images.float()
-        return f1_weighted / total_images if total_images != 0 else torch.tensor(0.0)
+        if not self.total_images:
+            return torch.tensor(0.0)
+        TPw = self.TPw.float()
+        FNw = self.FNw.float()
+        FPw = self.FPw.float()
+        denominator = 2 * TPw + FNw + FPw
+        f1_weighted = 2 * TPw / denominator if denominator != 0 else torch.tensor(0.0)
+        f1_weighted /= self.total_images
+        return f1_weighted

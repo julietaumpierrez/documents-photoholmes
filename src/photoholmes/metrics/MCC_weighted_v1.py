@@ -3,7 +3,7 @@ from torch import Tensor
 from torchmetrics import Metric
 
 
-class MCC_weighted(Metric):
+class MCC_weighted_v1(Metric):
     """
     The MCC weighted (Mathews Correlation Coefficient weighted) metric calculates the
     F1 score taking into account the value of the heatmap as a probability and uses

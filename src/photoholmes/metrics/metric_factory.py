@@ -98,15 +98,15 @@ class MetricFactory:
 
                     metrics.append(TPR(task="binary"))
                 case MetricName.IoU_WEIGHTED:
-                    from photoholmes.metrics.IoU_weighted import IoU_weighted
+                    from photoholmes.metrics.IoU_weighted_v1 import IoU_weighted
 
                     metrics.append(IoU_weighted())
                 case MetricName.F1_WEIGHTED:
-                    from photoholmes.metrics.F1_weighted import F1_weighted
+                    from photoholmes.metrics.F1_weighted_v1 import F1_weighted
 
                     metrics.append(F1_weighted())
                 case MetricName.MCC_WEIGHTED:
-                    from photoholmes.metrics.MCC_weighted import MCC_weighted
+                    from photoholmes.metrics.MCC_weighted_v1 import MCC_weighted
 
                     metrics.append(MCC_weighted())
                 case _:
