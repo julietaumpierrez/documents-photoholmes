@@ -64,7 +64,7 @@ class Benchmark:
         log.info(f"    Device: {self.device}")
         log.info("-" * 80)
 
-        metrics_on_device = metrics.to(self.device)
+        metrics_on_device = metrics.to("cpu", dtype=torch.float32)
 
         heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
         mask_metrics = metrics_on_device.clone(prefix="mask")
@@ -77,9 +77,14 @@ class Benchmark:
 
             mask = mask.to(self.device)
             output = method.predict(**data_on_device)
+            output = {
+                k: v.to("cpu") if isinstance(v, torch.Tensor) else v
+                for k, v in output.items()
+            }
+            mask = mask.to("cpu")
 
             if "detection" in output:
-                detection_gt = torch.tensor(int(torch.any(mask))).unsqueeze(0)
+                detection_gt = torch.tensor(int(torch.any(mask))).unsqueeze(0).to("cpu")
                 detection_metrics.update(output["detection"], detection_gt)
                 self.save_detection = True
             if "mask" in output:
@@ -115,7 +120,9 @@ class Benchmark:
 
     def move_to_device(self, data):
         return {
-            key: value.to(self.device) if isinstance(value, torch.Tensor) else value
+            key: value.to(self.device, dtype=torch.float32)
+            if isinstance(value, torch.Tensor)
+            else value
             for key, value in data.items()
         }
 
