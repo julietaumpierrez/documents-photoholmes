@@ -1,8 +1,12 @@
 import glob
 import os
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
+import numpy as np
+import torch
 from torch import Tensor
+
+from photoholmes.utils.image import read_image, read_jpeg_data
 
 from ..base import BaseDataset
 
@@ -57,6 +61,33 @@ class TraceJPEGQualityEndoDataset(BaseDataset):
     def _binarize_mask(self, mask_image: Tensor) -> Tensor:
         return mask_image[0, :, :] > 0
 
+    def _get_data(self, idx: int) -> Tuple[Dict, Tensor, str]:
+        x = {}
+
+        image_path = self.image_paths[idx]
+        image_name = "_".join(image_path.split("/")[-2:]).split(".")[0]
+
+        if self.image_data or self.mask_paths[idx] is None:
+            image = read_image(image_path)
+            if "image" in self.item_data:
+                x["image"] = image
+            if "original_image_size" in self.item_data or self.mask_paths[idx] is None:
+                x["original_image_size"] = image.shape[-2:]
+        if self.jpeg_data:
+            dct, qtables = read_jpeg_data(image_path)
+            if "dct_coefficients" in self.item_data:
+                x["dct_coefficients"] = torch.tensor(dct)
+            if "qtables" in self.item_data:
+                x["qtables"] = torch.tensor(np.array(qtables))
+
+        if self.mask_paths[idx] is None:
+            mask = torch.zeros(x["original_image_size"], dtype=torch.bool)
+        else:
+            mask_im = read_image(self.mask_paths[idx])
+            mask = self._binarize_mask(mask_im)
+
+        return x, mask, image_name
+
 
 class TraceJPEGQualityExoDataset(BaseDataset):
     """
@@ -107,3 +138,30 @@ class TraceJPEGQualityExoDataset(BaseDataset):
 
     def _binarize_mask(self, mask_image: Tensor) -> Tensor:
         return mask_image[0, :, :] > 0
+
+    def _get_data(self, idx: int) -> Tuple[Dict, Tensor, str]:
+        x = {}
+
+        image_path = self.image_paths[idx]
+        image_name = "_".join(image_path.split("/")[-2:]).split(".")[0]
+
+        if self.image_data or self.mask_paths[idx] is None:
+            image = read_image(image_path)
+            if "image" in self.item_data:
+                x["image"] = image
+            if "original_image_size" in self.item_data or self.mask_paths[idx] is None:
+                x["original_image_size"] = image.shape[-2:]
+        if self.jpeg_data:
+            dct, qtables = read_jpeg_data(image_path)
+            if "dct_coefficients" in self.item_data:
+                x["dct_coefficients"] = torch.tensor(dct)
+            if "qtables" in self.item_data:
+                x["qtables"] = torch.tensor(np.array(qtables))
+
+        if self.mask_paths[idx] is None:
+            mask = torch.zeros(x["original_image_size"], dtype=torch.bool)
+        else:
+            mask_im = read_image(self.mask_paths[idx])
+            mask = self._binarize_mask(mask_im)
+
+        return x, mask, image_name
