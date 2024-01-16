@@ -180,6 +180,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
             case DatasetName.TRACE_NOISE_ENDO:
                 from photoholmes.datasets.trace.trace_noise import TraceNoiseEndoDataset
@@ -189,6 +190,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
             case DatasetName.TRACE_CFA_ALG_EXO:
                 from photoholmes.datasets.trace.trace_cfa_alg import (
@@ -200,6 +202,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
             case DatasetName.TRACE_CFA_ALG_ENDO:
                 from photoholmes.datasets.trace.trace_cfa_alg import (
@@ -211,6 +214,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
             case DatasetName.TRACE_CFA_GRID_EXO:
                 from photoholmes.datasets.trace.trace_cfa_grid import (
@@ -222,6 +226,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
             case DatasetName.TRACE_CFA_GRID_ENDO:
                 from photoholmes.datasets.trace.trace_cfa_grid import (
@@ -233,6 +238,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
             case DatasetName.TRACE_JPEG_GRID_EXO:
                 from photoholmes.datasets.trace.trace_jpeg_grid import (
@@ -244,6 +250,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
             case DatasetName.TRACE_JPEG_GRID_ENDO:
                 from photoholmes.datasets.trace.trace_jpeg_grid import (
@@ -255,6 +262,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
             case DatasetName.TRACE_JPEG_QUALITY_EXO:
                 from photoholmes.datasets.trace.trace_jpeg_quality import (
@@ -266,6 +274,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
             case DatasetName.TRACE_JPEG_QUALITY_ENDO:
                 from photoholmes.datasets.trace.trace_jpeg_quality import (
@@ -277,6 +286,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
             case DatasetName.TRACE_HYBRID_EXO:
                 from photoholmes.datasets.trace.trace_hybrid import (
@@ -288,6 +298,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
             case DatasetName.TRACE_HYBRID_ENDO:
                 from photoholmes.datasets.trace.trace_hybrid import (
@@ -299,6 +310,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
+                    tampered_only=tampered_only,
                 )
 
             case _:
