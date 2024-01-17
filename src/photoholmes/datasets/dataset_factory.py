@@ -1,3 +1,4 @@
+import re
 from typing import List, Literal, Optional, Union
 
 from photoholmes.datasets.base import BaseDataset
@@ -71,6 +72,16 @@ class DatasetFactory:
                 from photoholmes.datasets.columbia import ColumbiaDataset
 
                 return ColumbiaDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                    tampered_only=tampered_only,
+                )
+            case DatasetName.COLUMBIA_OSN:
+                from photoholmes.datasets.columbia import ColumbiaOSNDataset
+
+                return ColumbiaOSNDataset(
                     img_dir=dataset_dir,
                     item_data=item_data,
                     transform=transform,

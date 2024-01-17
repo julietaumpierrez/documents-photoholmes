@@ -4,6 +4,7 @@ from enum import Enum, unique
 @unique
 class DatasetName(Enum):
     COLUMBIA = "columbia"
+    COLUMBIA_OSN = "columbia_osn"
     OSN = "osn"
     COVERAGE = "coverage"
     REALISTIC_TAMPERING = "realistic_tampering"

@@ -58,3 +58,20 @@ class ColumbiaDataset(BaseDataset):
 
     def _binarize_mask(self, mask_image: Tensor) -> Tensor:
         return mask_image[self.TAMPERED_COLOR_INDEX, :, :] > 0
+
+
+class ColumbiaOSNDataset(ColumbiaDataset):
+    """
+    Directory structure:
+    img_dir (Columbia Uncompressed Image Splicing Detection)
+    ├── 4cam_auth
+    │   ├── [images in TIF]
+    ├── Columbia_Whatsapp
+    │   ├── [images in JPEG]
+    |   └── edgemask
+    |       └── [masks in JPG]
+    └── README.txt
+    """
+
+    TAMP_DIR = "Columbia_Whatsapp"
+    IMAGE_EXTENSION = ".jpeg"
