@@ -1,4 +1,3 @@
-import re
 from typing import List, Literal, Optional, Union
 
 from photoholmes.datasets.base import BaseDataset
