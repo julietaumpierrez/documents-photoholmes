@@ -15,22 +15,24 @@ from abc import ABC, abstractmethod
 import torch
 from torch.utils.data import DataLoader
 
-from photoholmes.datasets.columbia import ColumbiaOSNDataset
+from photoholmes.datasets.columbia import ColumbiaDataset, ColumbiaOSNDataset
 from photoholmes.datasets.coverage import CoverageDataset
-from photoholmes.datasets.dso1 import DSO1Dataset
+from photoholmes.datasets.dso1 import DSO1Dataset, DSO1OSNDataset
 from photoholmes.utils.image import plot_multiple
 
 # %%
 DSO1_PATH = "/Users/julietaumpierrez/Desktop/Datasets/tifs-database/"
-dataset = DSO1Dataset(DSO1_PATH, tampered_only=True)
+dataset = DSO1OSNDataset(DSO1_PATH, tampered_only=True)
 print(len(dataset))
 ims = []
 mks = []
 idxs = list(range(0, 6)) + list(range(len(dataset) - 6, len(dataset)))
 for n in idxs:
-    x, mk = dataset[n]
+    x, mk, names = dataset[n]
     ims.append(x["image"])
     mks.append(mk)
 
 plot_multiple(ims, title="Imágenes DSO1")
 plot_multiple(mks, title="Máscaras DSO1")
+
+# %%

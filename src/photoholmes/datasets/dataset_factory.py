@@ -86,7 +86,7 @@ class DatasetFactory:
                     item_data=item_data,
                     transform=transform,
                     mask_transform=mask_transform,
-                    tampered_only=tampered_only,
+                    tampered_only=True,
                 )
             case DatasetName.COVERAGE:
                 from photoholmes.datasets.coverage import CoverageDataset
@@ -130,6 +130,16 @@ class DatasetFactory:
                     transform=transform,
                     mask_transform=mask_transform,
                     tampered_only=tampered_only,
+                )
+            case DatasetName.DSO1_OSN:
+                from photoholmes.datasets.dso1 import DSO1OSNDataset
+
+                return DSO1OSNDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                    tampered_only=True,
                 )
             case DatasetName.CASIA1_COPY_MOVE:
                 from photoholmes.datasets.casia1 import Casia1CopyMoveDataset

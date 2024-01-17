@@ -58,3 +58,26 @@ class DSO1Dataset(BaseDataset):
 
     def _binarize_mask(self, mask_image: Tensor) -> Tensor:
         return mask_image[0, :, :] == 0
+
+
+class DSO1OSNDataset(DSO1Dataset):
+    """
+    Directory structure:
+    img_dir (tifs-database)
+    ├── DSO-1
+    │   ├── [images in png, normal for untampered, splicing for forged]
+    ├── DSO_Whatsapp
+    │   ├── [masks in png]
+    └── Possibly more folders
+    """
+
+    TAMP_DIR = "DSO_Whatsapp"
+    IMAGE_EXTENSION = ".jpeg"
+    IMAGE_DIR = "DSO_Whatsapp"
+
+    def _get_mask_path(self, image_path: str) -> str:
+        img_dir = "/".join(image_path.split("/")[:-2])
+        im_filename = image_path.split("/")[-1]
+        im_filename = im_filename.replace(self.IMAGE_EXTENSION, self.MASK_EXTENSION)
+        mask_path = os.path.join(img_dir, self.MASKS_DIR, im_filename)
+        return mask_path
