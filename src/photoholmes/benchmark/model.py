@@ -47,11 +47,14 @@ class Benchmark:
                 f"Moving method to '{self.device}'"
             )
             method.method_to_device(self.device)
+            
+        tampered_path = "tampered_only" if dataset.tampered_only else "tampered_pristine"
 
         output_path = os.path.join(
             self.output_path,
             method.__class__.__name__.lower(),
             dataset.__class__.__name__.lower(),
+            tampered_path
         )
         log.info("-" * 80)
         log.info("Running the benchmark")
