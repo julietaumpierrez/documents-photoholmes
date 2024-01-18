@@ -15,14 +15,20 @@ from abc import ABC, abstractmethod
 import torch
 from torch.utils.data import DataLoader
 
+from photoholmes.datasets.casia1 import (
+    Casia1CopyMoveDataset,
+    Casia1CopyMoveOSNDataset,
+    Casia1SplicingDataset,
+    Casia1SplicingOSNDataset,
+)
 from photoholmes.datasets.columbia import ColumbiaDataset, ColumbiaOSNDataset
 from photoholmes.datasets.coverage import CoverageDataset
 from photoholmes.datasets.dso1 import DSO1Dataset, DSO1OSNDataset
 from photoholmes.utils.image import plot_multiple
 
 # %%
-DSO1_PATH = "/Users/julietaumpierrez/Desktop/Datasets/tifs-database/"
-dataset = DSO1OSNDataset(DSO1_PATH, tampered_only=True)
+DSO1_PATH = "/Users/julietaumpierrez/Desktop/Datasets/CASIA 1.0 dataset/"
+dataset = Casia1SplicingDataset(DSO1_PATH, tampered_only=True)
 print(len(dataset))
 ims = []
 mks = []

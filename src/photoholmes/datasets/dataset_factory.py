@@ -150,6 +150,27 @@ class DatasetFactory:
                     mask_transform=mask_transform,
                     tampered_only=tampered_only,
                 )
+
+            case DatasetName.CASIA1_COPY_MOVE_OSN:
+                from photoholmes.datasets.casia1 import Casia1CopyMoveOSNDataset
+
+                return Casia1CopyMoveOSNDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                    tampered_only=True,
+                )
+            case DatasetName.CASIA1_SPLICING_OSN:
+                from photoholmes.datasets.casia1 import Casia1SplicingOSNDataset
+
+                return Casia1SplicingOSNDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                    tampered_only=True,
+                )
             case DatasetName.CASIA1_SPLICING:
                 from photoholmes.datasets.casia1 import Casia1SplicingDataset
 

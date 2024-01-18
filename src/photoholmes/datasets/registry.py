@@ -12,6 +12,8 @@ class DatasetName(Enum):
     DSO1_OSN = "dso1_osn"
     CASIA1_COPY_MOVE = "casia1_copy_move"
     CASIA1_SPLICING = "casia1_splicing"
+    CASIA1_COPY_MOVE_OSN = "casia1_copy_move_osn"
+    CASIA1_SPLICING_OSN = "casia1_splicing_osn"
     AUTOSPLICE100 = "autosplice_100"
     AUTOSPLICE90 = "autosplice_90"
     AUTOSPLICE75 = "autosplice_75"

@@ -65,6 +65,29 @@ class Casia1SplicingDataset(BaseDataset):
         return mask_image[0, :, :] > 0
 
 
+class Casia1SplicingOSNDataset(Casia1SplicingDataset):
+    """
+    Directory structure:
+    img_dir (CASIA 1.0 dataset)
+    ├── Au
+    │   └── [Authentic images in jpg]
+    ├── Casia_Whatsapp
+    │   ├── CM
+    │   │   └── [Copy Move images in jpeg]
+    |   ├── Sp
+    |   |   └── [Spliced images in jpeg]
+    ├── CASIA 1.0 groundtruth
+    │   ├── CM
+    │   │   └── [Copy Move masks in png]
+    |   ├── Sp
+    |   |   └── [Spliced masks in png]
+    └── Possibly more files
+    """
+
+    SP_DIR = "Casia_Whatsapp/Sp"
+    IMAGE_EXTENSION = ".jpeg"
+
+
 class Casia1CopyMoveDataset(BaseDataset):
     """
     Directory structure:
@@ -121,3 +144,26 @@ class Casia1CopyMoveDataset(BaseDataset):
 
     def _binarize_mask(self, mask_image: Tensor) -> Tensor:
         return mask_image[0, :, :] > 0
+
+
+class Casia1CopyMoveOSNDataset(Casia1CopyMoveDataset):
+    """
+    Directory structure:
+    img_dir (CASIA 1.0 dataset)
+    ├── Au
+    │   └── [Authentic images in jpg]
+    ├── Casia_Whatsapp
+    │   ├── CM
+    │   │   └── [Copy Move images in jpeg]
+    |   ├── Sp
+    |   |   └── [Spliced images in jpeg]
+    ├── CASIA 1.0 groundtruth
+    │   ├── CM
+    │   │   └── [Copy Move masks in png]
+    |   ├── Sp
+    |   |   └── [Spliced masks in png]
+    └── Possibly more files
+    """
+
+    CM_DIR = "Casia_Whatsapp/CM"
+    IMAGE_EXTENSION = ".jpeg"
