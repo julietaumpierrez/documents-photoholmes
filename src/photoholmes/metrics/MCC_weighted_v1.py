@@ -61,6 +61,10 @@ class MCC_weighted_v1(Metric):
         FPw = torch.sum((1 - pred_flat) * target_flat)
         TNw = torch.sum((1 - pred_flat) * (1 - target_flat))
         FNw = torch.sum(pred_flat * (1 - target_flat))
+        if TPw + TNw != 0 and FPw + FNw == 0:
+            self.MCC_weighted += 1.0
+        if TPw + TNw == 0 and FPw + FNw != 0:
+            self.MCC_weighted += -1.0
         denominator = torch.sqrt((TPw + FPw) * (TPw + FNw) * (TNw + FPw) * (TNw + FNw))
         if denominator != 0:
             self.MCC_weighted += (TPw * TNw - FPw * FNw) / denominator
