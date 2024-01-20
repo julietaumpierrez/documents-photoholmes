@@ -1,9 +1,11 @@
 # derived from https://www.grip.unina.it/download/prog/Splicebuster/
+import warnings
 from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
 import torch
 from numpy.typing import NDArray
+from scipy.linalg import LinAlgWarning
 from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
@@ -215,19 +217,36 @@ class Splicebuster(BaseMethod):
         if self.pca_dim > 0:
             pca = PCA(n_components=self.pca_dim)
             flat_features = pca.fit_transform(flat_features)
-
         if self.mixture == "gaussian":
-            gg_mixt = GaussianMixture()
-            mus, covs = gg_mixt.fit(flat_features)
-            labels = mahalanobis_distance(
-                flat_features, mus[1], covs[1]
-            ) / mahalanobis_distance(flat_features, mus[0], covs[0])
-            labels_comp = 1 / labels
-            labels = labels if labels.sum() < labels_comp.sum() else labels_comp
+            with warnings.catch_warnings():
+                warnings.filterwarnings("error")
+                try:
+                    gg_mixt = GaussianMixture()
+                    mus, covs = gg_mixt.fit(flat_features)
+                    labels = mahalanobis_distance(
+                        flat_features, mus[1], covs[1]
+                    ) / mahalanobis_distance(flat_features, mus[0], covs[0])
+                    labels_comp = 1 / labels
+                    labels = labels if labels.sum() < labels_comp.sum() else labels_comp
+                except LinAlgWarning:
+                    return {"heatmap": torch.zeros((X, Y))}
+                except RuntimeWarning:
+                    return {"heatmap": torch.zeros((X, Y))}
+                except Warning:
+                    raise
         elif self.mixture == "uniform":
-            gu_mixt = GaussianUniformEM()
-            mus, covs, _ = gu_mixt.fit(flat_features)
-            _, labels = gu_mixt.predict(flat_features)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("error")
+                try:
+                    gu_mixt = GaussianUniformEM()
+                    mus, covs, _ = gu_mixt.fit(flat_features)
+                    _, labels = gu_mixt.predict(flat_features)
+                except LinAlgWarning:
+                    return {"heatmap": torch.zeros((X, Y))}
+                except RuntimeWarning:
+                    return {"heatmap": torch.zeros((X, Y))}
+                except Warning:
+                    raise
         else:
             raise ValueError(
                 (
