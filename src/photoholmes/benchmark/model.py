@@ -38,11 +38,15 @@ class Benchmark:
         self,
         save_output: bool = True,
         save_metrics: bool = True,
+        save_output: bool = True,
+        save_metrics: bool = True,
         output_path: str = "output/",
         device: str = "cpu",
         use_existing_output: bool = True,
         verbose: Literal[0, 1, 2] = 1,
     ):
+        self.save_output_flag = save_output
+        self.save_metrics_flag = save_metrics
         self.save_output_flag = save_output
         self.save_metrics_flag = save_metrics
         self.output_path = output_path
@@ -74,10 +78,11 @@ class Benchmark:
 
     def run(self, method: BaseMethod, dataset: BaseDataset, metrics: MetricCollection):
         if method.device != self.device:
-            log.warning(
-                f"Method device '{method.device}' does not match benchmark device '{self.device}'. "
-                f"Moving method to '{self.device}'"
-            )
+            if self.verbose:
+                log.warning(
+                    f"Method device '{method.device}' does not match benchmark device '{self.device}'. "
+                    f"Moving method to '{self.device}'"
+                )
             method.method_to_device(self.device)
 
         output_path = os.path.join(
@@ -94,19 +99,23 @@ class Benchmark:
         log.info("    Metrics:")
         for metric in metrics:
             log.info(f"       - {metric}")
+        log.info("    Metrics:")
+        for metric in metrics:
+            log.info(f"       - {metric}")
         log.info(f"    Output path: {output_path}")
+        log.info(f"    Save output flag: {self.save_output_flag}")
+        log.info(f"    Save metrics flag: {self.save_metrics_flag}")
         log.info(f"    Save output flag: {self.save_output_flag}")
         log.info(f"    Save metrics flag: {self.save_metrics_flag}")
         log.info(f"    Device: {self.device}")
         log.info(f"    Check existing output: {self.use_existing_output}")
         log.info(f"    Verbose: {logging._levelToName[verbose_dict[self.verbose]]}")
         log.info("-" * 80)
-
-        metrics_on_device = metrics.to("cpu", dtype=torch.float32)
-
-        heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
-        mask_metrics = metrics_on_device.clone(prefix="mask")
-        detection_metrics = metrics_on_device.clone(prefix="detection")
+        if self.save_metrics_flag:
+            metrics_on_device = metrics.to("cpu", dtype=torch.float32)
+            heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
+            mask_metrics = metrics_on_device.clone(prefix="mask")
+            detection_metrics = metrics_on_device.clone(prefix="detection")
 
         for data, mask, image_name in tqdm(dataset, desc="Processing Images"):
             # TODO: make a cleaner way to move the data to the device
@@ -217,7 +226,8 @@ class Benchmark:
             ):
                 json_report[key] = value
             else:
-                log.warning(f"Skipping metric '{key}' of type '{type(value)}'")
+                if self.verbose:
+                    log.warning(f"Skipping metric '{key}' of type '{type(value)}'")
 
         with open(
             os.path.join(metrics_path, f"{metrics.prefix}_report_{report_id}.json"), "w"
@@ -230,10 +240,24 @@ class Benchmark:
             os.path.join(image_save_path, "arrays.npz")
         ):
             os.makedirs(image_save_path, exist_ok=True)
+        # check if the files arrays and data.json already exist
+        if not self.check_existing_output or not os.path.exists(
+            os.path.join(image_save_path, "arrays.npz")
+        ):
+            os.makedirs(image_save_path, exist_ok=True)
 
             array_like_dict = {}
             non_array_like_dict = {}
+            array_like_dict = {}
+            non_array_like_dict = {}
 
+            for key, value in output.items():
+                if isinstance(value, (torch.Tensor)):
+                    array_like_dict[key] = value.cpu()
+                elif isinstance(value, (list, np.ndarray)):
+                    array_like_dict[key] = value
+                else:
+                    non_array_like_dict[key] = value
             for key, value in output.items():
                 if isinstance(value, (torch.Tensor)):
                     array_like_dict[key] = value.cpu()
