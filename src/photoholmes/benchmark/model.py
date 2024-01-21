@@ -74,8 +74,12 @@ class Benchmark:
         heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
         mask_metrics = metrics_on_device.clone(prefix="mask")
         detection_metrics = metrics_on_device.clone(prefix="detection")
-
+        i = 0
         for data, mask, image_name in tqdm(dataset, desc="Processing Images"):
+            if i < 76:
+                i += 1
+                continue
+
             # TODO: make a cleaner way to move the data to the device
             # (conditioned to the method or something)
             data_on_device = self.move_to_device(data)
