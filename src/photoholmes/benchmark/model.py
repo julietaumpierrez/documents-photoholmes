@@ -13,7 +13,6 @@ from photoholmes.methods.base import BaseMethod
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 class Benchmark:
@@ -32,15 +31,17 @@ class Benchmark:
         self.output_path = output_path
         self.use_existing_output = use_existing_output
         self.verbose = verbose
+        if self.verbose:
+            log.setLevel(logging.INFO)
+        else:
+            log.setLevel(logging.WARNING)
 
         if device.startswith("cuda") and not torch.cuda.is_available():
-            if self.verbose:
-                log.warning(
-                    f"Requested device '{device}' is not available. Falling back to 'cpu'."
-                )
+            log.warning(
+                f"Requested device '{device}' is not available. Falling back to 'cpu'."
+            )
         self.device = torch.device("cpu")
-        if self.verbose:
-            log.info(f"Using device: {self.device}")
+        log.info(f"Using device: {self.device}")
 
         # TODO: set an attribute "output_keys" in the method class and use that
         # to determine whether to save the mask and heatmap or not
@@ -50,11 +51,10 @@ class Benchmark:
 
     def run(self, method: BaseMethod, dataset: BaseDataset, metrics: MetricCollection):
         if method.device != self.device:
-            if self.verbose:
-                log.warning(
-                    f"Method device '{method.device}' does not match benchmark device '{self.device}'. "
-                    f"Moving method to '{self.device}'"
-                )
+            log.warning(
+                f"Method device '{method.device}' does not match benchmark device '{self.device}'. "
+                f"Moving method to '{self.device}'"
+            )
             method.method_to_device(self.device)
 
         output_path = os.path.join(
@@ -119,7 +119,9 @@ class Benchmark:
 
         log.info("-" * 80)
         if self.save_metrics_flag:
-            tampered = "tampered_only" if dataset.tampered_only else "tampered_pristine"
+            tampered = (
+                "tampered_only" if dataset.tampered_only else "tampered_and_pristine"
+            )
             timestamp = time.strftime("%Y%m%d_%H:%M")
 
             report_id = f"{tampered}_{timestamp}"
@@ -171,9 +173,14 @@ class Benchmark:
                 isinstance(v, torch.Tensor) for v in value
             ):
                 json_report[key] = [v.tolist() for v in value]
+            elif (
+                isinstance(value, int)
+                or isinstance(value, float)
+                or isinstance(value, str)
+            ):
+                json_report[key] = value
             else:
-                if self.verbose:
-                    log.warning(f"Skipping metric '{key}' of type '{type(value)}'")
+                log.warning(f"Skipping metric '{key}' of type '{type(value)}'")
 
         with open(
             os.path.join(metrics_path, f"{metrics.prefix}_report_{report_id}.json"), "w"
@@ -204,7 +211,7 @@ class Benchmark:
             if non_array_like_dict:
                 with open(os.path.join(image_save_path, "data.json"), "w") as f:
                     json.dump(non_array_like_dict, f)
-        elif self.verbose:
+        else:
             log.info(
                 f"Output for image '{image_name}' already exists. "
                 f"Skipping saving output."
@@ -216,11 +223,10 @@ class Benchmark:
             return None
         files = os.listdir(output_path)
         if image_name in files:
-            if self.verbose:
-                log.info(
-                    f"Output for image '{image_name}' already exists. "
-                    f"Loading existing output."
-                )
+            log.info(
+                f"Output for image '{image_name}' already exists. "
+                f"Loading existing output."
+            )
 
             prior_output = np.load(
                 os.path.join(output_path, image_name, "arrays.npz"),
@@ -241,6 +247,5 @@ class Benchmark:
 
             return prior_output
 
-        if self.verbose:
-            log.info(f"No prior output found for image '{image_name}'.")
+        log.info(f"No prior output found for image '{image_name}'.")
         return None
