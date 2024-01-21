@@ -78,11 +78,10 @@ class Benchmark:
 
     def run(self, method: BaseMethod, dataset: BaseDataset, metrics: MetricCollection):
         if method.device != self.device:
-            if self.verbose:
-                log.warning(
-                    f"Method device '{method.device}' does not match benchmark device '{self.device}'. "
-                    f"Moving method to '{self.device}'"
-                )
+            log.warning(
+                f"Method device '{method.device}' does not match benchmark device '{self.device}'. "
+                f"Moving method to '{self.device}'"
+            )
             method.method_to_device(self.device)
 
         output_path = os.path.join(
@@ -226,8 +225,7 @@ class Benchmark:
             ):
                 json_report[key] = value
             else:
-                if self.verbose:
-                    log.warning(f"Skipping metric '{key}' of type '{type(value)}'")
+                log.warning(f"Skipping metric '{key}' of type '{type(value)}'")
 
         with open(
             os.path.join(metrics_path, f"{metrics.prefix}_report_{report_id}.json"), "w"
