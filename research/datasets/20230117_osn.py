@@ -28,7 +28,7 @@ from photoholmes.utils.image import plot_multiple
 
 # %%
 DSO1_PATH = "/Users/julietaumpierrez/Desktop/Datasets/CASIA 1.0 dataset/"
-dataset = Casia1SplicingDataset(DSO1_PATH, tampered_only=True)
+dataset = Casia1SplicingOSNDataset(DSO1_PATH, tampered_only=True)
 print(len(dataset))
 ims = []
 mks = []
