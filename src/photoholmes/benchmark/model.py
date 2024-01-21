@@ -182,9 +182,11 @@ class Benchmark:
 
     def move_to_device(self, data):
         return {
-            key: value.to(self.device, dtype=torch.float32)
-            if isinstance(value, torch.Tensor)
-            else value
+            key: (
+                value.to(self.device, dtype=torch.float32)
+                if isinstance(value, torch.Tensor)
+                else value
+            )
             for key, value in data.items()
         }
 

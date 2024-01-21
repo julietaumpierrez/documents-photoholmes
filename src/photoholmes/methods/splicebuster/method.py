@@ -1,10 +1,12 @@
 # derived from https://www.grip.unina.it/download/prog/Splicebuster/
 import warnings
+import warnings
 from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
 import torch
 from numpy.typing import NDArray
+from scipy.linalg import LinAlgWarning
 from scipy.linalg import LinAlgWarning
 from torch import Tensor
 
