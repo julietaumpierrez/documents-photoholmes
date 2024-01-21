@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 
 import numpy as np
 import torch
@@ -23,13 +24,13 @@ class Benchmark:
         save_metrics: bool = True,
         output_path: str = "output/",
         device: str = "cpu",
-        check_existing_output: bool = True,
+        use_existing_output: bool = True,
         verbose: bool = True,
     ):
         self.save_output_flag = save_output
         self.save_metrics_flag = save_metrics
         self.output_path = output_path
-        self.check_existing_output = check_existing_output
+        self.use_existing_output = use_existing_output
         self.verbose = verbose
 
         if device.startswith("cuda") and not torch.cuda.is_available():
@@ -56,15 +57,10 @@ class Benchmark:
                 )
             method.method_to_device(self.device)
 
-        tampered_path = (
-            "tampered_only" if dataset.tampered_only else "tampered_pristine"
-        )
-
         output_path = os.path.join(
             self.output_path,
             method.__class__.__name__.lower(),
             dataset.__class__.__name__.lower(),
-            tampered_path,
         )
 
         log.info("-" * 80)
@@ -79,7 +75,7 @@ class Benchmark:
         log.info(f"    Save output flag: {self.save_output_flag}")
         log.info(f"    Save metrics flag: {self.save_metrics_flag}")
         log.info(f"    Device: {self.device}")
-        log.info(f"    Check existing output: {self.check_existing_output}")
+        log.info(f"    Check existing output: {self.use_existing_output}")
         log.info(f"    Verbose: {self.verbose}")
         log.info("-" * 80)
         if self.save_metrics_flag:
@@ -92,7 +88,7 @@ class Benchmark:
             # TODO: make a cleaner way to move the data to the device
             # (conditioned to the method or something)
             output = None
-            if self.check_existing_output:
+            if self.use_existing_output:
                 output = self.check_for_existing_output(output_path, image_name)
 
             if output is None:
@@ -123,19 +119,23 @@ class Benchmark:
 
         log.info("-" * 80)
         if self.save_metrics_flag:
+            tampered = "tampered_only" if dataset.tampered_only else "tampered_pristine"
+            timestamp = time.strftime("%Y%m%d_%H:%M")
+
+            report_id = f"{tampered}_{timestamp}"
             if self.save_heatmap:
                 log.info("     - Saving heatmap metrics")
-                self.save_metrics(output_path, heatmap_metrics)
+                self.save_metrics(output_path, heatmap_metrics, report_id)
             else:
                 log.info("     - No heatmap metrics to save")
             if self.save_mask:
                 log.info("     - Saving mask metrics")
-                self.save_metrics(output_path, mask_metrics)
+                self.save_metrics(output_path, mask_metrics, report_id)
             else:
                 log.info("     - No mask metrics to save")
             if self.save_detection:
                 log.info("     - Saving detection metrics")
-                self.save_metrics(output_path, detection_metrics)
+                self.save_metrics(output_path, detection_metrics, report_id)
             else:
                 log.info("     - No detection metrics to save")
         else:
@@ -153,14 +153,14 @@ class Benchmark:
             for key, value in data.items()
         }
 
-    def save_metrics(self, output_path, metrics):
+    def save_metrics(self, output_path, metrics, report_id):
         metrics_path = os.path.join(output_path, "metrics")
         os.makedirs(metrics_path, exist_ok=True)
 
         metric_report = metrics.compute()
         torch.save(
             metrics.state_dict(),
-            os.path.join(metrics_path, f"{metrics.prefix}_state.pt"),
+            os.path.join(metrics_path, f"{metrics.prefix}_state_{report_id}.pt"),
         )
 
         json_report = {}
@@ -176,14 +176,13 @@ class Benchmark:
                     log.warning(f"Skipping metric '{key}' of type '{type(value)}'")
 
         with open(
-            os.path.join(metrics_path, f"{metrics.prefix}_report.json"), "w"
+            os.path.join(metrics_path, f"{metrics.prefix}_report_{report_id}.json"), "w"
         ) as f:
             json.dump(json_report, f)
 
     def save_pred_output(self, output_path, image_name, output):
         image_save_path = os.path.join(output_path, "outputs", image_name)
-        # check if the files arrays and data.json already exist
-        if not self.check_existing_output or not os.path.exists(
+        if not self.use_existing_output or not os.path.exists(
             os.path.join(image_save_path, "arrays.npz")
         ):
             os.makedirs(image_save_path, exist_ok=True)
@@ -212,35 +211,36 @@ class Benchmark:
             )
 
     def check_for_existing_output(self, output_path, image_name):
-        output_path = os.path.join(*output_path.split("/")[:-1])
-        folders = ["tampered_pristine/outputs", "tampered_only/outputs"]
-        for folder in folders:
-            if not os.path.exists(os.path.join(output_path, folder)):
-                continue
-            files = os.listdir(os.path.join(output_path, folder))
-            if image_name in files:
-                if self.verbose:
-                    log.info(
-                        f"Output for image '{image_name}' already exists. "
-                        f"Loading existing output."
-                    )
-                prior_output = np.load(
-                    os.path.join(output_path, folder, image_name, "arrays.npz"),
-                    allow_pickle=True,
+        output_path = os.path.join(output_path, "outputs")
+        if not os.path.exists(output_path):
+            return None
+        files = os.listdir(output_path)
+        if image_name in files:
+            if self.verbose:
+                log.info(
+                    f"Output for image '{image_name}' already exists. "
+                    f"Loading existing output."
                 )
-                prior_output = dict(prior_output)
-                prior_output = {
-                    k: torch.from_numpy(v) if isinstance(v, np.ndarray) else v
-                    for k, v in prior_output.items()
-                }
-                data_json_path = os.path.join(
-                    output_path, folder, image_name, "data.json"
-                )
-                if os.path.exists(data_json_path):
-                    with open(data_json_path, "r") as f:
-                        data_json = json.load(f)
-                    prior_output.update(data_json)
-                return prior_output
+
+            prior_output = np.load(
+                os.path.join(output_path, image_name, "arrays.npz"),
+                allow_pickle=True,
+            )
+
+            prior_output = dict(prior_output)
+            prior_output = {
+                k: torch.from_numpy(v) if isinstance(v, np.ndarray) else v
+                for k, v in prior_output.items()
+            }
+
+            data_json_path = os.path.join(output_path, image_name, "data.json")
+            if os.path.exists(data_json_path):
+                with open(data_json_path, "r") as f:
+                    data_json = json.load(f)
+                prior_output.update(data_json)
+
+            return prior_output
+
         if self.verbose:
             log.info(f"No prior output found for image '{image_name}'.")
         return None
