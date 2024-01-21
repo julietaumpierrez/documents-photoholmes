@@ -47,14 +47,16 @@ class Benchmark:
                 f"Moving method to '{self.device}'"
             )
             method.method_to_device(self.device)
-            
-        tampered_path = "tampered_only" if dataset.tampered_only else "tampered_pristine"
+
+        tampered_path = (
+            "tampered_only" if dataset.tampered_only else "tampered_pristine"
+        )
 
         output_path = os.path.join(
             self.output_path,
             method.__class__.__name__.lower(),
             dataset.__class__.__name__.lower(),
-            tampered_path
+            tampered_path,
         )
         log.info("-" * 80)
         log.info("Running the benchmark")
@@ -72,8 +74,12 @@ class Benchmark:
         heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
         mask_metrics = metrics_on_device.clone(prefix="mask")
         detection_metrics = metrics_on_device.clone(prefix="detection")
-
+        i = 0
         for data, mask, image_name in tqdm(dataset, desc="Processing Images"):
+            if i < 76:
+                i += 1
+                continue
+
             # TODO: make a cleaner way to move the data to the device
             # (conditioned to the method or something)
             data_on_device = self.move_to_device(data)

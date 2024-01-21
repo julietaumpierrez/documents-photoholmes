@@ -1,10 +1,12 @@
 # derived from https://www.grip.unina.it/download/prog/Splicebuster/
 import warnings
+import warnings
 from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
 import torch
 from numpy.typing import NDArray
+from scipy.linalg import LinAlgWarning
 from scipy.linalg import LinAlgWarning
 from torch import Tensor
 
@@ -23,6 +25,8 @@ from .utils import (
     quantize,
     third_order_residual,
 )
+
+warnings.filterwarnings("error", category=LinAlgWarning)
 
 
 class Splicebuster(BaseMethod):
@@ -218,35 +222,25 @@ class Splicebuster(BaseMethod):
             pca = PCA(n_components=self.pca_dim)
             flat_features = pca.fit_transform(flat_features)
         if self.mixture == "gaussian":
-            with warnings.catch_warnings():
-                warnings.filterwarnings("error")
-                try:
-                    gg_mixt = GaussianMixture()
-                    mus, covs = gg_mixt.fit(flat_features)
-                    labels = mahalanobis_distance(
-                        flat_features, mus[1], covs[1]
-                    ) / mahalanobis_distance(flat_features, mus[0], covs[0])
-                    labels_comp = 1 / labels
-                    labels = labels if labels.sum() < labels_comp.sum() else labels_comp
-                except LinAlgWarning:
-                    return {"heatmap": torch.zeros((X, Y))}
-                except RuntimeWarning:
-                    return {"heatmap": torch.zeros((X, Y))}
-                except Warning:
-                    raise
+            try:
+                gg_mixt = GaussianMixture()
+                mus, covs = gg_mixt.fit(flat_features)
+                labels = mahalanobis_distance(
+                    flat_features, mus[1], covs[1]
+                ) / mahalanobis_distance(flat_features, mus[0], covs[0])
+                labels_comp = 1 / labels
+                labels = labels if labels.sum() < labels_comp.sum() else labels_comp
+            except LinAlgWarning:
+                labels = np.zeros(flat_features.shape[0])
+                print("LinAlgWarning, returning zeros")
         elif self.mixture == "uniform":
-            with warnings.catch_warnings():
-                warnings.filterwarnings("error")
-                try:
-                    gu_mixt = GaussianUniformEM()
-                    mus, covs, _ = gu_mixt.fit(flat_features)
-                    _, labels = gu_mixt.predict(flat_features)
-                except LinAlgWarning:
-                    return {"heatmap": torch.zeros((X, Y))}
-                except RuntimeWarning:
-                    return {"heatmap": torch.zeros((X, Y))}
-                except Warning:
-                    raise
+            try:
+                gu_mixt = GaussianUniformEM()
+                mus, covs, _ = gu_mixt.fit(flat_features)
+                _, labels = gu_mixt.predict(flat_features)
+            except LinAlgWarning:
+                labels = np.zeros(flat_features.shape[0])
+                print("LinAlgWarning, returning zeros")
         else:
             raise ValueError(
                 (
