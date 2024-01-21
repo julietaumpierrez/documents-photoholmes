@@ -68,10 +68,19 @@ class ColumbiaOSNDataset(ColumbiaDataset):
     │   ├── [images in TIF]
     ├── Columbia_Whatsapp
     │   ├── [images in JPEG]
-    |   └── edgemask
-    |       └── [masks in JPG]
+    |   └── Columbia_GT
+    |       └── [masks in png]
     └── README.txt
     """
 
     TAMP_DIR = "Columbia_Whatsapp"
     IMAGE_EXTENSION = ".jpeg"
+    MASKS_DIR = "Columbia_Whatsapp/Columbia_GT"
+    MASK_EXTENSION = ".png"
+
+    def _get_mask_path(self, image_path: str) -> str:
+        image_filename = image_path.split("/")[-1]
+        image_name_list = ".".join(image_filename.split(".")[:-1]).split("_")
+        mask_name = "_".join(image_name_list + ["gt"])
+        mask_filename = mask_name + self.MASK_EXTENSION
+        return os.path.join(self.MASKS_DIR, mask_filename)
