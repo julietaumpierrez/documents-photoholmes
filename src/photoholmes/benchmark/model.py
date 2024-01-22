@@ -101,11 +101,13 @@ class Benchmark:
         log.info(f"    Check existing output: {self.use_existing_output}")
         log.info(f"    Verbose: {logging._levelToName[verbose_dict[self.verbose]]}")
         log.info("-" * 80)
-        if self.save_metrics_flag:
-            metrics_on_device = metrics.to("cpu", dtype=torch.float32)
-            heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
-            mask_metrics = metrics_on_device.clone(prefix="mask")
-            detection_metrics = metrics_on_device.clone(prefix="detection")
+
+        metrics_on_device = metrics.to("cpu", dtype=torch.float32)
+
+        heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
+        mask_metrics = metrics_on_device.clone(prefix="mask")
+        detection_metrics = metrics_on_device.clone(prefix="detection")
+
         for data, mask, image_name in tqdm(dataset, desc="Processing Images"):
             # TODO: make a cleaner way to move the data to the device
             # (conditioned to the method or something)
