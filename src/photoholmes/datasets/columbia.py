@@ -66,16 +66,16 @@ class ColumbiaOSNDataset(ColumbiaDataset):
     img_dir (Columbia Uncompressed Image Splicing Detection)
     ├── 4cam_auth
     │   ├── [images in TIF]
-    ├── Columbia_Whatsapp
-    │   ├── [images in JPEG]
+    ├── Columbia_Facebook
+    │   ├── [images in JPG]
     |   └── Columbia_GT
     |       └── [masks in png]
     └── README.txt
     """
 
-    TAMP_DIR = "Columbia_Whatsapp"
-    IMAGE_EXTENSION = ".jpeg"
-    MASKS_DIR = "Columbia_Whatsapp/Columbia_GT"
+    TAMP_DIR = "Columbia_Facebook"
+    IMAGE_EXTENSION = ".jpg"
+    MASKS_DIR = "Columbia_Facebook/Columbia_GT"
     MASK_EXTENSION = ".png"
 
     def _get_mask_path(self, image_path: str) -> str:
