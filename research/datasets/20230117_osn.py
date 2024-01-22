@@ -28,7 +28,7 @@ from photoholmes.utils.image import plot_multiple
 
 # %%
 DSO1_PATH = "/Users/julietaumpierrez/Desktop/Datasets/tifs-database/"
-dataset = DSO1Dataset(DSO1_PATH, tampered_only=True)
+dataset = DSO1OSNDataset(DSO1_PATH, tampered_only=True)
 print(len(dataset))
 ims = []
 mks = []
