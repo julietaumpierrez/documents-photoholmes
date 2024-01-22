@@ -3,3 +3,4 @@ torch==2.0.1+cpu
 
 torchvision
 torchmetrics
+torch_kmeans
