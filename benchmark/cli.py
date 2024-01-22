@@ -74,6 +74,11 @@ def run_benchmark(
     output_path: str = "output/",
     device: str = "cpu",
 ):
+    from photoholmes.benchmark.model import Benchmark
+    from photoholmes.datasets.dataset_factory import DatasetFactory
+    from photoholmes.methods.method_factory import MethodFactory
+    from photoholmes.metrics.metric_factory import MetricFactory
+
     # Load method and preprocessing
     method, preprocessing = MethodFactory.load(
         method_name=method_name, config=method_config, device=device
