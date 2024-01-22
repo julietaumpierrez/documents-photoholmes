@@ -29,10 +29,9 @@ class BaseMethod(ABC):
         """
         self.threshold = threshold
         self.device = torch.device(device)
-        self.method_to_device(device)
 
     @abstractmethod
-    def predict(self, image: T) -> T:
+    def predict(self, image: T) -> Dict[str, Any]:
         """Predicts heatmap from an image."""
 
     def predict_mask(self, heatmap):
@@ -84,7 +83,7 @@ class BaseTorchMethod(BaseMethod, Module):
         Module.__init__(self, *args, **kwargs)
         BaseMethod.__init__(self, threshold=threshold)
 
-    def load_weigths(self, weights: Union[str, Path, dict]):
+    def load_weights(self, weights: Union[str, Path, dict]):
         if isinstance(weights, (str, Path)):
             # trick to get current device
             weights_ = torch.load(
