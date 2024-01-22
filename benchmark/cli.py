@@ -63,6 +63,47 @@ def run_benchmark(
     )
 
 
+def run_benchmark(
+    method_name: MethodName,
+    method_config: str | dict,
+    dataset_name: DatasetName,
+    dataset_path: str,
+    metrics: List[str],
+    tampered_only: bool = False,
+    save_output: bool = False,
+    output_path: str = "output/",
+    device: str = "cpu",
+):
+    # Load method and preprocessing
+    method, preprocessing = MethodFactory.load(
+        method_name=method_name, config=method_config, device=device
+    )
+
+    # Load dataset
+    dataset = DatasetFactory.load(
+        dataset_name=dataset_name,
+        dataset_dir=dataset_path,
+        tampered_only=tampered_only,
+        transform=preprocessing,
+    )
+
+    metrics_objects = MetricFactory.load(metrics)
+
+    # Create Benchmark
+    benchmark = Benchmark(
+        save_output=save_output,
+        output_path=output_path,
+        device=device,
+    )
+
+    # Run Benchmark
+    benchmark.run(
+        method=method,
+        dataset=dataset,
+        metrics=metrics_objects,
+    )
+
+
 @app.command()
 def main(
     method_name: MethodName = typer.Option(..., help="Name of the method to use."),
