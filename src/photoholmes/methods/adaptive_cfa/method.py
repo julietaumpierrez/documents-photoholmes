@@ -180,7 +180,7 @@ class AdaptiveCFANet(BaseTorchMethod):
         self.method_to_device(device=device)
 
         if weights is not None:
-            self.load_weigths(weights)
+            self.load_weights(weights)
         else:
             self.init_weights()
         self.eval()
@@ -229,7 +229,7 @@ class AdaptiveCFANet(BaseTorchMethod):
         output = resize_heatmap_with_trim_and_pad(upscaled_heatmap, original_image_size)
         return {"heatmap": output}
 
-    def load_weigths(self, weights: Union[str, Path, dict]):
+    def load_weights(self, weights: Union[str, Path, dict]):
         if isinstance(weights, (str, Path)):
             weights = torch.load(weights, map_location=self.device)
 

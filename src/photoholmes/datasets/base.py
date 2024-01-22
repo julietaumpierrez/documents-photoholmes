@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractmethod
 from typing import Dict, List, Literal, Tuple
 
@@ -32,6 +33,10 @@ class BaseDataset(ABC, Dataset):
         tampered_only: bool = False,
     ):
         self.img_dir = img_dir
+
+        if not os.path.exists(img_dir):
+            raise ValueError(f"{img_dir} does not exist.")
+
         self.item_data = item_data
         self.transform = transform
         self.mask_transform = mask_transform

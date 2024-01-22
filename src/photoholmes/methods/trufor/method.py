@@ -148,7 +148,7 @@ class TruFor(BaseTorchMethod):
             assert False
 
         if cfg.pretrained is not None:
-            self.load_weigths(cfg.pretrained)
+            self.load_weights(cfg.pretrained)
         else:
             self.init_weights()
 
