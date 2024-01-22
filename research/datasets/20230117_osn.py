@@ -27,8 +27,8 @@ from photoholmes.datasets.dso1 import DSO1Dataset, DSO1OSNDataset
 from photoholmes.utils.image import plot_multiple
 
 # %%
-DSO1_PATH = "/Users/julietaumpierrez/Desktop/Datasets/Columbia Uncompressed Image Splicing Detection/"
-dataset = ColumbiaOSNDataset(DSO1_PATH, tampered_only=True)
+DSO1_PATH = "/Users/julietaumpierrez/Desktop/Datasets/CASIA 1.0 dataset/"
+dataset = Casia1SplicingOSNDataset(DSO1_PATH, tampered_only=True)
 print(len(dataset))
 ims = []
 mks = []
@@ -48,7 +48,9 @@ for n in range(len(dataset)):
     if x["image"].shape[1] != mk.shape[0] and x["image"].shape[2] != mk.shape[1]:
         print(names)
 # %%
-x, mk, names = dataset[0]
-print(x["image"].shape)
-print(mk.shape)
+# Check if any masks has nans
+for n in range(len(dataset)):
+    x, mk, names = dataset[n]
+    if torch.isnan(mk).any():
+        print(names)
 # %%
