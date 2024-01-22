@@ -4,31 +4,35 @@ import os
 if "research" in os.path.abspath("."):
     os.chdir("../../")
 
+import warnings
+
 # %%
 from photoholmes.benchmark.model import Benchmark
 from photoholmes.datasets.dataset_factory import DatasetFactory
 from photoholmes.methods.method_factory import MethodFactory
 from photoholmes.metrics.metric_factory import MetricFactory
 
-method_name = "exif_as_language"
+warnings.filterwarnings("ignore")
+
+method_name = "splicebuster"
 config = f"src/photoholmes/methods/{method_name}/config.yaml"
-device = "mps"
+device = "cpu"
 
 method, preprocessing = MethodFactory.load(
     method_name=method_name, config=config, device=device
 )
-base_path = "/Users/sote/Desktop/data/datasets/"
+base_path = "/home/pento/workspace/fing/datasets/"
 dataset_dict = {
-    "dso1": f"{base_path}DSO-1/tifs-database",
-    "columbia": f"{base_path}COLUMBIA",
-    "casia1_copy_move": f"{base_path}CASIA_1",
-    "casia1_splicing": f"{base_path}CASIA_1",
-    "realistic_tampering": f"{base_path}realistic_tampering",
+    # "dso1": f"{base_path}DSO-1/tifs-database",
+    # "columbia": f"{base_path}Columbia",
+    # "casia1_copy_move": f"{base_path}CASIA_1",
+    # "casia1_splicing": f"{base_path}CASIA_1",
+    "realistic_tampering": f"{base_path}realistic-tampering",
     "autosplice_100": f"{base_path}AutoSplice",
     "autosplice_90": f"{base_path}AutoSplice",
     "autosplice_75": f"{base_path}AutoSplice",
-    # "trace_noise_exo": f"{base_path}minitrace",
-    # "trace_noise_endo": f"{base_path}minitrace",
+    "trace_noise_exo": f"{base_path}minitrace",
+    "trace_noise_endo": f"{base_path}minitrace",
     "trace_cfa_alg_exo": f"{base_path}minitrace",
     "trace_cfa_alg_endo": f"{base_path}minitrace",
     "trace_cfa_grid_exo": f"{base_path}minitrace",
@@ -63,6 +67,7 @@ for dataset_name, dataset_path in dataset_dict.items():
             dataset_dir=dataset_path,
             tampered_only=tampered_only,
             transform=preprocessing,
+            item_data=["image_name", "image", "original_image_size"],
         )
 
         metrics = MetricFactory.load(
@@ -88,6 +93,8 @@ for dataset_name, dataset_path in dataset_dict.items():
             save_output=True,
             output_path="output/",
             device=device,
+            verbose=1,
+            save_metrics=False,
         )
 
         benchmark.run(
