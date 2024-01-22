@@ -76,6 +76,8 @@ class Casia1SplicingOSNDataset(Casia1SplicingDataset):
     │   │   └── [Copy Move images in jpeg]
     |   ├── Sp
     |   |   └── [Spliced images in jpeg]
+    |   ├── CASIA_GT
+    |   |   └── [Groundtruth masks in png]
     ├── CASIA 1.0 groundtruth
     │   ├── CM
     │   │   └── [Copy Move masks in png]
@@ -86,6 +88,7 @@ class Casia1SplicingOSNDataset(Casia1SplicingDataset):
 
     SP_DIR = "Casia_Whatsapp/Sp"
     IMAGE_EXTENSION = ".jpeg"
+    SP_MASKS_DIR = "Casia_Whatsapp/CASIA_GT"
 
 
 class Casia1CopyMoveDataset(BaseDataset):
@@ -157,6 +160,8 @@ class Casia1CopyMoveOSNDataset(Casia1CopyMoveDataset):
     │   │   └── [Copy Move images in jpeg]
     |   ├── Sp
     |   |   └── [Spliced images in jpeg]
+    |   ├── CASIA_GT
+    |   |   └── [Groundtruth masks in png]
     ├── CASIA 1.0 groundtruth
     │   ├── CM
     │   │   └── [Copy Move masks in png]
@@ -167,3 +172,4 @@ class Casia1CopyMoveOSNDataset(Casia1CopyMoveDataset):
 
     CM_DIR = "Casia_Whatsapp/CM"
     IMAGE_EXTENSION = ".jpeg"
+    CM_MASKS_DIR = "Casia_Whatsapp/CASIA_GT"

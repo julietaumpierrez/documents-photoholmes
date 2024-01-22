@@ -91,7 +91,7 @@ class MetricFactory:
                     from torchmetrics import ROC
 
                     metrics.append(
-                        ROC(task="binary", thresholds=list(np.linspace(0, 1, 200)))
+                        ROC(task="binary", thresholds=list(np.linspace(0, 1, 100)))
                     )
                 case MetricName.TPR:
                     from torchmetrics import Recall as TPR

@@ -87,6 +87,10 @@ class MCC_weighted_v2(Metric):
         FNw = self.FNw.float()
         FPw = self.FPw.float()
         TNw = self.TNw.float()
+        if TPw + TNw != 0 and FPw + FNw == 0:
+            return torch.tensor(1.0)
+        if TPw + TNw == 0 and FPw + FNw != 0:
+            return torch.tensor(-1.0)
         denominator = torch.sqrt((TPw + FPw) * (TPw + FNw) * (TNw + FPw) * (TNw + FNw))
         MCC_weighted = (TPw * TNw - FPw * FNw) / denominator if denominator != 0 else 0
         return MCC_weighted

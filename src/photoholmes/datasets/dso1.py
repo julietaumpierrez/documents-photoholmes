@@ -67,13 +67,17 @@ class DSO1OSNDataset(DSO1Dataset):
     ├── DSO-1
     │   ├── [images in png, normal for untampered, splicing for forged]
     ├── DSO_Whatsapp
-    │   ├── [masks in png]
+    │   ├── [Images in jpeg]
+    |   ├── DSO_GT
+    |   |   └── [masks in png]
     └── Possibly more folders
     """
 
     TAMP_DIR = "DSO_Whatsapp"
     IMAGE_EXTENSION = ".jpeg"
     IMAGE_DIR = "DSO_Whatsapp"
+    MASK_EXTENSION = "_gt.png"
+    MASKS_DIR = "DSO_WHATSAPP/DSO_GT"
 
     def _get_mask_path(self, image_path: str) -> str:
         img_dir = "/".join(image_path.split("/")[:-2])
@@ -81,3 +85,6 @@ class DSO1OSNDataset(DSO1Dataset):
         im_filename = im_filename.replace(self.IMAGE_EXTENSION, self.MASK_EXTENSION)
         mask_path = os.path.join(img_dir, self.MASKS_DIR, im_filename)
         return mask_path
+
+    def _binarize_mask(self, mask_image: Tensor) -> Tensor:
+        return mask_image[0, :, :] > 0
