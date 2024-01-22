@@ -66,18 +66,18 @@ class DSO1OSNDataset(DSO1Dataset):
     img_dir (tifs-database)
     ├── DSO-1
     │   ├── [images in png, normal for untampered, splicing for forged]
-    ├── DSO_Whatsapp
-    │   ├── [Images in jpeg]
+    ├── DSO_Facebook
+    │   ├── [Images in jpg]
     |   ├── DSO_GT
     |   |   └── [masks in png]
     └── Possibly more folders
     """
 
-    TAMP_DIR = "DSO_Whatsapp"
-    IMAGE_EXTENSION = ".jpeg"
-    IMAGE_DIR = "DSO_Whatsapp"
+    TAMP_DIR = "DSO_Facebook"
+    IMAGE_EXTENSION = ".jpg"
+    IMAGE_DIR = "DSO_Facebook"
     MASK_EXTENSION = "_gt.png"
-    MASKS_DIR = "DSO_WHATSAPP/DSO_GT"
+    MASKS_DIR = "DSO_Facebook/DSO_GT"
 
     def _get_mask_path(self, image_path: str) -> str:
         img_dir = "/".join(image_path.split("/")[:-2])

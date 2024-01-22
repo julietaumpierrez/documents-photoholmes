@@ -28,7 +28,7 @@ from photoholmes.utils.image import plot_multiple
 
 # %%
 DSO1_PATH = "/Users/julietaumpierrez/Desktop/Datasets/tifs-database/"
-dataset = DSO1Dataset(DSO1_PATH, tampered_only=True)
+dataset = DSO1OSNDataset(DSO1_PATH, tampered_only=True)
 print(len(dataset))
 ims = []
 mks = []
@@ -41,4 +41,14 @@ for n in idxs:
 plot_multiple(ims, title="Imágenes DSO1")
 plot_multiple(mks, title="Máscaras DSO1")
 
+# %%
+# Check if masks have the same shape as images
+for n in range(len(dataset)):
+    x, mk, names = dataset[n]
+    if x["image"].shape[1] != mk.shape[0] and x["image"].shape[2] != mk.shape[1]:
+        print(names)
+# %%
+x, mk, names = dataset[0]
+print(x["image"].shape)
+print(mk.shape)
 # %%
