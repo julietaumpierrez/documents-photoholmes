@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+from typing import Literal
 
 import numpy as np
 import torch
@@ -11,8 +12,24 @@ from tqdm import tqdm
 from photoholmes.datasets.base import BaseDataset
 from photoholmes.methods.base import BaseMethod
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
+logging.basicConfig(format="%(levelname)s - %(message)s")
+IO_MESSAGE = 11
+logging.addLevelName(IO_MESSAGE, "IO_MESSAGE")
+
+
+def io_message(self, message, *args, **kws):
+    if self.isEnabledFor(IO_MESSAGE):
+        self._log(IO_MESSAGE, message, args, **kws)
+
+
+logging.Logger.io_message = io_message
 log = logging.getLogger(__name__)
+
+verbose_dict = {
+    0: logging.WARNING,
+    1: logging.INFO,
+    2: IO_MESSAGE,
+}
 
 
 class Benchmark:
@@ -24,17 +41,20 @@ class Benchmark:
         output_path: str = "output/",
         device: str = "cpu",
         use_existing_output: bool = True,
-        verbose: bool = True,
+        verbose: Literal[0, 1, 2] = 1,
     ):
         self.save_output_flag = save_output
         self.save_metrics_flag = save_metrics
         self.output_path = output_path
         self.use_existing_output = use_existing_output
         self.verbose = verbose
-        if self.verbose:
-            log.setLevel(logging.INFO)
-        else:
-            log.setLevel(logging.WARNING)
+        if self.verbose not in verbose_dict:
+            log.warning(
+                f"Invalid verbose level '{self.verbose}'. "
+                f"Using default verbose level '1'."
+            )
+            self.verbose = 1
+        log.setLevel(verbose_dict[self.verbose])
 
         if device.startswith("cuda") and not torch.cuda.is_available():
             log.warning(
@@ -76,14 +96,13 @@ class Benchmark:
         log.info(f"    Save metrics flag: {self.save_metrics_flag}")
         log.info(f"    Device: {self.device}")
         log.info(f"    Check existing output: {self.use_existing_output}")
-        log.info(f"    Verbose: {self.verbose}")
+        log.info(f"    Verbose: {logging._levelToName[verbose_dict[self.verbose]]}")
         log.info("-" * 80)
         if self.save_metrics_flag:
             metrics_on_device = metrics.to("cpu", dtype=torch.float32)
             heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
             mask_metrics = metrics_on_device.clone(prefix="mask")
             detection_metrics = metrics_on_device.clone(prefix="detection")
-
         for data, mask, image_name in tqdm(dataset, desc="Processing Images"):
             # TODO: make a cleaner way to move the data to the device
             # (conditioned to the method or something)
@@ -212,7 +231,7 @@ class Benchmark:
                 with open(os.path.join(image_save_path, "data.json"), "w") as f:
                     json.dump(non_array_like_dict, f)
         else:
-            log.info(
+            log.io_message(
                 f"Output for image '{image_name}' already exists. "
                 f"Skipping saving output."
             )
@@ -223,7 +242,7 @@ class Benchmark:
             return None
         files = os.listdir(output_path)
         if image_name in files:
-            log.info(
+            log.io_message(
                 f"Output for image '{image_name}' already exists. "
                 f"Loading existing output."
             )
@@ -247,5 +266,5 @@ class Benchmark:
 
             return prior_output
 
-        log.info(f"No prior output found for image '{image_name}'.")
+        log.io_message(f"No prior output found for image '{image_name}'.")
         return None
