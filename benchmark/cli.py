@@ -2,12 +2,8 @@ from typing import List
 
 import typer
 
-from photoholmes.benchmark.model import Benchmark
-from photoholmes.datasets.dataset_factory import DatasetFactory
 from photoholmes.datasets.registry import DatasetName
-from photoholmes.methods.method_factory import MethodFactory
 from photoholmes.methods.registry import MethodName
-from photoholmes.metrics.metric_factory import MetricFactory
 from photoholmes.utils.generic import load_yaml
 
 # TODO: add a command to list the available methods, datasets and metrics
@@ -26,6 +22,11 @@ def run_benchmark(
     output_path: str = "output/",
     device: str = "cpu",
 ):
+    from photoholmes.benchmark.model import Benchmark
+    from photoholmes.datasets.dataset_factory import DatasetFactory
+    from photoholmes.methods.method_factory import MethodFactory
+    from photoholmes.metrics.metric_factory import MetricFactory
+
     # Load method and preprocessing
     method, preprocessing = MethodFactory.load(
         method_name=method_name, config=method_config, device=device
@@ -93,7 +94,7 @@ def main(
 
 @app.command("from_config")
 def run_from_config(
-    config_path: str = typer.Option(..., help="Path to the configuration file.")
+    config_path: str = typer.Argument(..., help="Path to the configuration file.")
 ):
     config = load_yaml(config_path)
     run_benchmark(**config)
