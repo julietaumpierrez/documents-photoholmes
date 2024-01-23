@@ -43,6 +43,7 @@ class PSCCNet(BaseTorchMethod):
         super().__init__(**kwargs)
 
         self.device = device
+        print(self.device)
         self.device_ids = device_ids
 
         if arch_config == "pretrained":
@@ -110,4 +111,4 @@ class PSCCNet(BaseTorchMethod):
         sm = nn.Softmax(dim=1)
         pred_logit = sm(pred_logit)[:, 1]
 
-        return {"heatmap": heatmap, "score": pred_logit}
+        return {"heatmap": heatmap, "detection": pred_logit}
