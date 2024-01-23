@@ -60,8 +60,11 @@ class Benchmark:
             log.warning(
                 f"Requested device '{device}' is not available. Falling back to 'cpu'."
             )
-        self.device = torch.device("cpu")
-        log.info(f"Using device: {self.device}")
+            self.device = torch.device("cpu")
+            log.info(f"Using device: {self.device}")
+        else:
+            self.device = torch.device(device)
+            log.info(f"Using device: {self.device}")
 
         # TODO: set an attribute "output_keys" in the method class and use that
         # to determine whether to save the mask and heatmap or not
