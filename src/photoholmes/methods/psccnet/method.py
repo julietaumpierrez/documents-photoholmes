@@ -43,6 +43,7 @@ class PSCCNet(BaseTorchMethod):
         super().__init__(**kwargs)
 
         self.device = device
+        print(self.device)
         self.device_ids = device_ids
 
         if arch_config == "pretrained":
