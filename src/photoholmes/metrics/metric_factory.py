@@ -73,10 +73,6 @@ class MetricFactory:
                     metrics.append(
                         AUROC(task="binary", thresholds=list(np.linspace(0, 1, 100)))
                     )
-                case MetricName.mAUROC:
-                    from photoholmes.metrics.mAuroc import mAuroc
-
-                    metrics.append(mAuroc(thresholds=list(np.linspace(0, 1, 100))))
                 case MetricName.FPR:
                     from photoholmes.metrics.FPR import FPR
 
