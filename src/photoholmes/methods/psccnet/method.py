@@ -110,4 +110,4 @@ class PSCCNet(BaseTorchMethod):
         sm = nn.Softmax(dim=1)
         pred_logit = sm(pred_logit)[:, 1]
 
-        return {"heatmap": heatmap, "score": pred_logit}
+        return {"heatmap": heatmap, "detection": pred_logit}

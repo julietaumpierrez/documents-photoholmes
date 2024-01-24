@@ -29,7 +29,7 @@ class BaseMethod(ABC):
         """
         self.threshold = threshold
         self.device = torch.device(device)
-        self.method_to_device(device)
+        # self.method_to_device(device)
 
     @abstractmethod
     def predict(self, image: T) -> T:
