@@ -60,7 +60,8 @@ class Benchmark:
             log.warning(
                 f"Requested device '{device}' is not available. Falling back to 'cpu'."
             )
-        self.device = torch.device("cpu")
+            device = "cpu"
+        self.device = torch.device(device)
         log.info(f"Using device: {self.device}")
 
         # TODO: set an attribute "output_keys" in the method class and use that
