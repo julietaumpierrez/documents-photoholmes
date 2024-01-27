@@ -229,15 +229,6 @@ class AdaptiveCFANet(BaseTorchMethod):
         output = resize_heatmap_with_trim_and_pad(upscaled_heatmap, original_image_size)
         return {"heatmap": output}
 
-    def load_weights(self, weights: Union[str, Path, dict]):
-        if isinstance(weights, (str, Path)):
-            weights = torch.load(weights, map_location=self.device)
-
-        if isinstance(weights, dict) and "state_dict" in weights.keys():
-            weights = weights["state_dict"]
-
-        self.load_state_dict(weights)  # type: ignore
-
     @classmethod
     def from_config(
         cls,
