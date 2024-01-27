@@ -70,7 +70,9 @@ class MetricFactory:
                 case MetricName.AUROC:
                     from torchmetrics import AUROC
 
-                    metrics.append(AUROC(task="binary"))
+                    metrics.append(
+                        AUROC(task="binary", thresholds=list(np.linspace(0, 1, 100)))
+                    )
                 case MetricName.FPR:
                     from photoholmes.metrics.FPR import FPR
 

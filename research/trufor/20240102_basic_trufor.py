@@ -76,7 +76,7 @@ print(out_auth["detection"])
 # %%
 method = TruFor()
 
-method.load_weigths("weights/trufor.pth.tar")
+method.load_weights("weights/trufor.pth.tar")
 # %%
 out = method.predict(img)
 plt.imshow(out["heatmap"][0])
