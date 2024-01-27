@@ -62,6 +62,8 @@ class CatNet(BaseTorchMethod):
         else:
             self.init_weights()
 
+        print(self.conv1.weight.device)
+
         self.eval()
 
     def load_model(self, arch_config: CatnetArchConfig):
