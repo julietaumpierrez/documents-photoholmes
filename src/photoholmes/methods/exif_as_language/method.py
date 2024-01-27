@@ -47,7 +47,7 @@ class EXIFAsLanguage(BaseMethod):
             , by default "cuda:0"
         ms_window: Window size for mean shift
         ms_iter: Number of iterations for mean shift
-        state_dict_paths: Path to weights
+        state_dict_path: Path to weights
         """
         random.seed(seed)
         super().__init__()
@@ -142,12 +142,17 @@ class EXIFAsLanguage(BaseMethod):
         score = pred_maps.mean()
         affinity_matrix = self.generate_afinity_matrix(patch_features)
 
-        out_ms = torch.from_numpy(out_ms).to(self.device)
-        out_ncuts = torch.from_numpy(out_ncuts).to(self.device)
-        score = torch.tensor(score).to(self.device)
-        out_pca = torch.from_numpy(out_pca).float().to(self.device)
-        pred_maps = torch.from_numpy(pred_maps).to(self.device)
-        affinity_matrix = affinity_matrix.to(self.device)
+        out_ms = torch.from_numpy(out_ms).to(self.device, dtype=torch.float32)
+        out_ncuts = torch.from_numpy(out_ncuts).to(self.device, dtype=torch.float32)
+        score = torch.tensor(score).to(self.device, dtype=torch.float32)
+        out_pca = torch.from_numpy(out_pca).float().to(self.device, dtype=torch.float32)
+        pred_maps = torch.from_numpy(pred_maps).to(self.device, dtype=torch.float32)
+        affinity_matrix = affinity_matrix.to(self.device, dtype=torch.float32)
+        detection = (
+            torch.tensor(float(torch.any(out_ncuts)))
+            .unsqueeze(0)
+            .to(self.device, dtype=torch.float32)
+        )
         return {
             "heatmap": out_ms,
             "mask": out_ncuts,
@@ -155,6 +160,7 @@ class EXIFAsLanguage(BaseMethod):
             "output_pca": out_pca,
             "affinity_matrix": affinity_matrix,
             "pred_maps": pred_maps,
+            "detection": detection,
         }
 
     def method_to_device(self, device: str):

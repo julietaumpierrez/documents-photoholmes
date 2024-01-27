@@ -62,22 +62,28 @@ def mean_shift(points_: NDArray, heat_map: NDArray, window: int, iter: int) -> N
         scipy.spatial.distance.cdist(points, points, metric="euclidean"), window
     )
     if eps_5 != 0:
-        for _ in range(iter):
-            for point_ind in range(points.shape[0]):
-                point = points[point_ind]
-                nearest_inds = kdt.query_ball_point(point, r=eps_5)
-                points[point_ind] = np.mean(points[nearest_inds], axis=0)
-        val = []
-        for i in range(points.shape[0]):
-            val.append(
-                kdt.count_neighbors(
-                    scipy.spatial.cKDTree(np.array([points[i]])), r=eps_5
-                )
+        try:
+            for _ in range(iter):
+                for point_ind in range(points.shape[0]):
+                    point = points[point_ind]
+                    nearest_inds = kdt.query_ball_point(point, r=eps_5)
+                    points[point_ind] = np.mean(points[nearest_inds], axis=0)
+            val = []
+            for i in range(points.shape[0]):
+                try:
+                    val.append(
+                        kdt.count_neighbors(
+                            scipy.spatial.cKDTree(np.array([points[i]])), r=eps_5
+                        )
+                    )
+                except ValueError:
+                    pass
+            ind = np.nonzero(val == np.max(val))
+            result = np.mean(points[ind[0]], axis=0).reshape(
+                heat_map.shape[0], heat_map.shape[1]
             )
-        ind = np.nonzero(val == np.max(val))
-        result = np.mean(points[ind[0]], axis=0).reshape(
-            heat_map.shape[0], heat_map.shape[1]
-        )
+        except:
+            result = np.zeros((heat_map.shape[0], heat_map.shape[1]))
     else:
         result = np.zeros((heat_map.shape[0], heat_map.shape[1]))
     return result
