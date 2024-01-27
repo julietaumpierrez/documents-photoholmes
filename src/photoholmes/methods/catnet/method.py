@@ -489,6 +489,8 @@ class CatNet(BaseTorchMethod):
         else:
             self.init_weights()
 
+        print(self.conv1.weight.device)
+
         self.eval()
 
     def load_model(self, arch_config: CatnetArchConfig):
@@ -760,7 +762,7 @@ class CatNet(BaseTorchMethod):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
         if os.path.isfile(pretrained_rgb):
-            loaded_dict = torch.load(pretrained_rgb)
+            loaded_dict = torch.load(pretrained_rgb,map_location=self.device)
             model_dict = self.state_dict()
             loaded_dict = {
                 k: v
@@ -777,7 +779,7 @@ class CatNet(BaseTorchMethod):
         else:
             logger.warning("=> Cannot load pretrained RGB")
         if os.path.isfile(pretrained_dct):
-            loaded_dict = torch.load(pretrained_dct)["state_dict"]
+            loaded_dict = torch.load(pretrained_dct,map_location=self.device)["state_dict"]
             model_dict = self.state_dict()
             loaded_dict = {
                 k: v for k, v in loaded_dict.items() if k in model_dict.keys()

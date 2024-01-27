@@ -86,9 +86,8 @@ class BaseTorchMethod(BaseMethod, Module):
 
     def load_weights(self, weights: Union[str, Path, dict]):
         if isinstance(weights, (str, Path)):
-            # trick to get current device
             weights_ = torch.load(
-                weights, map_location=next(self.parameters())[0].device
+                weights, map_location=self.device
             )
         else:
             weights_ = weights
@@ -96,4 +95,4 @@ class BaseTorchMethod(BaseMethod, Module):
         if "state_dict" in weights_.keys():
             weights_ = weights_["state_dict"]
 
-        self.load_state_dict(weights_)
+        self.load_state_dict(weights_, assign=True)
