@@ -82,7 +82,7 @@ def mean_shift(points_: NDArray, heat_map: NDArray, window: int, iter: int) -> N
             result = np.mean(points[ind[0]], axis=0).reshape(
                 heat_map.shape[0], heat_map.shape[1]
             )
-        except:
+        except ValueError:
             result = np.zeros((heat_map.shape[0], heat_map.shape[1]))
     else:
         result = np.zeros((heat_map.shape[0], heat_map.shape[1]))

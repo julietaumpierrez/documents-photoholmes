@@ -112,7 +112,7 @@ class Benchmark:
             output = None
             if self.use_existing_output:
                 output = self.check_for_existing_output(output_path, image_name)
-                if output ==-1:
+                if output == -1:
                     continue
 
             if output is None:
