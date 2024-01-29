@@ -112,6 +112,8 @@ class Benchmark:
             output = None
             if self.use_existing_output:
                 output = self.check_for_existing_output(output_path, image_name)
+                if output ==-1:
+                    continue
 
             if output is None:
                 data_on_device = self.move_to_device(data)
@@ -249,6 +251,8 @@ class Benchmark:
                 f"Output for image '{image_name}' already exists. "
                 f"Loading existing output."
             )
+            if not self.save_metrics_flag:
+                return -1
 
             prior_output = np.load(
                 os.path.join(output_path, image_name, "arrays.npz"),
