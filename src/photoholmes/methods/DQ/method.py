@@ -1,16 +1,12 @@
 from typing import Dict, List, Tuple
 
 import numpy as np
-import torch
 from numpy.typing import NDArray
 from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
+from photoholmes.methods.DQ.postprocessing import DQ_postprocessing
 from photoholmes.methods.DQ.utils import ZIGZAG, fft_period, histogram_period
-from photoholmes.postprocessing.resizing import (
-    resize_heatmap_with_trim_and_pad,
-    simple_upscale_heatmap,
-)
 
 
 class DQ(BaseMethod):
@@ -35,11 +31,10 @@ class DQ(BaseMethod):
             BPPM += self._calculate_BPPM_channel(
                 dct_coefficients[channel], ZIGZAG[: self.number_frecs]
             )
-        BPPM_norm = torch.from_numpy(BPPM / len(dct_coefficients))
-        BPPM_upsampled = simple_upscale_heatmap(BPPM_norm, 8)
-        BPPM_upsampled = resize_heatmap_with_trim_and_pad(
-            BPPM_upsampled, original_image_size
-        )
+        BPPM_norm = BPPM / len(dct_coefficients)
+
+        BPPM_upsampled = DQ_postprocessing(BPPM_norm, original_image_size)
+
         return {"heatmap": BPPM_upsampled}
 
     def _detect_period(self, histogram: NDArray) -> int:
