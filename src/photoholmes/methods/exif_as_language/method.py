@@ -10,11 +10,16 @@ from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
 from photoholmes.methods.exif_as_language.clip import ClipModel
+from photoholmes.methods.exif_as_language.postprocessing import (
+    exif_as_language_postprocessing,
+)
+from photoholmes.methods.exif_as_language.utils import (
+    cosine_similarity,
+    mean_shift,
+    normalized_cut,
+)
 from photoholmes.utils.patched_image import PatchedImage
 from photoholmes.utils.pca import PCA
-
-from .postprocessing import exif_as_language_postprocessing
-from .utils import cosine_similarity, mean_shift, normalized_cut
 
 
 # FIXME fix docstrings
