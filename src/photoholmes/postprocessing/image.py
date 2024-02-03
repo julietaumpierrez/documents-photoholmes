@@ -25,7 +25,7 @@ def to_tensor_dict(input_dict: Dict[str, Any]) -> Dict[str, Any]:
         elif isinstance(value, Image):
             output_dict[key] = torch.from_numpy(np.array(value)).float()
         elif isinstance(value, (int, float)):
-            output_dict[key] = torch.tensor(value).unsqueeze(0)
+            output_dict[key] = torch.tensor(value).unsqueeze(0).float()
         else:
             output_dict[key] = value
     return output_dict
