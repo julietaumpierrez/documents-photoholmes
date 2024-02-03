@@ -214,15 +214,15 @@ class GetImageSize(PreprocessingTransform):
 
 class RGBtoYCrCb(PreprocessingTransform):
     """
-    Converts an RGB image to grayscale.
+    Converts an RGB image to YCrCb.
 
     Args:
-        image: Image to be converted to grayscale.
+        image: Image to be converted to YCrCb.
         **kwargs: Additional keyword arguments to passthrough.
 
     Returns:
         A dictionary with the following key-value pairs:
-            - "image": The input image as a grayscale numpy array or PyTorch tensor.
+            - "image": The input image as a YCrCb PyTorch tensor.
             - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
