@@ -89,5 +89,9 @@ class MethodFactory:
                 from photoholmes.methods.trufor import TruFor, trufor_preprocessing
 
                 return TruFor.from_config(config), trufor_preprocessing
+            case MethodName.ZERO:
+                from photoholmes.methods.zero import Zero, zero_preprocessing
+
+                return Zero.from_config(config), zero_preprocessing
             case _:
                 raise NotImplementedError(f"Method '{method_name}' is not implemented.")

@@ -32,7 +32,7 @@ class BaseMethod(ABC):
         self.method_to_device(device)
 
     @abstractmethod
-    def predict(self, image: T) -> T:
+    def predict(self, image: T) -> Dict[str, Any]:
         """Predicts heatmap from an image."""
 
     def predict_mask(self, heatmap):
