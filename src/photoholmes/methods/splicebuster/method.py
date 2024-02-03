@@ -3,13 +3,12 @@ import warnings
 from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import numpy as np
-import torch
 from numpy.typing import NDArray
 from scipy.linalg import LinAlgWarning
 from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
-from photoholmes.postprocessing.resizing import upscale_mask
+from photoholmes.methods.splicebuster.postprocessing import postprocessing_splicebuster
 from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
 from photoholmes.utils.clustering.gaussian_uniform import GaussianUniformEM
 from photoholmes.utils.generic import load_yaml
@@ -249,9 +248,7 @@ class Splicebuster(BaseMethod):
 
         heatmap = labels.reshape(features.shape[:2])
 
-        heatmap = heatmap / np.max(labels)
-        heatmap = upscale_mask(coords, heatmap, (X, Y), method="linear", fill_value=0)
-        heatmap = torch.from_numpy(heatmap).float()
+        heatmap = postprocessing_splicebuster(heatmap, coords, X, Y)
 
         return {"heatmap": heatmap}
 
