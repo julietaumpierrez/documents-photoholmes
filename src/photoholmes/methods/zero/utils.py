@@ -19,14 +19,13 @@ def bin_prob(k: int, n: int, p: float) -> float:
 
 def binom_tail(ks: np.ndarray, n: int, p: float) -> np.ndarray:
     """
-    TODO: update docstring
-    TODO: integrate in general utils and noisesniffer
-    P(x >= np.floor(K/w**2)) where X~ Bin(np.ceil(N/w**2), m). If the precision
-    of scipy is not high enough, the computation is done using mpmath library
-    (see bin_prob function)
-    Input: K, N, w, m parameters of Binomial Tail according to the NFA formula of the
-    paper
-    Output: Binomial Tail
+    P(X >= k) where X~ Bin(n, p), for each k in ks.
+    Input:
+     - ks: array of k values.
+     - n: total amount of independent Bernoulli experiments.
+     - p: probability of success of each Bernoulli experiment.
+    Output:
+     - array of P(X >= k) for each k in ks.
     """
     cdf = binom.cdf(ks, n, p)
     if (cdf != 1).all():
@@ -40,7 +39,11 @@ def binom_tail(ks: np.ndarray, n: int, p: float) -> np.ndarray:
         return 1 - cdf
 
 
-def log_bin_tail(ks, n, p):
+def log_bin_tail(ks: np.ndarray, n: int, p: float) -> np.ndarray:
+    """
+    Computes the array of the logarithm of the binomial tail, for an array of k values,
+    and two fixed parameters n,p. Computes a light or high-precision version as needed.
+    """
     cdf = binom.cdf(ks, n, p)
     if (cdf != 1).all():
         return np.log10(1 - cdf)
@@ -55,5 +58,9 @@ def log_bin_tail(ks, n, p):
         return log_bin_tail
 
 
-def log_nfa(N_tests, ks, n, p):
+def log_nfa(N_tests: int, ks: np.ndarray, n: int, p: float) -> np.ndarray:
+    """
+    Computes the array of the logarithm of NFA for a given amount N_tests,
+     an array of k values, and two fixed parameters n,p.
+    """
     return np.log10(N_tests) + log_bin_tail(ks, n, p)

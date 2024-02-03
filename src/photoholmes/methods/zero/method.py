@@ -14,15 +14,15 @@ NO_VOTE = -1
 class Zero(BaseMethod):
     def __init__(self, **kwargs) -> None:
         """
-        Initialize the DQ class.
-
-        :param number_frecs: Number of frequencies, defaults to 10.
-        :param kwargs: Additional keyword arguments.
+        Initialize the Zero class.
         """
         super().__init__(**kwargs)
 
     def predict(self, image: np.ndarray) -> Dict[str, Any]:
-        """Applies the method over a YCrCb image."""
+        """
+        Applies the method over a YCrCb image.
+        Returns a dictionary with the predicted mask.
+        """
         luminance = image[..., 0]
         votes = self.compute_grid_votes_per_pixel(luminance)
         main_grid = self.detect_global_grids(votes)
@@ -33,8 +33,10 @@ class Zero(BaseMethod):
     def compute_grid_votes_per_pixel(self, luminance: np.ndarray) -> np.ndarray:
         """
         Compute the grid votes per pixel.
-        :param luminance: Luminance image.
-        :return: Grid votes per pixel.
+        Input:
+          - luminance: Luminance image.
+        Output:
+         - votes: Grid votes per pixel.
         """
         X, Y = luminance.shape
         zeros = np.zeros_like(luminance, dtype=np.int32)
@@ -66,7 +68,14 @@ class Zero(BaseMethod):
 
         return votes
 
-    def detect_global_grids(self, votes):
+    def detect_global_grids(self, votes: np.ndarray) -> int:
+        """
+        Detects the main detected grid.
+        Input:
+          - votes: Grid votes per pixel. Each pixel votes 1 of the 64 possible grids.
+        Output:
+          - most_voted_grid: Main detected grid.
+        """
         X, Y = votes.shape
         grid_votes = np.zeros(64)
         max_votes = 0
@@ -94,7 +103,15 @@ class Zero(BaseMethod):
 
         return most_voted_grid if grid_meaningful else NO_VOTE
 
-    def detect_forgeries(self, votes, grid_to_exclude):
+    def detect_forgeries(self, votes: np.ndarray, grid_to_exclude: int) -> np.ndarray:
+        """
+        Detects forgery mask from a grid votes map and a grid index to exclude.
+        Input:
+          - votes: Grid votes per pixel. Each pixel votes 1 of the 64 possible grids.
+          - grid_to_exclude: Grid index to exclude.
+        Output:
+            - forgery_mask: Forgery mask.
+        """
         W = 9
         grid_max = 63
         p = 1.0 / 64.0
