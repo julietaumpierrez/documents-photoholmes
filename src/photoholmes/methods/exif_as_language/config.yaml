@@ -8,5 +8,5 @@ device: cpu
 ms_window: 10
 ms_iter: 5
 pooling: mean
-state_dict_path: <path_to_weights>
+state_dict_path: weights/exif/pruned_weights.pth
 seed: 44
