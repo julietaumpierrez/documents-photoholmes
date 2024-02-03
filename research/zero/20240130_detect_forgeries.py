@@ -191,9 +191,6 @@ def log_nfa(N_tests, ks, n, p):
 
 
 def compare_arrays(true_array, estimated_array, threshold, array_name=""):
-    print("Arrays cercanos") if np.allclose(
-        true_array, estimated_array, atol=threshold
-    ) else print("Arrays distintos")
     print(
         f"{array_name}: Cantidad de elementos con distancia >{threshold}:",
         (np.abs(true_array - estimated_array) > threshold).sum(),
@@ -203,6 +200,9 @@ def compare_arrays(true_array, estimated_array, threshold, array_name=""):
         (np.abs(true_array - estimated_array)).max(),
     )
     print(true_array, estimated_array, true_array - estimated_array)
+    print("Arrays cercanos") if np.allclose(
+        true_array, estimated_array, atol=threshold
+    ) else print("Arrays distintos")
 
 
 def detect_global_grids(votes):
@@ -245,7 +245,6 @@ def detect_forgeries(votes, grid_to_exclude):
     p = 1.0 / 64.0
     X, Y = votes.shape
     N_tests = (64 * X * Y) ** 2
-    forgery_n = 0
     mask_aux = np.zeros_like(votes, dtype=int)
     used = np.full_like(votes, False)
     reg_x = np.zeros(votes.shape[0] * votes.shape[1], dtype=int)
@@ -269,90 +268,53 @@ def detect_forgeries(votes, grid_to_exclude):
                 and votes[y, x] >= 0
                 and votes[y, x] <= grid_max
             ):
-                reg_size = 0
                 grid = votes[y, x]
-                x0 = x
-                y0 = y
-                x1 = x
-                y1 = y
+                corner_0 = corner_1 = np.array([x, y])
                 used[y, x] = True
-                reg_x[reg_size] = x
-                reg_y[reg_size] = y
-                reg_size += 1
+                reg_x[0] = x
+                reg_y[0] = y
+                reg_size = 1
                 i = 0
-                # for i in range(reg_size):
+
                 while i < reg_size:
-                    for xx in range(reg_x[i] - W, reg_x[i] + W + 1):
-                        for yy in range(reg_y[i] - W, reg_y[i] + W + 1):
-                            if xx >= 0 and xx < X and yy >= 0 and yy < Y:
-                                # if (
-                                #     reg_size > 0
-                                #     and x == 7
-                                #     and y == 7
-                                #     and xx < 5
-                                #     and yy < 5
-                                # ):
-                                #     print(
-                                #         f"x: {x}, y: {y}, xx: {xx}, yy: {yy}, reg_size: {reg_size},  votes:{votes[yy, xx]},  grid:{votes[y, x]}, reg_x: {reg_x[:2]}"
-                                #     )
-                                if not used[yy, xx] and votes[yy, xx] == grid:
-                                    # if x % 100 == 0 and xx < 200 and reg_size > 1:
-                                    #     print(
-                                    #         f"x: {x}, y: {y}, xx: {xx}, yy: {yy}, reg_size: {reg_size},  votes:{votes[yy, xx]}"
-                                    #     )
-                                    # if x == 7 and y == 7:
-                                    #     print(
-                                    #         f"Region incr. x: {x}, y: {y}, xx: {xx}, yy: {yy}, reg_size: {reg_size},  votes:{votes[yy, xx]},  grid:{votes[y, x]}, reg_x: {reg_x[:2]}"
-                                    #     )
-                                    used[yy, xx] = True
-                                    reg_x[reg_size] = xx
-                                    reg_y[reg_size] = yy
-                                    reg_size += 1
-                                    if xx < x0:
-                                        x0 = xx
-                                    if yy < y0:
-                                        y0 = yy
-                                    if xx > x1:
-                                        x1 = xx
-                                    if yy > y1:
-                                        y1 = yy
+                    lower_xx = max(reg_x[i] - W, 0)
+                    higher_xx = min(reg_x[i] + W + 1, X)
+                    lower_yy = max(reg_y[i] - W, 0)
+                    higher_yy = min(reg_y[i] + W + 1, Y)
+                    for xx in range(lower_xx, higher_xx):
+                        for yy in range(lower_yy, higher_yy):
+                            if not used[yy, xx] and votes[yy, xx] == grid:
+                                used[yy, xx] = True
+                                reg_x[reg_size] = xx
+                                reg_y[reg_size] = yy
+                                reg_size += 1
+
+                                corner_0 = np.min(
+                                    np.vstack([corner_0, np.array([xx, yy])]),
+                                    axis=1,
+                                )
+                                corner_1 = np.max(
+                                    np.vstack([corner_0, np.array([xx, yy])]),
+                                    axis=1,
+                                )
                     i += 1
                 if reg_size >= min_size:
-                    n = int((x1 - x0 + 1) * (y1 - y0 + 1) // 64)
+                    n = int(
+                        (corner_1[0] - corner_0[0] + 1)
+                        * (corner_1[1] - corner_1[1] + 1)
+                        // 64
+                    )
                     k = int(reg_size // 64)
                     lnfa = log_nfa(N_tests, np.array([k]), n, p)[0]
                     if lnfa < 0.0:
-                        # foreign_regions[forgery_n].x0 = x0
-                        # foreign_regions[forgery_n].x1 = x1
-                        # foreign_regions[forgery_n].y0 = y0
-                        # foreign_regions[forgery_n].y1 = y1
-                        # foreign_regions[forgery_n].grid = grid
-                        # foreign_regions[forgery_n].lnfa = lnfa
-                        forgery_n += 1
-                        for i in range(reg_size):
-                            forgery_mask[reg_y[i], reg_x[i]] = 255
-    # for x in range(W, X - W):
-    #     for y in range(W, Y - W):
-    #         if forgery_mask[y, x] != 0:
-    #             for xx in range(x - W, x + W + 1):
-    #                 for yy in range(y - W, y + W + 1):
-    #                     mask_aux[yy, xx] = forgery_mask_reg[yy, xx] = 255
-    # for x in range(W, X - W):
-    #     for y in range(W, Y - W):
-    #         if mask_aux[y, x] == 0:
-    #             for xx in range(x - W, x + W + 1):
-    #                 for yy in range(y - W, y + W + 1):
-    #                     forgery_mask_reg[yy, xx] = 0
+                        idxs = np.array([reg_x[:reg_size], reg_y[:reg_size]]).T
+                        forgery_mask[idxs[:, 1], idxs[:, 0]] = 255
 
-    return forgery_mask  # , foreign_regions, forgery_mask_reg
+    return forgery_mask
 
 
 im = read_image(os.path.join(REPO_DIR, IMAGE))
 luminance = image_to_luminance(im)
-# votes = compute_grid_votes_per_pixel(luminance)
-# np.savetxt("data/debug/estimated_votes.csv", votes, delimiter=",")
-
-# main_grid = detect_global_grids(votes)
 main_grid = -1
 
 votes = np.loadtxt("data/debug/estimated_votes.csv", delimiter=",")
@@ -361,5 +323,5 @@ forgery_mask = detect_forgeries(votes, main_grid)
 
 true_forgery_mask = np.loadtxt("data/debug/true_forgery_mask.csv", delimiter=",")
 compare_arrays(true_forgery_mask, forgery_mask, 1e-1, "forgery_mask")
-
 plot_multiple([im, votes, true_forgery_mask, forgery_mask])
+assert (true_forgery_mask == forgery_mask).all(), "EL OUTPUT DEJÓ DE SER IGUAL"
