@@ -1,10 +1,10 @@
 from typing import Dict, Tuple
 
 import numpy as np
-import torch
 from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
+from photoholmes.postprocessing.image import to_tensor_dict
 
 
 class Naive(BaseMethod):
@@ -19,5 +19,4 @@ class Naive(BaseMethod):
     ) -> Dict[str, Tensor]:
         """Predicts masks from a list of images."""
         output = np.random.normal(0.5, self.sigma, size=original_image_size)
-        output = torch.from_numpy(output).float()
-        return {"heatmap": output}
+        return to_tensor_dict({"heatmap": output})
