@@ -25,17 +25,7 @@ from photoholmes.methods.catnet.config import (
     CatnetConfig,
     pretrained_arch,
 )
-from photoholmes.methods.catnet.hrnet_utils import (
-    BasicBlock,
-    blocks_dict,
-    make_layer,
-    make_stage,
-    make_transition_layer,
-)
-from photoholmes.postprocessing.resizing import (
-    resize_heatmap_with_trim_and_pad,
-    simple_upscale_heatmap,
-)
+from photoholmes.methods.catnet.postprocessing import catnet_postprocessing
 from photoholmes.utils.generic import load_yaml
 
 logger = logging.getLogger(__name__)
@@ -815,14 +805,9 @@ class CatNet(BaseTorchMethod):
         pred_tampered = pred[:, 1]
         pred_authentic = pred[:, 0]
 
-        # Original implementation simply upscales the heatmap to match the
-        # original image. We use a more sophisticated method to upscale the
-        # that "undos" the previous trimming.
-        pred_authentic = simple_upscale_heatmap(pred_authentic, 4)
-        pred_tampered = simple_upscale_heatmap(pred_tampered, 4)
-
-        pred_authentic = resize_heatmap_with_trim_and_pad(pred_authentic, image_size)
-        pred_tampered = resize_heatmap_with_trim_and_pad(pred_tampered, image_size)
+        pred_authentic, pred_tempered = catnet_postprocessing(
+            pred_authentic, pred_tempered, original_image_size
+        )
 
         if add_batch_dim:
             pred_tampered = pred_tampered.squeeze(0)
