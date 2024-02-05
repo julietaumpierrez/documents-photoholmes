@@ -36,7 +36,7 @@ method, pre = MethodFactory.load(method_name)
 dataset = SampleDataset(SAMPLE_PATH, transform=pre, filenames=FILENAMES)
 
 true_mks = [
-    np.loadtxt(os.path.join(SAMPLE_PATH, f"output_{f}.csv"), delimiter=",")
+    np.loadtxt(os.path.join(SAMPLE_PATH, f"output_{f}.csv"), delimiter=",") / 255
     for f in FILENAMES
 ]
 
@@ -48,6 +48,7 @@ for x in dataset:
     out = method.predict(**x)
     mask = out["mask"].numpy()
     mks.append(mask)
+    print(out["detection"])
 
 plot_multiple(ims + true_mks + mks, titles=FILENAMES * 3, ncols=4)
 
