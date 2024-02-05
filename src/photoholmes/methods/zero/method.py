@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.fftpack import dctn
 from torch import from_numpy
 
@@ -18,7 +19,7 @@ class Zero(BaseMethod):
         """
         super().__init__(**kwargs)
 
-    def predict(self, image: np.ndarray) -> Dict[str, Any]:
+    def predict(self, image: NDArray) -> Dict[str, Any]:
         """
         Applies the method over a YCrCb image.
         Returns a dictionary with the predicted mask.
@@ -27,10 +28,11 @@ class Zero(BaseMethod):
         votes = self.compute_grid_votes_per_pixel(luminance)
         main_grid = self.detect_global_grids(votes)
         forgery_mask = from_numpy(self.detect_forgeries(votes, main_grid))
+        detection = (forgery_mask == 1).any()
 
-        return {"mask": forgery_mask}
+        return {"mask": forgery_mask, "detection": detection}
 
-    def compute_grid_votes_per_pixel(self, luminance: np.ndarray) -> np.ndarray:
+    def compute_grid_votes_per_pixel(self, luminance: NDArray) -> NDArray:
         """
         Compute the grid votes per pixel.
         Input:
@@ -68,7 +70,7 @@ class Zero(BaseMethod):
 
         return votes
 
-    def detect_global_grids(self, votes: np.ndarray) -> int:
+    def detect_global_grids(self, votes: NDArray) -> int:
         """
         Detects the main detected grid.
         Input:
@@ -103,7 +105,7 @@ class Zero(BaseMethod):
 
         return most_voted_grid if grid_meaningful else NO_VOTE
 
-    def detect_forgeries(self, votes: np.ndarray, grid_to_exclude: int) -> np.ndarray:
+    def detect_forgeries(self, votes: NDArray, grid_to_exclude: int) -> NDArray:
         """
         Detects forgery mask from a grid votes map and a grid index to exclude.
         Input:
@@ -173,6 +175,6 @@ class Zero(BaseMethod):
                         lnfa = log_nfa(N_tests, np.array([k]), n, p)[0]
                         if lnfa < 0.0:
                             idxs = np.array([reg_x[:reg_size], reg_y[:reg_size]]).T
-                            forgery_mask[idxs[:, 1], idxs[:, 0]] = 255
+                            forgery_mask[idxs[:, 1], idxs[:, 0]] = 1
 
         return forgery_mask

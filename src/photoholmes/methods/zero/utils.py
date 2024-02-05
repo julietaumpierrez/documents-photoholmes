@@ -1,5 +1,6 @@
 import mpmath
 import numpy as np
+from numpy.typing import NDArray
 from scipy.stats import binom
 
 
@@ -17,7 +18,7 @@ def bin_prob(k: int, n: int, p: float) -> float:
     return bp
 
 
-def binom_tail(ks: np.ndarray, n: int, p: float) -> np.ndarray:
+def binom_tail(ks: np.ndarray, n: int, p: float) -> NDArray:
     """
     P(X >= k) where X~ Bin(n, p), for each k in ks.
     Input:
@@ -39,7 +40,7 @@ def binom_tail(ks: np.ndarray, n: int, p: float) -> np.ndarray:
         return 1 - cdf
 
 
-def log_bin_tail(ks: np.ndarray, n: int, p: float) -> np.ndarray:
+def log_bin_tail(ks: NDArray, n: int, p: float) -> NDArray:
     """
     Computes the array of the logarithm of the binomial tail, for an array of k values,
     and two fixed parameters n,p. Computes a light or high-precision version as needed.
@@ -58,7 +59,7 @@ def log_bin_tail(ks: np.ndarray, n: int, p: float) -> np.ndarray:
         return log_bin_tail
 
 
-def log_nfa(N_tests: int, ks: np.ndarray, n: int, p: float) -> np.ndarray:
+def log_nfa(N_tests: int, ks: NDArray, n: int, p: float) -> NDArray:
     """
     Computes the array of the logarithm of NFA for a given amount N_tests,
      an array of k values, and two fixed parameters n,p.
