@@ -40,20 +40,17 @@ class Zero(BaseMethod):
         Output:
          - votes: Grid votes per pixel.
         """
-        X, Y = luminance.shape
+        Y, X = luminance.shape
         zeros = np.zeros_like(luminance, dtype=np.int32)
         votes = np.zeros_like(luminance, dtype=np.int32)
 
-        const_along_x = np.all(
-            luminance[:, :, np.newaxis] == luminance[:, :1], axis=(1, 2)
-        )
-        const_along_y = np.all(
-            luminance[:, :, np.newaxis] == luminance[:1, :], axis=(1, 2)
-        )
-
         for x in range(X - 7):
             for y in range(Y - 7):
-                dct = dctn(luminance[y : y + 8, x : x + 8], type=2, norm="ortho")
+                block = luminance[y : y + 8, x : x + 8]
+                const_along_x = np.all(block[:, :] == block[:1, :])
+                const_along_y = np.all(block[:, :] == block[:, :1])
+
+                dct = dctn(block, type=2, norm="ortho")
                 z = (np.abs(dct) < 0.5).sum()
 
                 mask_zeros = z == zeros[y : y + 8, x : x + 8]
@@ -62,9 +59,7 @@ class Zero(BaseMethod):
                 votes[y : y + 8, x : x + 8][mask_zeros] = NO_VOTE
                 zeros[y : y + 8, x : x + 8][mask_greater] = z
                 votes[y : y + 8, x : x + 8][mask_greater] = (
-                    NO_VOTE
-                    if const_along_x[y] or const_along_y[x]
-                    else (x % 8) + (y % 8) * 8
+                    NO_VOTE if const_along_x or const_along_y else (x % 8) + (y % 8) * 8
                 )
         votes[:7, :] = votes[-7:, :] = votes[:, :7] = votes[:, -7:] = NO_VOTE
 
@@ -78,7 +73,7 @@ class Zero(BaseMethod):
         Output:
           - most_voted_grid: Main detected grid.
         """
-        X, Y = votes.shape
+        Y, X = votes.shape
         grid_votes = np.zeros(64)
         max_votes = 0
         most_voted_grid = NO_VOTE
@@ -117,7 +112,7 @@ class Zero(BaseMethod):
         W = 9
         grid_max = 63
         p = 1.0 / 64.0
-        X, Y = votes.shape
+        Y, X = votes.shape
         N_tests = (64 * X * Y) ** 2
 
         used = np.full_like(votes, False)
