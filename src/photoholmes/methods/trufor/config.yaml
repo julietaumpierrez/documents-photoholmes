@@ -7,7 +7,8 @@ bn_eps: 0.001
 bn_momentum: 0.01
 detection: confpool
 confidence: True
-mods: 
+mods:
   - NP++
   - RGB
-pretrained: <path_to_weigths>
+confidence_backbone: null
+weights: <path_to_weigths>

@@ -85,9 +85,7 @@ class BaseTorchMethod(BaseMethod, Module):
 
     def load_weights(self, weights: Union[str, Path, dict]):
         if isinstance(weights, (str, Path)):
-            weights_ = torch.load(
-                weights, map_location=self.device
-            )
+            weights_ = torch.load(weights, map_location=self.device)
         else:
             weights_ = weights
 
