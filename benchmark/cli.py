@@ -1,14 +1,19 @@
-from typing import List
+import logging
+from typing import Any, Dict, List, Literal
 
 import typer
+from pydantic import BaseModel
+from tqdm import tqdm
 
 from photoholmes.datasets.registry import DatasetName
 from photoholmes.methods.registry import MethodName
+from photoholmes.metrics.registry import MetricName
 from photoholmes.utils.generic import load_yaml
 
 # TODO: add a command to list the available methods, datasets and metrics
 # TODO: add documentation for the CLI
 app = typer.Typer()
+logger = logging.getLogger(__name__)
 
 
 def run_benchmark(
@@ -92,12 +97,76 @@ def main(
     )
 
 
+class DatasetSpec(BaseModel):
+    name: DatasetName
+    path: str
+    tampered_only: bool
+
+
+class BenchmarkConfig(BaseModel):
+    method_name: MethodName
+    method_config: Dict[str, Any]
+    datasets: List[DatasetSpec]
+    metrics: List[MetricName]
+    save_output: bool = True
+    save_metrics: bool = True
+    output_path: str = "output/"
+    device: Literal["cpu", "cuda", "mps"] = "cpu"
+    use_existing_output: bool = True
+    verbose: Literal[0, 1, 2] = 1
+
+
 @app.command("from_config")
 def run_from_config(
     config_path: str = typer.Argument(..., help="Path to the configuration file.")
 ):
-    config = load_yaml(config_path)
-    run_benchmark(**config)
+    bench_config = BenchmarkConfig(**load_yaml(config_path))
+
+    from photoholmes.benchmark.model import Benchmark
+    from photoholmes.datasets.dataset_factory import DatasetFactory
+    from photoholmes.methods.method_factory import MethodFactory
+    from photoholmes.metrics.metric_factory import MetricFactory
+
+    # Load method and preprocessing
+    method, preprocessing = MethodFactory.load(
+        method_name=bench_config.method_name,
+        config=bench_config.method_config,
+        device=bench_config.device,
+    )
+
+    # Load datasets
+    datasets = []
+    for d in tqdm(bench_config.datasets, desc="Setting up datasets"):
+        dataset = DatasetFactory.load(
+            dataset_name=d.name,
+            dataset_dir=d.path,
+            tampered_only=d.tampered_only,
+            transform=preprocessing,
+        )
+        if len(dataset) == 0:
+            logger.warning(f"Dataset {d.name} is empty.")
+            continue
+        datasets.append(dataset)
+
+    metrics_objects = MetricFactory.load(bench_config.metrics)
+
+    # Create Benchmark
+    benchmark = Benchmark(
+        save_output=bench_config.save_output,
+        save_metrics=bench_config.save_metrics,
+        output_path=bench_config.output_path,
+        device=bench_config.device,
+        use_existing_output=bench_config.use_existing_output,
+        verbose=bench_config.verbose,
+    )
+
+    # Run Benchmark
+    for dataset in datasets:
+        benchmark.run(
+            method=method,
+            dataset=dataset,
+            metrics=metrics_objects,
+        )
 
 
 if __name__ == "__main__":

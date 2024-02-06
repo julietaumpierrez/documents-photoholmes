@@ -5,7 +5,7 @@ Edited in September 2022
 """
 
 import logging
-from typing import Any, Dict, Literal, Optional, Type
+from typing import Any, Dict, Literal, Optional, Type, Union
 
 import torch
 import torch.nn as nn
@@ -18,6 +18,8 @@ from .config import PRETRAINED_CONFIG, TruForConfig
 from .models.DnCNN import ActivationOptions, make_net
 from .models.utils.init_func import init_weight
 from .models.utils.layer import weighted_statistics_pooling
+
+logger = logging.getLogger(__name__)
 
 
 def preprc_imagenet_torch(x):
@@ -36,7 +38,7 @@ def create_backbone(typ: Literal["mit_b2"], norm_layer: Type[nn.Module]):
     """
     channels = [64, 128, 320, 512]
     if typ == "mit_b2":
-        logging.info("Using backbone: Segformer-B2")
+        logger.info("Using backbone: Segformer-B2")
         from .models.cmx.encoders.dual_segformer import mit_b2 as backbone_
 
         backbone = backbone_(norm_fuse=norm_layer)
@@ -47,12 +49,20 @@ def create_backbone(typ: Literal["mit_b2"], norm_layer: Type[nn.Module]):
 
 class TruFor(BaseTorchMethod):
     def __init__(
-        self, cfg: TruForConfig = PRETRAINED_CONFIG, norm_layer=nn.BatchNorm2d, **kwargs
+        self,
+        cfg: Union[TruForConfig, Literal["pretrained"]] = "pretrained",
+        norm_layer=nn.BatchNorm2d,
+        device: str = "cpu",
+        **kwargs,
     ):
         super().__init__(**kwargs)
 
-        self.norm_layer = norm_layer
+        if cfg == "pretrained":
+            cfg = PRETRAINED_CONFIG
+
         self.cfg = cfg
+
+        self.norm_layer = norm_layer
         self.mods = cfg.mods
 
         # import backbone and decoder
@@ -66,7 +76,7 @@ class TruFor(BaseTorchMethod):
             self.confidence_backbone = None
 
         if self.cfg.decoder == "MLPDecoder":
-            logging.info("Using MLP Decoder")
+            logger.info("Using MLP Decoder")
             from .models.cmx.decoders.MLPDecoder import DecoderHead
 
             self.decode_head = DecoderHead(
@@ -147,13 +157,15 @@ class TruFor(BaseTorchMethod):
         else:
             assert False
 
-        if cfg.pretrained is not None:
-            self.load_weights(cfg.pretrained)
+        if cfg.weights is not None:
+            self.load_weights(cfg.weights)
         else:
+            logger.warn("No weight file provided. Initiralizing random weights.")
             self.init_weights()
 
+        self.method_to_device(device)
+
     def init_weights(self):
-        logging.info("Initing weights ...")
         init_weight(
             self.decode_head,
             nn.init.kaiming_normal_,
@@ -224,12 +236,17 @@ class TruFor(BaseTorchMethod):
             image = image.unsqueeze(0)
 
         with torch.no_grad():
-            out, conf, det, _ = self.forward(image)
+            out, conf, det, npp = self.forward(image)
 
         # select the map with the smallest sum (smallest anomaly area)
         sum_maps = torch.sum(out, dim=[-1, -2])
         heatmap = out[:, torch.argmin(sum_maps[0, :]), :, :]
-        return {"heatmap": heatmap, "confidence": conf, "detection": det}
+        return {
+            "heatmap": heatmap,
+            "confidence": conf,
+            "detection": det,
+            "noiseprint": npp,
+        }
 
     @classmethod
     def from_config(cls, config: Optional[str | Dict[str, Any]]):
@@ -237,10 +254,14 @@ class TruFor(BaseTorchMethod):
             config = load_yaml(config)
 
         if config is None:
-            trufor_config = PRETRAINED_CONFIG
+            trufor_config = TruForConfig()
         else:
             trufor_config = TruForConfig(**config)
 
         return cls(
             cfg=trufor_config,
         )
+
+    def method_to_device(self, device: str):
+        self.to(device)
+        self.device = torch.device(device)
