@@ -126,15 +126,24 @@ class Benchmark:
             if self.save_metrics_flag:
                 mask = mask.to("cpu")
                 if "detection" in output:
+                    if output["detection"].ndim == 2:
+                        output["detection"] = output["detection"].squeeze(0)
+
                     detection_gt = (
                         torch.tensor(int(torch.any(mask))).unsqueeze(0).to("cpu")
                     )
                     detection_metrics.update(output["detection"], detection_gt)
                     self.save_detection = True
                 if "mask" in output:
+                    if output["mask"].ndim == 3:
+                        output["mask"] = output["mask"].squeeze(0)
+
                     mask_metrics.update(output["mask"], mask)
                     self.save_mask = True
                 if "heatmap" in output:
+                    if output["heatmap"].ndim == 3:
+                        output["heatmap"] = output["heatmap"].squeeze(0)
+
                     heatmap_metrics.update(output["heatmap"], mask)
                     self.save_heatmap = True
 

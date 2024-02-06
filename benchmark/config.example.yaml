@@ -1,0 +1,29 @@
+method_name: catnet
+method_config:
+  arg1: ...
+  arg2: ...
+datasets:
+  - name: ...
+    path: ...
+    tampered_only: ...
+metrics:
+  - auroc
+  - fpr
+  - iou
+  - mcc
+  - precision
+  - roc
+  - tpr
+  - iou_weighted_v1
+  - f1_weighted_v1
+  - mcc_weighted_v1
+  - iou_weighted_v2
+  - f1_weighted_v2
+  - mcc_weighted_v2
+  - f1
+save_output: True
+save_metrics: True
+output_path: output/
+device: cpu
+use_existing_output: True
+verbose: 1
