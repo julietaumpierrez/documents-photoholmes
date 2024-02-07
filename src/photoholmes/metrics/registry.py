@@ -4,6 +4,7 @@ from enum import Enum, unique
 @unique
 class MetricName(Enum):
     AUROC = "auroc"
+    mAUROC = "mauroc"
     FPR = "fpr"
     IoU = "iou"
     MCC = "mcc"
