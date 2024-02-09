@@ -3,6 +3,7 @@ from typing import Any, Dict
 import numpy as np
 from numpy.typing import NDArray
 from scipy.fftpack import dctn
+from torch import any as torch_any
 from torch import from_numpy
 
 from photoholmes.methods.base import BaseMethod
@@ -21,14 +22,14 @@ class Zero(BaseMethod):
 
     def predict(self, image: NDArray) -> Dict[str, Any]:
         """
-        Applies the method over a YCrCb image.
+        Applies the method over an image's luminance (first cannel of input).
         Returns a dictionary with the predicted mask.
         """
         luminance = image[..., 0]
         votes = self.compute_grid_votes_per_pixel(luminance)
         main_grid = self.detect_global_grids(votes)
         forgery_mask = from_numpy(self.detect_forgeries(votes, main_grid))
-        detection = (forgery_mask == 1).any()
+        detection = torch_any(forgery_mask).float().unsqueeze(0)
 
         return {"mask": forgery_mask, "detection": detection}
 

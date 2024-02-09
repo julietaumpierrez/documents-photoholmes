@@ -1,6 +1,5 @@
-from typing import Any, Dict, Optional, Tuple, TypeVar, Union
+from typing import Dict, Optional, Tuple, TypeVar, Union
 
-import cv2 as cv
 import numpy as np
 import torch
 from numpy.typing import NDArray
@@ -174,6 +173,24 @@ class RGBtoGray(PreprocessingTransform):
             )
             image = image[..., np.newaxis]
         return {"image": image, **kwargs}
+
+
+class RoundToUInt(PreprocessingTransform):
+    """
+    Rounds the input float tensor and converts it to an unsigned integer.
+    Args:
+        image: Image to be converted to rounded into uint.
+        **kwargs: Additional keyword arguments to passthrough.
+
+    Returns:
+        A dictionary with the following key-value pairs:
+            - "image": The input image rounded as a PyTorch tensor.
+            - **kwargs: The additional keyword arguments passed through unchanged.
+    """
+
+    def __call__(self, image: Tensor, **kwargs) -> Dict[str, Tensor]:
+        rounded_image = torch.round(image).byte()
+        return {"image": rounded_image, **kwargs}
 
 
 class GrayToRGB(PreprocessingTransform):
