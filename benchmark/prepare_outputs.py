@@ -37,6 +37,9 @@ DATASET_TP_MAPPING = {
     "casia1copymoveosndataset": NeededEvals.TPOnly,
     "casia1splicingosndataset": NeededEvals.TPOnly,
     "realistictamperingdataset": NeededEvals.TPOnly,
+    "autosplice100dataset": NeededEvals.BOTH,
+    "autosplice90dataset": NeededEvals.TPOnly,
+    "autosplice75dataset": NeededEvals.TPOnly,
 }
 
 
@@ -83,7 +86,11 @@ def process_output_folder(method: str, output_dir: Path, upload_dir: Path):
         if d not in eval_datasets:
             logger.warning(f"Dataset {d} isn't part of the evaluation.")
             continue
+
         dataset_dir = output_dir / method / d / "metrics"
+        if not os.path.exists(dataset_dir):
+            logger.warning(f"Dataset {d} is missing the metrics folder.")
+            continue
 
         latest_reports = []
         needed_evals = eval_datasets.pop(d)
