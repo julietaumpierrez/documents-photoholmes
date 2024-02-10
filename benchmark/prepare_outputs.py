@@ -56,19 +56,21 @@ METHOD_OUTPUT_MAPPINGS = {
 }
 
 
-def check_evals(dataset: str, evals: List[str], needed_evals: NeededEvals):
+def check_evals(dataset: str, evals: List[str], needed_evals: NeededEvals, output: str):
     lastest_runs = []
     if needed_evals == NeededEvals.BOTH or needed_evals == NeededEvals.TPOnly:
         tampered_only = [e for e in evals if "tampered_only" in e]
         if len(tampered_only) == 0:
-            logger.warning(f"Missing tampered only evaluation for dataset {dataset}")
+            logger.warning(
+                f"Missing tampered only evaluation for {output} in dataset {dataset}"
+            )
         else:
             tampered_only.sort()
             lastest_runs.append(tampered_only[-1])
     if needed_evals == NeededEvals.BOTH or needed_evals == NeededEvals.TPandPT:
         complete_runs = [e for e in evals if "tampered_and_pristine" not in e]
         if len(complete_runs) == 0:
-            logger.warning(f"Missing full evaluation for dataset {dataset}")
+            logger.warning(f"Missing full evaluation for {output} in dataset {dataset}")
         else:
             complete_runs.sort()
             lastest_runs.append(complete_runs[-1])
@@ -98,7 +100,7 @@ def process_output_folder(method: str, output_dir: Path, upload_dir: Path):
             reports = [
                 f for f in os.listdir(dataset_dir) if f"{method_output}_report" in f
             ]
-            latest_reports.extend(check_evals(d, reports, needed_evals))
+            latest_reports.extend(check_evals(d, reports, needed_evals, method_output))
 
         os.makedirs(os.path.join(upload_dir, method, d), exist_ok=True)
         for report in latest_reports:
