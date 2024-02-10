@@ -26,8 +26,7 @@ DATASET_TP_MAPPING = {
     "tracecfaalgexodataset": NeededEvals.TPOnly,
     "tracecfaalgendodataset": NeededEvals.TPOnly,
     "tracecfagridendodataset": NeededEvals.TPOnly,
-    "tracecfagridexodataset": NeededEvals.TPOnly,
-    "tracehybridendodataset": NeededEvals.TPOnly,
+    "tracecfagridexodataset": NeededEvals.TPOnly, "tracehybridendodataset": NeededEvals.TPOnly,
     "tracehybridexodataset": NeededEvals.TPOnly,
     "tracejpeggridendodataset": NeededEvals.TPOnly,
     "tracejpeggridexodataset": NeededEvals.TPOnly,
@@ -69,7 +68,7 @@ def check_evals(dataset: str, evals: List[str], needed_evals: NeededEvals, outpu
             tampered_only.sort()
             lastest_runs.append(tampered_only[-1])
     if needed_evals == NeededEvals.BOTH or needed_evals == NeededEvals.TPandPT:
-        complete_runs = [e for e in evals if "tampered_and_pristine" not in e]
+        complete_runs = [e for e in evals if "tampered_and_pristine" in e]
         if len(complete_runs) == 0:
             logger.warning(f"Missing full evaluation for {output} in dataset {dataset}")
         else:
