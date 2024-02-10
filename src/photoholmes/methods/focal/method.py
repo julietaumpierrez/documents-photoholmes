@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -6,14 +6,17 @@ from torch.nn import functional as F
 from torch_kmeans import KMeans
 from torchvision.transforms.functional import resize
 
+from photoholmes.methods.base import BaseTorchMethod
+
 from .utils import load_weights
 
 
-class Focal(nn.Module):
+class Focal(BaseTorchMethod):
     def __init__(
         self,
         net_list: List[Literal["HRNet", "ViT"]],
         weights: List[Union[str, Dict[str, Any]]],
+        device: Optional[str] = "cpu",
     ):
         super().__init__()
 
@@ -37,6 +40,8 @@ class Focal(nn.Module):
                 self.network_list.append(net)
 
             self.clustering = KMeans()
+        self.device = torch.device(device)
+        self.method_to_device(device)
 
     def forward(self, x):
         Fo = self.network_list[0](x)
@@ -58,6 +63,8 @@ class Focal(nn.Module):
         return Fo
 
     def predict(self, image: torch.Tensor):
+        if len(image.shape) != 3:
+            raise ValueError("Input image should be of shape (C, H, W)")
         _, im_H, im_W = image.shape
 
         # FIXME don't want to add this as a preprocessing step
@@ -75,6 +82,10 @@ class Focal(nn.Module):
         if torch.sum(Lo) > torch.sum(1 - Lo):
             Lo = 1 - Lo
         Lo = Lo.view(H, W)
+        heatmap = resize(Lo.unsqueeze(0), [im_H, im_W]).squeeze(0)
 
-        print(Lo.shape, im_H, im_W)
-        return resize(Lo.unsqueeze(0), [im_H, im_W]).squeeze(0)
+        return {"heatmap": heatmap}
+
+    def method_to_device(self, device: str):
+        self.to(device)
+        self.device = torch.device(device)
