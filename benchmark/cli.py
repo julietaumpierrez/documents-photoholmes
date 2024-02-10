@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Any, Dict, List, Literal
 
 import typer
@@ -167,6 +168,17 @@ def run_from_config(
             dataset=dataset,
             metrics=metrics_objects,
         )
+
+
+@app.command("process_outputs")
+def process_output(
+    method: MethodName = typer.Argument(),
+    outputs_dir: Path = typer.Argument(),
+    upload_dir: Path = typer.Argument(),
+):
+    from prepare_outputs import process_output_folder
+
+    process_output_folder(method.value, outputs_dir, upload_dir)
 
 
 if __name__ == "__main__":
