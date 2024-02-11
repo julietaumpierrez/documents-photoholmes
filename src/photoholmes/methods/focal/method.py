@@ -43,7 +43,7 @@ class Focal(BaseTorchMethod):
         self.device = torch.device(device)
         self.method_to_device(device)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
         Fo = self.network_list[0](x)
         Fo = Fo.permute(0, 2, 3, 1)
 
