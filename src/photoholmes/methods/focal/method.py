@@ -39,7 +39,7 @@ class Focal(BaseTorchMethod):
 
                 self.network_list.append(net)
 
-            self.clustering = KMeans()
+            self.clustering = KMeans(verbose=False)
         self.device = torch.device(device)
         self.method_to_device(device)
 
@@ -82,9 +82,9 @@ class Focal(BaseTorchMethod):
         if torch.sum(Lo) > torch.sum(1 - Lo):
             Lo = 1 - Lo
         Lo = Lo.view(H, W)
-        heatmap = resize(Lo.unsqueeze(0), [im_H, im_W]).squeeze(0)
+        mask = resize(Lo.unsqueeze(0), [im_H, im_W]).squeeze(0).float()
 
-        return {"heatmap": heatmap}
+        return {"mask": mask}
 
     def method_to_device(self, device: str):
         self.to(device)
