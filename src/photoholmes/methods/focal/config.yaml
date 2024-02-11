@@ -1,4 +1,4 @@
-net_list : [ViT, HRNet]
+net_list: [ViT, HRNet]
 # weights : [<path_to_ViT_weigths, <path_to_HRNet_weigths>]
-weights : [weights/focal/ViT_weights.pth, weights/focal/HRNet_weights.pth]
-device : cpu
+device: cpu
+

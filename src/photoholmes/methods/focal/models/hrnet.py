@@ -8,15 +8,17 @@ from __future__ import absolute_import, division, print_function
 
 import logging
 import os
+from typing import List, Literal, Optional, Type, Union
 
 import torch
 import torch.nn as nn
+from torch import Tensor
 
 BN_MOMENTUM = 0.1
 logger = logging.getLogger(__name__)
 
 
-def conv3x3(in_planes, out_planes, stride=1):
+def conv3x3(in_planes: int, out_planes: int, stride: int = 1):
     """3x3 convolution with padding"""
     return nn.Conv2d(
         in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False
@@ -26,7 +28,13 @@ def conv3x3(in_planes, out_planes, stride=1):
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None):
+    def __init__(
+        self,
+        inplanes: int,
+        planes: int,
+        stride: int = 1,
+        downsample: Optional[nn.Module] = None,
+    ):
         super(BasicBlock, self).__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
@@ -36,7 +44,7 @@ class BasicBlock(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
-    def forward(self, x):
+    def forward(self, x: Tensor):
         residual = x
 
         out = self.conv1(x)
@@ -58,7 +66,13 @@ class BasicBlock(nn.Module):
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None):
+    def __init__(
+        self,
+        inplanes: int,
+        planes: int,
+        stride: int = 1,
+        downsample: Optional[nn.Module] = None,
+    ):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes, momentum=BN_MOMENTUM)
@@ -74,7 +88,7 @@ class Bottleneck(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
-    def forward(self, x):
+    def forward(self, x: Tensor):
         residual = x
 
         out = self.conv1(x)
@@ -100,13 +114,13 @@ class Bottleneck(nn.Module):
 class HighResolutionModule(nn.Module):
     def __init__(
         self,
-        num_branches,
-        blocks,
-        num_blocks,
-        num_inchannels,
-        num_channels,
-        fuse_method,
-        multi_scale_output=True,
+        num_branches: int,
+        blocks: Union[Type[BasicBlock], Type[Bottleneck]],
+        num_blocks: List[int],
+        num_inchannels: List[int],
+        num_channels: List[int],
+        fuse_method: Optional[Literal["SUM", "CAT"]],
+        multi_scale_output: bool = True,
     ):
         super(HighResolutionModule, self).__init__()
         self._check_branches(
@@ -126,7 +140,12 @@ class HighResolutionModule(nn.Module):
         self.relu = nn.ReLU(True)
 
     def _check_branches(
-        self, num_branches, blocks, num_blocks, num_inchannels, num_channels
+        self,
+        num_branches: int,
+        blocks,
+        num_blocks: List[int],
+        num_inchannels: List[int],
+        num_channels: List[int],
     ):
         if num_branches != len(num_blocks):
             error_msg = "NUM_BRANCHES({}) <> NUM_BLOCKS({})".format(
@@ -149,7 +168,14 @@ class HighResolutionModule(nn.Module):
             logger.error(error_msg)
             raise ValueError(error_msg)
 
-    def _make_one_branch(self, branch_index, block, num_blocks, num_channels, stride=1):
+    def _make_one_branch(
+        self,
+        branch_index: int,
+        block: Union[Type[BasicBlock], Type[Bottleneck]],
+        num_blocks: List[int],
+        num_channels: List[int],
+        stride=1,
+    ):
         downsample = None
         if (
             stride != 1
@@ -186,7 +212,13 @@ class HighResolutionModule(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _make_branches(self, num_branches, block, num_blocks, num_channels):
+    def _make_branches(
+        self,
+        num_branches: int,
+        block: Union[Type[BasicBlock], Type[Bottleneck]],
+        num_blocks: List[int],
+        num_channels: List[int],
+    ):
         branches = []
 
         for i in range(num_branches):
@@ -196,7 +228,7 @@ class HighResolutionModule(nn.Module):
 
     def _make_fuse_layers(self):
         if self.num_branches == 1:
-            return None
+            return list()
 
         num_branches = self.num_branches
         num_inchannels = self.num_inchannels
@@ -263,7 +295,7 @@ class HighResolutionModule(nn.Module):
     def get_num_inchannels(self):
         return self.num_inchannels
 
-    def forward(self, x):
+    def forward(self, x: Tensor):
         if self.num_branches == 1:
             return [self.branches[0](x[0])]
 
@@ -287,8 +319,10 @@ class HighResolutionModule(nn.Module):
 blocks_dict = {"BASIC": BasicBlock, "BOTTLENECK": Bottleneck}
 
 
+# TODO fix typing and evaluate mixing HRNET definition using catnet's and
+# focal
 class HRNet(nn.Module):
-    def __init__(self, extra_name="w32_extra"):
+    def __init__(self, extra_name: Literal["w32_extra", "w48_extra"] = "w32_extra"):
         self.inplanes = 64
         w32_extra = {
             "PRETRAINED_LAYERS": [
@@ -530,7 +564,7 @@ class HRNet(nn.Module):
 
         return nn.Sequential(*modules), num_inchannels
 
-    def forward(self, x):
+    def forward(self, x: Tensor):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
