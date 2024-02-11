@@ -9,14 +9,12 @@ if "research" in os.path.abspath("."):
 # %%
 from photoholmes.methods.focal import Focal, focal_preprocessing
 
-focal = Focal.from_config("src/photoholmes/methods/focal/config.yaml", "cuda")
+focal = Focal.from_config("weights/focal/config.yaml", "cpu")
 
 # %%
 from photoholmes.utils.image import read_image
 
-img = read_image(
-    "/home/pento/workspace/fing/datasets/minitrace/r0b3220e1t/noise_endo.png"
-)
+img = read_image("data/test-images/img00.png")
 img = focal_preprocessing(image=img)
 
 # %%
@@ -27,4 +25,6 @@ from matplotlib import pyplot as plt
 
 image = out["heatmap"]
 plt.imshow(image)
+# %%
+
 # %%
