@@ -1,6 +1,6 @@
 # FOCAL: Rethinking Image Forgery Detection via Contrastive Learning and Unsupervised Clustering
 
-This is the implementation of the [FOCAL](https://arxiv.org/pdf/2308.09307.pdf) paper. The original implementation could be found [here](https://github.com/HighwayWu/FOCAL/tree/main).
+This is the implementation of the [FOCAL](https://arxiv.org/pdf/2308.09307.pdf) paper. This paper is a preprint and may not have been peer-reviewed. The original implementation could be found [here](https://github.com/HighwayWu/FOCAL/tree/main).
 
 ## Description
 

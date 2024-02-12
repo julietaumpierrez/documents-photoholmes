@@ -1,4 +1,4 @@
 net_list: [ViT, HRNet]
-# weights : [<path_to_ViT_weigths, <path_to_HRNet_weigths>]
+weights : [<path_to_ViT_weigths, <path_to_HRNet_weigths>]
 device: cpu
 

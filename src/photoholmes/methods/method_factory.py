@@ -88,12 +88,11 @@ class MethodFactory:
             case MethodName.TRUFOR:
                 from photoholmes.methods.trufor import TruFor, trufor_preprocessing
 
-                return TruFor.from_config(config), trufor_preprocessing
+                return TruFor.from_config(config, device), trufor_preprocessing
             case MethodName.FOCAL:
                 from photoholmes.methods.focal import Focal, focal_preprocessing
 
                 return Focal.from_config(config, device), focal_preprocessing
-
             case MethodName.ZERO:
                 from photoholmes.methods.zero import Zero, zero_preprocessing
 
