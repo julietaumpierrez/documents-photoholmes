@@ -12,3 +12,4 @@ class MethodName(Enum):
     NOISESNIFFER = "noisesniffer"
     PSCCNET = "psccnet"
     TRUFOR = "trufor"
+    ZERO = "zero"

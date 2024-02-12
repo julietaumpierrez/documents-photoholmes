@@ -175,6 +175,24 @@ class RGBtoGray(PreprocessingTransform):
         return {"image": image, **kwargs}
 
 
+class RoundToUInt(PreprocessingTransform):
+    """
+    Rounds the input float tensor and converts it to an unsigned integer.
+    Args:
+        image: Image to be converted to rounded into uint.
+        **kwargs: Additional keyword arguments to passthrough.
+
+    Returns:
+        A dictionary with the following key-value pairs:
+            - "image": The input image rounded as a PyTorch tensor.
+            - **kwargs: The additional keyword arguments passed through unchanged.
+    """
+
+    def __call__(self, image: Tensor, **kwargs) -> Dict[str, Tensor]:
+        rounded_image = torch.round(image).byte()
+        return {"image": rounded_image, **kwargs}
+
+
 class GrayToRGB(PreprocessingTransform):
     """
     Converts an grayscale image to RGB
