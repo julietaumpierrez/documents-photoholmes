@@ -1,9 +1,12 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional, TypeVar
 
 import numpy as np
 import torch
+from numpy.typing import NDArray
 from PIL.Image import Image
 from torch import Tensor
+
+T = TypeVar("T", Tensor, NDArray)
 
 
 def to_tensor_dict(input_dict: Dict[str, Any]) -> Dict[str, Any]:
@@ -54,28 +57,28 @@ def to_numpy_dict(input_dict: Dict[str, Any]) -> Dict[str, Any]:
     return output_dict
 
 
-def zero_one_range(value: Any) -> Any:
+def zero_one_range(
+    value: T, min_value: Optional[float] = None, max_value: Optional[float] = None
+) -> T:
     """
     Rescales the input value to the range [0, 1].
 
     Args:
         value: Value to be rescaled.
+        min_value: Minimum value of the input tensor.
+            If None, the minimum value of the tensor is used.
+            Default: None
+        max_value: Maximum value of the input tensor.
+            If None, the maximum value of the tensor is used.
+            Default: None
+
 
     Returns:
         The rescaled value.
     """
-    if isinstance(value, Tensor):
-        if value.dtype == torch.uint8:
-            value = value.float() / 255
-        elif value.max() > 1:
-            value = value.float() / 255
-        elif value.max() < 1:
-            value = (value - value.min()) / (value.max() - value.min())
-    elif isinstance(value, np.ndarray):
-        if value.dtype == np.uint8:
-            value = value.astype(np.float32) / 255
-        elif value.max() > 1:
-            value = value.astype(np.float32) / 255
-        elif value.max() < 1:
-            value = (value - value.min()) / (value.max() - value.min())
+    if min_value is None:
+        min_value = value.min()
+    if max_value is None:
+        max_value = value.max()
+    value = (value - min_value) / (max_value - min_value)
     return value
