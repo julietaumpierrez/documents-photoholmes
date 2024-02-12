@@ -27,5 +27,4 @@ class mAuroc(Metric):
         self.total += 1
 
     def compute(self):
-        print(self.aurocs)
         return self.auroc / self.total
