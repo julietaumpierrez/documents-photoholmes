@@ -11,3 +11,4 @@ imageio
 scikit_image
 mpmath
 typer
+pydantic
