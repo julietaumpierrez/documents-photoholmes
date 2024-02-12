@@ -49,14 +49,14 @@ def log_bin_tail(ks: NDArray, n: int, p: float) -> NDArray:
     if (cdf != 1).all():
         return np.log10(1 - cdf)
     else:
-        bin_tail = np.empty_like(ks)
+        log_bin_tail_array = np.empty_like(ks, dtype=float)
         for i, k in enumerate(ks):
-            bin_tail[i] = mpmath.nsum(
-                lambda x: bin_prob(x, n, p), [int(k), int(k) + 50]
+            bin_tail = mpmath.nsum(lambda x: bin_prob(x, n, p), [int(k), int(k) + 50])
+            log_bin_tail_array[i] = (
+                mpmath.log(bin_tail, 10) if bin_tail > 0 else -np.inf
             )
-        log_bin_tail = np.log10(bin_tail)
 
-        return log_bin_tail
+        return log_bin_tail_array
 
 
 def log_nfa(N_tests: int, ks: NDArray, n: int, p: float) -> NDArray:

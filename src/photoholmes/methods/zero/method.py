@@ -10,14 +10,13 @@ from photoholmes.methods.base import BaseMethod
 
 from .utils import log_nfa
 
-NO_VOTE = -1
-
 
 class Zero(BaseMethod):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, no_vote: int = -1, **kwargs) -> None:
         """
         Initialize the Zero class.
         """
+        self.no_vote = no_vote
         super().__init__(**kwargs)
 
     def predict(self, image: NDArray) -> Dict[str, Any]:
@@ -57,12 +56,14 @@ class Zero(BaseMethod):
                 mask_zeros = z == zeros[y : y + 8, x : x + 8]
                 mask_greater = z > zeros[y : y + 8, x : x + 8]
 
-                votes[y : y + 8, x : x + 8][mask_zeros] = NO_VOTE
+                votes[y : y + 8, x : x + 8][mask_zeros] = self.no_vote
                 zeros[y : y + 8, x : x + 8][mask_greater] = z
                 votes[y : y + 8, x : x + 8][mask_greater] = (
-                    NO_VOTE if const_along_x or const_along_y else (x % 8) + (y % 8) * 8
+                    self.no_vote
+                    if const_along_x or const_along_y
+                    else (x % 8) + (y % 8) * 8
                 )
-        votes[:7, :] = votes[-7:, :] = votes[:, :7] = votes[:, -7:] = NO_VOTE
+        votes[:7, :] = votes[-7:, :] = votes[:, :7] = votes[:, -7:] = self.no_vote
 
         return votes
 
@@ -77,7 +78,7 @@ class Zero(BaseMethod):
         Y, X = votes.shape
         grid_votes = np.zeros(64)
         max_votes = 0
-        most_voted_grid = NO_VOTE
+        most_voted_grid = self.no_vote
         p = 1.0 / 64.0
         for x in range(X):
             for y in range(Y):
@@ -99,7 +100,7 @@ class Zero(BaseMethod):
             and lnfa_grids[most_voted_grid] < 0.0
         )
 
-        return most_voted_grid if grid_meaningful else NO_VOTE
+        return most_voted_grid if grid_meaningful else self.no_vote
 
     def detect_forgeries(self, votes: NDArray, grid_to_exclude: int) -> NDArray:
         """
@@ -173,4 +174,4 @@ class Zero(BaseMethod):
                             idxs = np.array([reg_x[:reg_size], reg_y[:reg_size]]).T
                             forgery_mask[idxs[:, 1], idxs[:, 0]] = 1
 
-        return forgery_mask
+        return forgery_mask.astype(float)
