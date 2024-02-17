@@ -249,7 +249,9 @@ class TruFor(BaseTorchMethod):
         }
 
     @classmethod
-    def from_config(cls, config: Optional[str | Dict[str, Any]]):
+    def from_config(
+        cls, config: Optional[str | Dict[str, Any]], device: Optional[str] = "cpu"
+    ):
         if isinstance(config, str):
             config = load_yaml(config)
 
@@ -258,9 +260,8 @@ class TruFor(BaseTorchMethod):
         else:
             trufor_config = TruForConfig(**config)
 
-        return cls(
-            cfg=trufor_config,
-        )
+        # FIXME typing issue with device. Why is it optional in from config?
+        return cls(cfg=trufor_config, device=device)
 
     def method_to_device(self, device: str):
         self.to(device)

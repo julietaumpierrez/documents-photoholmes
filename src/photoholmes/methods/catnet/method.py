@@ -144,7 +144,7 @@ class HighResolutionModule(nn.Module):
         num_channels: List[int],
         fuse_method: Optional[Literal["SUM", "CAT"]],
         bn_momentum: float = 0.01,
-        multi_scale_output=True,
+        multi_scale_output: bool = True,
     ):
         super(HighResolutionModule, self).__init__()
         self._check_branches(num_branches, num_blocks, num_inchannels, num_channels)
