@@ -1,9 +1,10 @@
 from photoholmes.preprocessing import PreProcessingPipeline
-from photoholmes.preprocessing.image import GrayToRGB, Normalize
+from photoholmes.preprocessing.image import GrayToRGB, Normalize, ZeroOneRange
 from photoholmes.preprocessing.input import InputSelection
 
 exif_preprocessing = PreProcessingPipeline(
     [
+        ZeroOneRange(),
         GrayToRGB(),
         Normalize(
             # We don't know were they got this value, an issue was
