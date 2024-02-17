@@ -119,6 +119,18 @@ class DatasetFactory:
                     mask_transform=mask_transform,
                     tampered_only=tampered_only,
                 )
+            case DatasetName.REALISTIC_TAMPERING_WEBP:
+                from photoholmes.datasets.realistic_tampering_webp import (
+                    RealisticTamperingWebPDataset,
+                )
+
+                return RealisticTamperingWebPDataset(
+                    img_dir=dataset_dir,
+                    item_data=item_data,
+                    transform=transform,
+                    mask_transform=mask_transform,
+                    tampered_only=tampered_only,
+                )
 
             case DatasetName.DSO1:
                 from photoholmes.datasets.dso1 import DSO1Dataset
