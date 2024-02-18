@@ -238,9 +238,9 @@ class TruFor(BaseTorchMethod):
         with torch.no_grad():
             out, conf, det, npp = self.forward(image)
 
-        # select the map with the smallest sum (smallest anomaly area)
-        sum_maps = torch.sum(out, dim=[-1, -2])
-        heatmap = out[:, torch.argmin(sum_maps[0, :]), :, :]
+        pred = torch.squeeze(out, 0)
+        heatmap = F.softmax(pred, dim=0)[1]
+
         return {
             "heatmap": heatmap,
             "confidence": conf,
