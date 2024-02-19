@@ -52,15 +52,26 @@ def encode_matrix(
     base = 2 * T + 1
     max_value = (2 * T + 1) ** c - 1
 
+    left_index = c // 2
     if axis == 0:
         for i, b in enumerate(range(c)):
-            encoded_matrix[0] += base**b * X[:-c, i : coded_shape[1] + i]
-            encoded_matrix[1] += base ** (c - 1 - b) * X[:-c, i : coded_shape[1] + i]
+            encoded_matrix[0] += (
+                base**b * X[left_index : -c + left_index, i : coded_shape[1] + i]
+            )
+            encoded_matrix[1] += (
+                base ** (c - 1 - b)
+                * X[left_index : -c + left_index, i : coded_shape[1] + i]
+            )
 
     elif axis == 1:
         for i, b in enumerate(range(c)):
-            encoded_matrix[0] += base**b * X[i : coded_shape[0] + i, :-c]
-            encoded_matrix[1] += base ** (c - 1 - b) * X[i : coded_shape[0] + i, :-c]
+            encoded_matrix[0] += (
+                base**b * X[i : coded_shape[0] + i, left_index : -c + left_index]
+            )
+            encoded_matrix[1] += (
+                base ** (c - 1 - b)
+                * X[i : coded_shape[0] + i, left_index : -c + left_index]
+            )
 
     reduced = np.minimum(encoded_matrix[0], encoded_matrix[1])
     reduced = np.minimum(reduced, max_value - encoded_matrix[0])

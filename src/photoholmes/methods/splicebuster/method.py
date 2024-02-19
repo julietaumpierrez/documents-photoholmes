@@ -34,6 +34,7 @@ class Splicebuster(BaseMethod):
         stride: int = 8,
         q: int = 2,
         T: int = 1,
+        saturation_prob: float = 0.85,
         pca_dim: int = 25,
         mixture: Literal["uniform", "gaussian"] = "uniform",
         weights: Union[WeightConfig, Literal["original"], None] = None,
@@ -57,6 +58,7 @@ class Splicebuster(BaseMethod):
         self.stride = stride
         self.q = q
         self.T = T
+        self.saturation_prob = saturation_prob
         self.pca_dim = pca_dim
 
         self.weight_params: Optional[WeightConfig]
@@ -91,7 +93,7 @@ class Splicebuster(BaseMethod):
         qvh: NDArray[np.int64],
         qvv: NDArray[np.int64],
         mask: Optional[NDArray] = None,
-    ) -> Tuple[NDArray, int, Tuple[NDArray, NDArray]]:
+    ) -> Tuple[NDArray, NDArray, int, Tuple[NDArray, NDArray]]:
         """
         Efficiently compute histograms for stride x stride blocks.
         """
@@ -107,9 +109,15 @@ class Splicebuster(BaseMethod):
         feat_dim = int(2 * n_bins)
         features = np.zeros((len(x_range), len(y_range), feat_dim))
 
+        weights = np.zeros((len(x_range), len(y_range)))
+
         for x_i, i in enumerate(x_range):
             for x_j, j in enumerate(y_range):
                 block_weights = mask[i : i + self.stride, j : j + self.stride]
+                weights[x_i, x_j] = np.sum(block_weights)
+
+                if weights[x_i, x_j] == 0:
+                    continue
 
                 Hhh = np.histogram(
                     qhh[i : i + self.stride, j : j + self.stride],
@@ -117,12 +125,12 @@ class Splicebuster(BaseMethod):
                     weights=block_weights,
                 )[0].astype(float)
                 Hvv = np.histogram(
-                    qhv[i : i + self.stride, j : j + self.stride],
+                    qvv[i : i + self.stride, j : j + self.stride],
                     bins=bins,
                     weights=block_weights,
                 )[0].astype(float)
                 Hhv = np.histogram(
-                    qvh[i : i + self.stride, j : j + self.stride],
+                    qhv[i : i + self.stride, j : j + self.stride],
                     bins=bins,
                     weights=block_weights,
                 )[0].astype(float)
@@ -132,9 +140,11 @@ class Splicebuster(BaseMethod):
                     weights=block_weights,
                 )[0].astype(float)
 
-                features[x_i, x_j] = np.concatenate((Hhh + Hvv, Hhv + Hvh)) / 2
+                features[x_i, x_j] = np.concatenate((Hhh + Hvv, Hhv + Hvh))
 
-        return features, feat_dim, (np.array(x_range), np.array(y_range))
+        weights /= self.stride**2
+
+        return features, weights, feat_dim, (np.array(x_range), np.array(y_range))
 
     def correct_coords(
         self, coords: Tuple[NDArray, NDArray]
@@ -162,7 +172,7 @@ class Splicebuster(BaseMethod):
 
     def compute_features(
         self, image: NDArray
-    ) -> Tuple[NDArray, Tuple[NDArray, NDArray]]:
+    ) -> Tuple[NDArray, NDArray, Tuple[NDArray, NDArray]]:
         qhh, qhv, qvh, qvv = self.filter_and_encode(image)
 
         if self.weight_params is not None:
@@ -173,12 +183,14 @@ class Splicebuster(BaseMethod):
                 self.weight_params.opening_kernel_radius,
                 self.weight_params.dilation_kernel_size,
             )
-            mask = mask[2:-5, 2:-5]
-            features, feat_dim, coords = self.compute_histograms(
+            mask = mask[4:-4, 4:-4]
+            features, weights, feat_dim, coords = self.compute_histograms(
                 qhh, qhv, qvh, qvv, mask
             )
         else:
-            features, feat_dim, coords = self.compute_histograms(qhh, qhv, qvh, qvv)
+            features, weights, feat_dim, coords = self.compute_histograms(
+                qhh, qhv, qvh, qvv
+            )
 
         strides_x_block = self.block_size // self.stride
         block_features = np.zeros(
@@ -188,19 +200,28 @@ class Splicebuster(BaseMethod):
                 feat_dim,
             )
         )
+        block_weights = np.zeros(
+            (
+                features.shape[0] - strides_x_block + 1,
+                features.shape[1] - strides_x_block + 1,
+            )
+        )
         for i in range(block_features.shape[0]):
             for j in range(block_features.shape[1]):
+                block_weights[i, j] = weights[
+                    i : i + strides_x_block, j : j + strides_x_block
+                ].sum(axis=(0, 1))
                 block_features[i, j] = features[
                     i : i + strides_x_block, j : j + strides_x_block
                 ].sum(axis=(0, 1))
-                block_features[i, j] /= max(np.sum(block_features[i, j]), 1e-20)
+                block_features[i, j] /= max(np.sum(block_weights[i, j]), 1e-20)
 
         coords = self.correct_coords(coords)
 
         if self.pca_dim > 0:
             block_features = np.sqrt(block_features)
 
-        return block_features, coords
+        return block_features, block_weights, coords
 
     def predict(self, image: NDArray) -> Dict[str, Tensor]:
         """Run splicebuster on an image.
@@ -213,12 +234,16 @@ class Splicebuster(BaseMethod):
             image = image[:, :, 0]
         X, Y = image.shape[:2]
 
-        features, coords = self.compute_features(image)
+        features, weights, coords = self.compute_features(image)
+
+        valid = weights >= self.saturation_prob
         flat_features = features.reshape(-1, features.shape[-1])
+        valid_features = flat_features[valid.flatten()]
 
         if self.pca_dim > 0:
             pca = PCA(n_components=self.pca_dim)
-            flat_features = pca.fit_transform(flat_features)
+            flat_features = pca.fit_transform(valid_features)
+
         if self.mixture == "gaussian":
             try:
                 gg_mixt = GaussianMixture()
