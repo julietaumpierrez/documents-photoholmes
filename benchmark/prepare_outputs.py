@@ -37,7 +37,7 @@ DATASET_TP_MAPPING = {
     "casia1copymoveosndataset": NeededEvals.TPOnly,
     "casia1splicingosndataset": NeededEvals.TPOnly,
     "realistictamperingdataset": NeededEvals.TPandPT,
-    "realistictamperingdatasetwebp": NeededEvals.TPandPT,
+    "realistictamperingwebpdataset": NeededEvals.TPandPT,
     "autosplice100dataset": NeededEvals.BOTH,
     "autosplice90dataset": NeededEvals.TPOnly,
     "autosplice75dataset": NeededEvals.TPOnly,
