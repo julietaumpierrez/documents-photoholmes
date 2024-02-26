@@ -3,7 +3,7 @@ from typing import Any, Dict, Union
 import torch
 
 from photoholmes.postprocessing.device import to_device_dict
-from photoholmes.postprocessing.image import to_tensor_dict, zero_one_range
+from photoholmes.postprocessing.image import to_tensor_dict
 
 
 def exif_as_language_postprocessing(
@@ -19,11 +19,7 @@ def exif_as_language_postprocessing(
     Returns:
         A dictionary with the postprocessed output.
     """
-
-    output_dict = to_device_dict(input_dict, device)
-    output_dict["heatmap"] = (
-        zero_one_range(output_dict["heatmap"]) * output_dict["detection"]
-    )
-    output_dict = to_tensor_dict(output_dict)
+    output_dict = to_tensor_dict(input_dict)
+    output_dict = to_device_dict(output_dict, device)
 
     return output_dict
