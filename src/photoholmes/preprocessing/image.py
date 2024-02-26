@@ -192,3 +192,20 @@ class GrayToRGB(PreprocessingTransform):
             elif image.shape[2] == 1:
                 image = np.repeat(image, 3, axis=2)
         return {"image": image, **kwargs}
+
+
+class GetImageSize(PreprocessingTransform):
+    """
+    Get the size of the image
+    """
+
+    def __call__(self, image: T, **kwargs):
+        if isinstance(image, Tensor):
+            size = tuple(image.shape[1:])
+        elif isinstance(image, np.ndarray):
+            size = image.shape[:2]
+        elif isinstance(image, Image):
+            size = image.size
+        else:
+            raise ValueError(f"Image type not supported: {type(image)}")
+        return {"image_size": size, **kwargs}
