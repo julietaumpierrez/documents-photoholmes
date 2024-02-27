@@ -21,31 +21,17 @@ T = TypeVar("T", NDArray, Tensor)
 class BaseMethod(ABC):
     """Abstract class as a base for the methods"""
 
+    device: torch.device
+
     @abstractmethod
-    def __init__(self, threshold: float = 0.5, device: str = "cpu") -> None:
-        """Initialization.
-        he heatmap theshold value sets the default parameter for converting
-        predicted heatmaps to masks in the "predict_mask" method.
-        """
-        self.threshold = threshold
-        self.device = torch.device(device)
+    def __init__(self) -> None:
+        self.device = torch.device("cpu")
 
     @abstractmethod
     def predict(self, image: T) -> Dict[str, Any]:
-        """Predicts heatmap from an image."""
-
-    def predict_mask(self, heatmap):
-        """Default strategy for mask prediction from the 'predict' (heatmap predicting)
-        method.
-        This method can be overriden for smarter post-processing algorythms,
-            but should always use 'self.theshold' for metric evaluation purposes.
         """
-        return heatmap > self.threshold
-
-    @property
-    def name(self):
-        class_name = str(type(self)).split(".")[-1]
-        return class_name[:-2]
+        Runs method on an image.
+        """
 
     @classmethod
     def from_config(cls, config: Optional[str | Dict[str, Any]]):
@@ -64,7 +50,7 @@ class BaseMethod(ABC):
 
         return cls(**config)
 
-    def method_to_device(self, device: Union[str, torch.device]):
+    def to_device(self, device: Union[str, torch.device]):
         """Send the model to the device."""
         log.warning(
             f"Device wanted to be set to: `{device}`. "
@@ -75,9 +61,9 @@ class BaseMethod(ABC):
 
 
 class BaseTorchMethod(BaseMethod, Module):
-    def __init__(self, threshold: float = 0.5, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         Module.__init__(self, *args, **kwargs)
-        BaseMethod.__init__(self, threshold=threshold)
+        BaseMethod.__init__(self)
 
     def load_weights(self, weights: Union[str, Path, dict]):
         if isinstance(weights, (str, Path)):
@@ -88,4 +74,10 @@ class BaseTorchMethod(BaseMethod, Module):
         if "state_dict" in weights_.keys():
             weights_ = weights_["state_dict"]
 
-        self.load_state_dict(weights_, assign=True)
+        self.load_state_dict(
+            weights_, assign=True
+        )  # FIXME: asign limits torch version to >=2.1
+
+    def to_device(self, device: Union[str, torch.device]):
+        self.to(self.device)
+        self.device = torch.device(device)
