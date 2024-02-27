@@ -10,10 +10,16 @@ from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
 from photoholmes.methods.exif_as_language.clip import ClipModel
+from photoholmes.methods.exif_as_language.postprocessing import (
+    exif_as_language_postprocessing,
+)
+from photoholmes.methods.exif_as_language.utils import (
+    cosine_similarity,
+    mean_shift,
+    normalized_cut,
+)
 from photoholmes.utils.patched_image import PatchedImage
 from photoholmes.utils.pca import PCA
-
-from .utils import cosine_similarity, mean_shift, normalized_cut
 
 
 # FIXME fix docstrings
@@ -142,18 +148,9 @@ class EXIFAsLanguage(BaseMethod):
         score = pred_maps.mean()
         affinity_matrix = self.generate_afinity_matrix(patch_features)
 
-        out_ms = torch.from_numpy(out_ms).to(self.device, dtype=torch.float32)
-        out_ncuts = torch.from_numpy(out_ncuts).to(self.device, dtype=torch.float32)
-        score = torch.tensor(score).to(self.device, dtype=torch.float32)
-        out_pca = torch.from_numpy(out_pca).float().to(self.device, dtype=torch.float32)
-        pred_maps = torch.from_numpy(pred_maps).to(self.device, dtype=torch.float32)
-        affinity_matrix = affinity_matrix.to(self.device, dtype=torch.float32)
-        detection = (
-            torch.tensor(float(torch.any(out_ncuts)))
-            .unsqueeze(0)
-            .to(self.device, dtype=torch.float32)
-        )
-        return {
+        detection = float(np.any(out_ncuts))
+
+        output_dict = {
             "heatmap": out_ms,
             "mask": out_ncuts,
             "score": score,
@@ -162,6 +159,7 @@ class EXIFAsLanguage(BaseMethod):
             "pred_maps": pred_maps,
             "detection": detection,
         }
+        return exif_as_language_postprocessing(output_dict, self.device)
 
     def method_to_device(self, device: str):
         """Move method to device"""

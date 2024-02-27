@@ -4,12 +4,12 @@
 from typing import Dict, List, Tuple
 
 import numpy as np
-import torch
 from numpy.typing import NDArray
 from skimage.util import view_as_windows
 from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
+from photoholmes.postprocessing.image import to_tensor_dict
 
 from .utils import (
     all_image_means,
@@ -134,7 +134,6 @@ class Noisesniffer(BaseMethod):
             S = np.concatenate((S, S_ch))
 
         mask, img_paint = compute_output(image, self.w, self.W, self.m, V, S)
-        detection = torch.tensor(float(np.any(mask))).unsqueeze(0)
-        mask = torch.from_numpy(mask)
-        img_paint = torch.from_numpy(img_paint)
-        return {"mask": mask, "detection": detection, "img_paint": img_paint}
+        detection = float(np.any(mask))
+        output = {"mask": mask, "detection": detection, "img_paint": img_paint}
+        return to_tensor_dict(output)
