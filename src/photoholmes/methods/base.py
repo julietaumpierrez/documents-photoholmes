@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, Optional, TypeVar, Union
+from typing import Any, Dict, Optional, TypedDict, TypeVar, Union
 
 import torch
 from numpy.typing import NDArray
@@ -18,19 +18,31 @@ log.setLevel(logging.INFO)
 T = TypeVar("T", NDArray, Tensor)
 
 
+class BenchmarkOutput(TypedDict):
+    heatmap: Tensor
+    mask: Tensor
+    detection: Tensor
+
+
 class BaseMethod(ABC):
     """Abstract class as a base for the methods"""
 
     device: torch.device
 
-    @abstractmethod
     def __init__(self) -> None:
         self.device = torch.device("cpu")
 
-    @abstractmethod
-    def predict(self, image: T) -> Dict[str, Any]:
+    def predict(self, *args, **kwargs) -> Any:
         """
         Runs method on an image.
+        """
+        raise NotImplementedError("Method `predict` not implemented")
+
+    @abstractmethod
+    def benchmark(self, *args, **kwargs) -> BenchmarkOutput:
+        """
+        Runs method on an image and returns the output in the benchmark
+        format.
         """
 
     @classmethod
@@ -52,12 +64,12 @@ class BaseMethod(ABC):
 
     def to_device(self, device: Union[str, torch.device]):
         """Send the model to the device."""
-        log.warning(
-            f"Device wanted to be set to: `{device}`. "
-            "Model does not implement 'model_to_device' method.\n"
-            "Falling back to 'cpu' device."
+        logging.warning(
+            f"Method {self.__class__} isn't a TorchMethod, so it can't be sent "
+            "to a device. If the method utilizes a torch model as a feature extractor,"
+            "override this method to sent it to the device."
         )
-        self.device = torch.device("cpu")
+        self.device = torch.device(device)
 
 
 class BaseTorchMethod(BaseMethod, Module):
