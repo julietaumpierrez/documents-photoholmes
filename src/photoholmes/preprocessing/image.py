@@ -208,4 +208,4 @@ class GetImageSize(PreprocessingTransform):
             size = image.size
         else:
             raise ValueError(f"Image type not supported: {type(image)}")
-        return {"image_size": size, **kwargs}
+        return {"image": image, "image_size": size, **kwargs}

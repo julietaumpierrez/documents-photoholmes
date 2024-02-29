@@ -1,10 +1,9 @@
-from dataclasses import dataclass
-from pathlib import Path
 from typing import List, Literal, Optional, Union
 
+from pydantic import BaseModel
 
-@dataclass
-class StageConfig:
+
+class StageConfig(BaseModel):
     num_channels: List[int]
     block: Literal["BOTTLENECK", "BASIC"]
     num_blocks: List[int]
@@ -13,8 +12,7 @@ class StageConfig:
     fuse_method: Optional[Literal["SUM", "CAT"]]
 
 
-@dataclass
-class CatnetArchConfig:
+class CatnetArchConfig(BaseModel):
     stage1: StageConfig
     stage2: StageConfig
     stage3: StageConfig
@@ -25,15 +23,6 @@ class CatnetArchConfig:
     final_conf_kernel: int
     bn_momentum: float = 0.01
     num_classes: int = 2
-
-    @classmethod
-    def load_from_dict(cls, config_dict: dict):
-        for k, v in config_dict.items():
-            if isinstance(v, dict):
-                config_dict[k] = StageConfig(**v)
-            else:
-                config_dict[k] = v
-        return cls(**config_dict)
 
 
 pretrained_arch = CatnetArchConfig(
@@ -99,7 +88,6 @@ pretrained_arch = CatnetArchConfig(
 )
 
 
-@dataclass
-class CatnetConfig:
-    weights: Optional[Union[str, Path, dict]]
+class CatnetConfig(BaseModel):
+    weights: Optional[Union[str, dict]]
     arch: Union[CatnetArchConfig, Literal["pretrained"]] = "pretrained"
