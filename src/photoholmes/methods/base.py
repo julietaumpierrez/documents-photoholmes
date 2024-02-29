@@ -69,7 +69,7 @@ class BaseMethod(ABC):
             "to a device. If the method utilizes a torch model as a feature extractor,"
             "override this method to sent it to the device."
         )
-        self.device = torch.device(device)
+        self.device = torch.device("cpu")
 
 
 class BaseTorchMethod(BaseMethod, Module):
