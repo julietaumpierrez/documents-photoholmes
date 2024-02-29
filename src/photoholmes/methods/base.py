@@ -19,9 +19,9 @@ T = TypeVar("T", NDArray, Tensor)
 
 
 class BenchmarkOutput(TypedDict):
-    heatmap: Tensor
-    mask: Tensor
-    detection: Tensor
+    heatmap: Optional[Tensor]
+    mask: Optional[Tensor]
+    detection: Optional[Tensor]
 
 
 class BaseMethod(ABC):
@@ -44,6 +44,7 @@ class BaseMethod(ABC):
         Runs method on an image and returns the output in the benchmark
         format.
         """
+        return {"heatmap": None, "mask": None, "detection": None}
 
     @classmethod
     def from_config(cls, config: Optional[str | Dict[str, Any]]):
