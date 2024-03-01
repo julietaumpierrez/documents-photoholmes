@@ -30,13 +30,18 @@ logger = logging.getLogger(__name__)
 
 class DirFullDil(nn.Module):
     """
-    Performs horizontal, vertical and full convolutions, concatenate them, then perform
-    the same number of horizontal, vertical and full convolutions.
-    In parallel, performs horizontal, vertical and full convolutions once, but with a
-    dilation factor of 2.
-    Returns the concatenated results number of parametres:
-    (2*n_dir + n_full)*(1 + 2*n_dir + n_full + channels_in) +
-    (channels_in + 1)*(2*n_dir_dil + n_full_dil)
+    Module performing directional (horizontal and vertical), full, and dilated
+    convolutions. It concatenates the results of each, performing a series of
+    convolutions on the input image to extract features in different orientations
+    and scales. Additionally, it applies dilation to capture broader contextual
+    information without losing resolution.
+
+    Attributes:
+        channels_in (int): Number of input channels.
+        n_dir (int): Number of directional convolution filters.
+        n_full (int): Number of full convolution filters.
+        n_dir_dil (int): Number of directional dilated convolution filters.
+        n_full_dil (int): Number of full dilated convolution filters.
     """
 
     def __init__(self, channels_in, *n_convolutions):
@@ -67,12 +72,24 @@ class DirFullDil(nn.Module):
         return torch.cat((h_d, v_d, f_d, h, v, f), 1)
 
 
-class SkipDoubleDirFullDir(nn.Module):
-    """Uses a first DirFullDir module, skips the input to the results of the first
-    module, and finally send everything through a second DirFullDir module."""
+class SkipDoubleDirFullDil(nn.Module):
+    """
+    Module combining two DirFullDil modules with a skip connection between them.
+    It allows for the input to bypass the first convolutional block, combining
+    its features with the output of the first block before passing through the
+    second convolutional block. This approach is meant to help the network
+    preserve information from the input through the layers.
+
+    Attributes:
+        channels_in (int): Number of input channels.
+        convolutions_1 (DirFullDirConfig): Configuration for the first DirFullDil
+            module.
+        convolutions_2 (DirFullDirConfig): Configuration for the second DirFullDil
+            module.
+    """
 
     def __init__(self, channels_in, convolutions_1, convolutions_2):
-        super(SkipDoubleDirFullDir, self).__init__()
+        super(SkipDoubleDirFullDil, self).__init__()
         self.conv1 = DirFullDil(channels_in, *convolutions_1)
         self.conv2 = DirFullDil(channels_in + self.conv1.channels_out, *convolutions_2)
         self.channels_out = self.conv2.channels_out
@@ -87,6 +104,15 @@ class SkipDoubleDirFullDir(nn.Module):
 
 
 class SeparateAndPermutate(nn.Module):
+    """
+    Rearranges the pixels of the input feature map by separating them based on
+    their position in the original image grid and permutating them in four possible
+    ways. This operation aims to prepare the data for pixel-wise analysis in
+    subsequent layers by highlighting different spatial relationships.
+
+    No attributes.
+    """
+
     def forward(self, x):
         n, C, Y, X = x.shape
         assert n == 1
@@ -109,6 +135,19 @@ class SeparateAndPermutate(nn.Module):
 
 
 class Pixelwise(nn.Module):
+    """
+    Applies a sequence of convolutions to the input feature map for pixel-wise
+    feature extraction.
+
+    Attributes:
+        channels_in (int): Number of input channels.
+        conv1_out_channels (int): Number of output channels for the first convolution.
+        conv2_out_channels (int): Number of output channels for the second convolution.
+        conv3_out_channels (int): Number of output channels for the third convolution.
+        conv4_out_channels (int): Number of output channels for the fourth convolution.
+        kernel_size (int): Size of the convolutional kernels.
+    """
+
     def __init__(
         self,
         channels_in: int = 103,
@@ -140,23 +179,18 @@ class Pixelwise(nn.Module):
 
 class AdaptiveCFANet(BaseTorchMethod):
     """
-    Input image: (1, 3, 2Y, 2X)
-    ⮟First module: Spatial convolutions, without pooling
-    Pixel-wise features: (1, 30 , 2Y-8, 2X-8) (⮞Pixelwise auxiliary training)
-    ⮟Grid separation and permutations
-    : (1, 120, Y-4, X-4)
-    ⮟Permutations of the grid pixels
-    Pixel-wise features, with the pixels separated by position in the grid in different
-    channels, permutated in the four possible ways in image numbers: (4, 120, Y-4, X-4)
-    ⮟ 1×1 convolutions: pixel-wise causality
-    ⮟Average Pooling to get the mean in each block
-    Mean in each block, channel and permutation of the pixels' features:
-    (4N, 120, (Y-4)//block_size, (X-4)//block_size
-    ⮟1×1 convolutions: block-wise causality
-    Features in each block, channel and permutation of the pixels's features:
-    (4N, 4, (Y-4)//block_size, (X-4)//block_size)
-    ⮟LogSoftMax
-    Out
+    Implements the Adaptive CFA Net architecture for image forgery detection.
+    This network applies spatial convolutions to extract pixel-wise features,
+    separates grid pixels for detailed analysis, and uses block-wise convolutions
+    to analyze larger image regions. It outputs a heatmap indicating the likelihood
+    of forgery in different image areas.
+
+    Attributes:
+        arch_config (Union[AdaptiveCFANetArchConfig, Literal['pretrained']]):
+            Configuration for the network architecture. Can be a predefined
+            architecture or 'pretrained' for default settings.
+        weights (Optional[Union[str, Path, dict]]): Weights to load into the model.
+            Can be a file path, dictionary, or None for random initialization.
     """
 
     def __init__(
@@ -182,11 +216,11 @@ class AdaptiveCFANet(BaseTorchMethod):
             self.init_weights()
 
     def load_model(self, arch_config: AdaptiveCFANetArchConfig):
-        # Initialize DirFullDil for the SkipDoubleDirFullDir using config
-        conv1_config = arch_config.skip_double_dir_full_dir_config.convolutions_1
-        conv2_config = arch_config.skip_double_dir_full_dir_config.convolutions_2
-        self.spatial = SkipDoubleDirFullDir(
-            arch_config.skip_double_dir_full_dir_config.channels_in,
+        # Initialize DirFullDil for the SkipDoubleDirFullDil using config
+        conv1_config = arch_config.skip_double_dir_full_dil_config.convolutions_1
+        conv2_config = arch_config.skip_double_dir_full_dil_config.convolutions_2
+        self.spatial = SkipDoubleDirFullDil(
+            arch_config.skip_double_dir_full_dil_config.channels_in,
             (
                 conv1_config.n_dir,
                 conv1_config.n_full,

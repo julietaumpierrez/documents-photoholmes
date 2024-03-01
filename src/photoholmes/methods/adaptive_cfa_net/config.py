@@ -3,17 +3,17 @@ from typing import List, Literal, Optional, Union
 from pydantic import BaseModel
 
 
-class DirFullDirConfig(BaseModel):
+class DirFullDilConfig(BaseModel):
     n_dir: int
     n_full: int
     n_dir_dil: int
     n_full_dil: int
 
 
-class SkipDoubleDirFullDirConfig(BaseModel):
+class SkipDoubleDirFullDilConfig(BaseModel):
     channels_in: int
-    convolutions_1: DirFullDirConfig
-    convolutions_2: DirFullDirConfig
+    convolutions_1: DirFullDilConfig
+    convolutions_2: DirFullDilConfig
 
 
 class PixelwiseConfig(BaseModel):
@@ -40,16 +40,16 @@ class BlockwiseConfig(BaseModel):
 
 
 class AdaptiveCFANetArchConfig(BaseModel):
-    skip_double_dir_full_dir_config: SkipDoubleDirFullDirConfig
+    skip_double_dir_full_dir_config: SkipDoubleDirFullDilConfig
     pixelwise_config: PixelwiseConfig
     blockwise_config: BlockwiseConfig
 
 
 pretrained_arch = AdaptiveCFANetArchConfig(
-    skip_double_dir_full_dir_config=SkipDoubleDirFullDirConfig(
+    skip_double_dir_full_dir_config=SkipDoubleDirFullDilConfig(
         channels_in=3,
-        convolutions_1=DirFullDirConfig(n_dir=10, n_full=5, n_dir_dil=10, n_full_dil=5),
-        convolutions_2=DirFullDirConfig(n_dir=10, n_full=5, n_dir_dil=10, n_full_dil=5),
+        convolutions_1=DirFullDilConfig(n_dir=10, n_full=5, n_dir_dil=10, n_full_dil=5),
+        convolutions_2=DirFullDilConfig(n_dir=10, n_full=5, n_dir_dil=10, n_full_dil=5),
     ),
     pixelwise_config=PixelwiseConfig(
         conv1_in_channels=103,
