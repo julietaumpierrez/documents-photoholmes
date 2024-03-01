@@ -7,7 +7,7 @@
 
 import logging
 from pathlib import Path
-from typing import Dict, Literal, Optional, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
 import torch
 from torch import Tensor, nn
@@ -18,7 +18,7 @@ from photoholmes.methods.adaptive_cfa_net.config import (
     AdaptiveCFANetConfig,
     pretrained_arch,
 )
-from photoholmes.methods.base import BaseTorchMethod
+from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
 from photoholmes.postprocessing.resizing import (
     resize_heatmap_with_trim_and_pad,
     simple_upscale_heatmap,
@@ -165,7 +165,6 @@ class AdaptiveCFANet(BaseTorchMethod):
             AdaptiveCFANetArchConfig, Literal["pretrained"]
         ] = "pretrained",
         weights: Optional[Union[str, Path, dict]] = None,
-        device: str = "cpu",
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -181,7 +180,6 @@ class AdaptiveCFANet(BaseTorchMethod):
             self.load_weights(weights)
         else:
             self.init_weights()
-        self.device = torch.device(device)
 
     def load_model(self, arch_config: AdaptiveCFANetArchConfig):
         # Initialize DirFullDil for the SkipDoubleDirFullDir using config
@@ -231,11 +229,9 @@ class AdaptiveCFANet(BaseTorchMethod):
                 groups=layer.groups,
             )
             self.blockwise.add_module(f"{2*i}", conv_layer)
-            # Correctly handling activation functions including LogSoftmax and others
             if layer.activation.lower() != "none":
                 activation_fn = getattr(nn, layer.activation, None)
                 if activation_fn:
-                    # Special case for LogSoftmax due to its 'dim' parameter
                     if activation_fn == nn.LogSoftmax:
                         self.blockwise.add_module(
                             f"activation_{i}", activation_fn(dim=1)
@@ -266,7 +262,7 @@ class AdaptiveCFANet(BaseTorchMethod):
         return x
 
     @torch.no_grad()
-    def predict(self, image: Tensor, image_size: Tuple[int, int]) -> Dict[str, Tensor]:
+    def predict(self, image: Tensor, image_size: Tuple[int, int]) -> Tensor:
 
         image = image.to(self.device)
         if image.ndim == 3:
@@ -287,8 +283,14 @@ class AdaptiveCFANet(BaseTorchMethod):
         error_map = 1 - confidence
 
         upscaled_heatmap = simple_upscale_heatmap(error_map, 32)
-        output = resize_heatmap_with_trim_and_pad(upscaled_heatmap, image_size)
-        return {"heatmap": output}
+        upscaled_heatmap = resize_heatmap_with_trim_and_pad(
+            upscaled_heatmap, image_size
+        )
+        return upscaled_heatmap
+
+    def benchmark(self, image: Tensor, image_size: Tuple[int, int]) -> BenchmarkOutput:
+        heatmap = self.predict(image, image_size)
+        return {"heatmap": heatmap, "mask": None, "detection": None}
 
     @classmethod
     def from_config(
@@ -298,22 +300,14 @@ class AdaptiveCFANet(BaseTorchMethod):
         if isinstance(config, AdaptiveCFANetConfig):
             return cls(**config.__dict__)
 
-        if isinstance(config, (str, Path)):
+        if isinstance(config, str) or isinstance(config, Path):
             config = load_yaml(str(config))
-        print(config)
+        elif config is None:
+            config = {}
 
-        if config is None:
-            config = {"arch": pretrained_arch}
+        adaptive_cga_net_config = AdaptiveCFANetConfig(**config)
 
-        arch_config = config.pop("arch", "pretrained")
-        print(arch_config)
-        if isinstance(arch_config, dict):
-            arch_config = AdaptiveCFANetArchConfig.load_from_dict(config["arch"])
-        elif arch_config == "pretrained":
-            arch_config = pretrained_arch
-        print(*config)
-        return cls(arch_config=arch_config, **config)
-
-    def to_device(self, device: Union[str, torch.device]):
-        self.to(device)
-        self.device = torch.device(device)
+        return cls(
+            arch_config=adaptive_cga_net_config.arch,
+            weights=adaptive_cga_net_config.weights,
+        )

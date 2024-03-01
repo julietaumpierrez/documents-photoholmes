@@ -1,25 +1,22 @@
-from dataclasses import dataclass
-from pathlib import Path
 from typing import List, Literal, Optional, Union
 
+from pydantic import BaseModel
 
-@dataclass
-class DirFullDirConfig:
+
+class DirFullDirConfig(BaseModel):
     n_dir: int
     n_full: int
     n_dir_dil: int
     n_full_dil: int
 
 
-@dataclass
-class SkipDoubleDirFullDirConfig:
+class SkipDoubleDirFullDirConfig(BaseModel):
     channels_in: int
     convolutions_1: DirFullDirConfig
     convolutions_2: DirFullDirConfig
 
 
-@dataclass
-class PixelwiseConfig:
+class PixelwiseConfig(BaseModel):
     conv1_in_channels: int
     conv1_out_channels: int
     conv2_out_channels: int
@@ -28,8 +25,7 @@ class PixelwiseConfig:
     kernel_size: int
 
 
-@dataclass
-class BlockwiseLayerConfig:
+class BlockwiseLayerConfig(BaseModel):
     in_channels: int
     out_channels: int
     kernel_size: int
@@ -39,35 +35,14 @@ class BlockwiseLayerConfig:
     activation: Literal["Softplus", "LogSoftmax"]
 
 
-@dataclass
-class BlockwiseConfig:
+class BlockwiseConfig(BaseModel):
     layers: List[BlockwiseLayerConfig]
 
 
-@dataclass
-class AdaptiveCFANetArchConfig:
+class AdaptiveCFANetArchConfig(BaseModel):
     skip_double_dir_full_dir_config: SkipDoubleDirFullDirConfig
     pixelwise_config: PixelwiseConfig
     blockwise_config: BlockwiseConfig
-
-    @classmethod
-    def load_from_dict(cls, config_dict: dict):
-        parsed_config = {}
-        for key, value in config_dict.items():
-            if isinstance(value, dict):
-                config_class_name = key.capitalize() + "Config"
-                if config_class_name in globals():
-                    config_class = globals()[config_class_name]
-                    parsed_config[key] = (
-                        config_class.load_from_dict(value)
-                        if hasattr(config_class, "load_from_dict")
-                        else config_class(**value)
-                    )
-                else:
-                    parsed_config[key] = value  # Fallback if no matching class found
-            else:
-                parsed_config[key] = value
-        return cls(**parsed_config)
 
 
 pretrained_arch = AdaptiveCFANetArchConfig(
@@ -145,8 +120,6 @@ pretrained_arch = AdaptiveCFANetArchConfig(
 )
 
 
-@dataclass
-class AdaptiveCFANetConfig:
-    weights: Optional[Union[str, Path, dict]]
+class AdaptiveCFANetConfig(BaseModel):
+    weights: Optional[Union[str, dict]]
     arch: Union[AdaptiveCFANetArchConfig, Literal["pretrained"]] = "pretrained"
-    device: str = "cpu"

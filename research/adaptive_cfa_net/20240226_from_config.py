@@ -21,7 +21,7 @@ image = read_image("data/pelican.png")
 image
 
 # %%
-image_data = {"image": image, "metadata": {"test": "test"}}
+image_data = {"image": image}
 # %%
 # %%
 input = adaptive_cfa_net_preprocessing(**image_data)
@@ -33,5 +33,8 @@ output_1
 from photoholmes.utils.image import plot
 
 # %%
-plot(output_1["heatmap"])
+plot(output_1)
+# %%
+output_2 = method.benchmark(**input)
+output_2
 # %%
