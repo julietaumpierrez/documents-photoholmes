@@ -111,12 +111,12 @@ class SeparateAndPermutate(nn.Module):
 class Pixelwise(nn.Module):
     def __init__(
         self,
-        channels_in=103,
-        conv1_out_channels=30,
-        conv2_out_channels=15,
-        conv3_out_channels=15,
-        conv4_out_channels=30,
-        kernel_size=1,
+        channels_in: int = 103,
+        conv1_out_channels: int = 30,
+        conv2_out_channels: int = 15,
+        conv3_out_channels: int = 15,
+        conv4_out_channels: int = 30,
+        kernel_size: int = 1,
     ):
         super(Pixelwise, self).__init__()
         self.conv1 = nn.Conv2d(channels_in, conv1_out_channels, kernel_size)
