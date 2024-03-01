@@ -45,7 +45,7 @@ class MethodFactory:
             case MethodName.DQ:
                 from photoholmes.methods.dq import DQ, dq_preprocessing
 
-                return DQ.from_config(config, device), dq_preprocessing
+                return DQ.from_config(config), dq_preprocessing
             case MethodName.SPLICEBUSTER:
                 from photoholmes.methods.splicebuster import (
                     Splicebuster,

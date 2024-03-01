@@ -1,11 +1,11 @@
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
 import torch
 from numpy.typing import NDArray
 from torch import Tensor
 
-from photoholmes.methods.base import BaseMethod
+from photoholmes.methods.base import BaseMethod, BenchmarkOutput
 from photoholmes.methods.dq.utils import ZIGZAG, fft_period, histogram_period
 from photoholmes.postprocessing.resizing import (
     resize_heatmap_with_trim_and_pad,
@@ -14,21 +14,39 @@ from photoholmes.postprocessing.resizing import (
 
 
 class DQ(BaseMethod):
+    """
+    The DQ class implements a specific method for detecting image forgery based on
+    discrepancies in double quantization.
+    """
+
     def __init__(self, number_frecs: int = 8, alpha: float = 1.0, **kwargs) -> None:
         """
-        Initialize the DQ class.
+        Initializes the DQ class with specified parameters.
 
-        :param number_frecs: Number of frequencies, defaults to 10.
-        :param kwargs: Additional keyword arguments.
+        Args:
+            number_frecs (int): Number of frequency components to consider.
+                Defaults to 8.
+            alpha (float): Alpha value used in period detection.
+                Defaults to 1.0.
         """
         super().__init__(**kwargs)
         self.number_frecs = number_frecs
         self.alpha = alpha
 
-    def predict(
-        self, dct_coefficients: NDArray, original_image_size: Tuple[int, int]
-    ) -> Dict[str, Tensor]:
-        # TODO: Add docstring
+    def predict(self, dct_coefficients: NDArray, image_size: Tuple[int, int]) -> Tensor:
+        """
+        Predicts the BPPM (Block Posterior Probability Map) heatmap from DCT
+        coefficients.
+
+        Args:
+            dct_coefficients (np.ndarray): Array containing DCT coefficients of the
+                image.
+            image_size (Tuple[int, int]): Tuple representing the dimensions of the
+                image.
+
+        Returns:
+            Tensor: The predicted BPPM heatmap as a PyTorch tensor.
+        """
         M, N = dct_coefficients.shape[-2:]
         BPPM = np.zeros((M // 8, N // 8))
         for channel in range(dct_coefficients.shape[0]):
@@ -37,17 +55,35 @@ class DQ(BaseMethod):
             )
         BPPM_norm = torch.from_numpy(BPPM / len(dct_coefficients))
         BPPM_upsampled = simple_upscale_heatmap(BPPM_norm, 8)
-        BPPM_upsampled = resize_heatmap_with_trim_and_pad(
-            BPPM_upsampled, original_image_size
-        )
-        return {"heatmap": BPPM_upsampled}
+        heatmap = resize_heatmap_with_trim_and_pad(BPPM_upsampled, image_size)
+        return heatmap
+
+    def benchmark(
+        self, dct_coefficients: NDArray, image_size: Tuple[int, int]
+    ) -> BenchmarkOutput:
+        """
+        Benchmarks the DQ method using provided DCT coefficients and image size.
+
+        Args:
+            dct_coefficients (np.ndarray): DCT coefficients of the image.
+            image_size (Tuple[int, int]): Dimensions of the image.
+
+        Returns:
+            BenchmarkOutput: Contains the heatmap and placeholders for mask and
+                detection.
+        """
+        heatmap = self.predict(dct_coefficients, image_size)
+        return {"heatmap": heatmap, "mask": None, "detection": None}
 
     def _detect_period(self, histogram: NDArray) -> int:
         """
-        Detect the period of the histogram.
+        Detects the repeating period in a histogram.
 
-        :param histogram: Input histogram.
-        :return: Detected period.
+        Args:
+            histogram (np.ndarray): The input histogram from image frequencies.
+
+        Returns:
+            int: The detected period within the histogram.
         """
         if len(histogram) < 2:
             return 1
@@ -61,12 +97,15 @@ class DQ(BaseMethod):
         self, coefficients_f: NDArray, histogram: NDArray, period: int
     ) -> NDArray:
         """
-        Calculate Pu values for a given frequency.
+        Calculates Pu values for given frequency coefficients based on histogram.
 
-        :param coefficients_f: Coefficients for a given frequency.
-        :param histogram: Input histogram for a given frequency.
-        :param period: Detected period for a given frequency.
-        :return: Calculated Pu values for a given frequency.
+        Args:
+            coefficients_f (np.ndarray): Frequency-specific DCT coefficients.
+            histogram (np.ndarray): Histogram of values for the specific frequency.
+            period (int): Detected period for the histogram of the frequency.
+
+        Returns:
+            np.ndarray: Array of Pu values for the given frequency coefficients.
         """
         coefficients_f -= np.min(coefficients_f)
         M, N = coefficients_f.shape
@@ -84,10 +123,13 @@ class DQ(BaseMethod):
 
     def _calculate_BPPM_f(self, DCT_coefficients_f: NDArray) -> NDArray:
         """
-        Calculate BPPM values for given DCT coefficients for a given frequency..
+        Calculates BPPM values for given DCT coefficients at a specific frequency.
 
-        :param DCT_coefficients_f: DCT coefficients for a given frequency..
-        :return: Calculated BPPM values for a given frequency..
+        Args:
+            DCT_coefficients_f (np.ndarray): DCT coefficients for a specific frequency.
+
+        Returns:
+            np.ndarray: Calculated BPPM values for the given frequency.
         """
         hmax = np.max(DCT_coefficients_f)
         hmin = np.min(DCT_coefficients_f)
@@ -112,11 +154,14 @@ class DQ(BaseMethod):
         self, DCT_coefs: NDArray, fs: List[Tuple[int, int]]
     ) -> NDArray:
         """
-        Calculate BPPM values for a given channel.
+        Calculates BPPM values for all frequencies within a single image channel.
 
-        :param DCT_coefs: DCT coefficients for the channel.
-        :param fs: Frequency values.
-        :return: Calculated BPPM values for the channel.
+        Args:
+            DCT_coefs (np.ndarray): DCT coefficients for the image channel.
+            fs (List[Tuple[int, int]]): List of frequency tuples to consider.
+
+        Returns:
+            np.ndarray: Aggregated BPPM values for the image channel.
         """
         M, N = DCT_coefs.shape
         BPPM = np.zeros((len(fs), M // 8, N // 8))
