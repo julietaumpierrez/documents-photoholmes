@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
-from photoholmes.methods.DQ.utils import ZIGZAG, fft_period, histogram_period
+from photoholmes.methods.dq.utils import ZIGZAG, fft_period, histogram_period
 from photoholmes.postprocessing.resizing import (
     resize_heatmap_with_trim_and_pad,
     simple_upscale_heatmap,

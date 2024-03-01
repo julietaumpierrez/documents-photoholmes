@@ -43,7 +43,7 @@ class MethodFactory:
 
                 return Naive.from_config(config, device), naive_preprocessing
             case MethodName.DQ:
-                from photoholmes.methods.DQ import DQ, dq_preprocessing
+                from photoholmes.methods.dq import DQ, dq_preprocessing
 
                 return DQ.from_config(config, device), dq_preprocessing
             case MethodName.SPLICEBUSTER:
