@@ -15,8 +15,9 @@ from photoholmes.postprocessing.resizing import (
 
 class DQ(BaseMethod):
     """
-    The DQ class implements a specific method for detecting image forgery based on
-    discrepancies in double quantization.
+    Implementation of DQ [Autores, et.al. 2009]. The method detects forgeries
+    exploiting double quantization discrepancies. It uses the DCT coefficients
+    of the image to calculate the BPPM (Block Posterior Probability Map) heatmap.
     """
 
     def __init__(self, number_frecs: int = 8, alpha: float = 1.0, **kwargs) -> None:
