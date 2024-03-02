@@ -284,8 +284,8 @@ class Splicebuster(BaseMethod):
                     "pi": [],
                     "loss": [],
                 }
-                gu_mixt = GaussianUniformEM(debug_series=debug_series)
-                np.random.seed(SEED)
+                gu_mixt = GaussianUniformEM(debug_series=debug_series, seed=SEED)
+                # np.random.seed(SEED)
                 mus, covs, _ = gu_mixt.fit(flat_features)
                 gu_mixt.mean = checkpoint(mus, "mean.npy", load_gt=False)
                 gu_mixt.covariance_matrix = checkpoint(

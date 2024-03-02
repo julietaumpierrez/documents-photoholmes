@@ -26,6 +26,7 @@ class GaussianUniformEM:
         max_iter: int = 100,
         n_init: int = 30,
         debug_series={},
+        seed=None,
     ) -> None:
         """
         Gaussian Uniform Expectation Maximization algorithm.
@@ -45,9 +46,9 @@ class GaussianUniformEM:
         assert n_init > 1, "n_init must be at least 1"
         self.n_init = n_init
 
+        self.random_state = np.random.RandomState(seed)
         self.covariance_matrix: NDArray
         self.mean: NDArray
-        print("Init gm class")
         self.debug_amount_of_fits = 0
         self.debug_amount_of_random_inits = 0
 
@@ -73,7 +74,9 @@ class GaussianUniformEM:
         n_samples, n_features = X.shape
         # np.random.seed(42)
         self.debug_amount_of_random_inits += 1
-        init_index = np.random.randint(0, n_samples - 1)
+        init_index = self.random_state.random_integers(
+            low=0, high=(n_samples - 1), size=(1,)
+        ).squeeze()
         self.mean = X[init_index]
         variance = np.var(X, axis=0)
         variance += np.spacing(variance.max())
