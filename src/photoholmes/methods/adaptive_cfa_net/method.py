@@ -179,8 +179,8 @@ class Pixelwise(nn.Module):
 
 class AdaptiveCFANet(BaseTorchMethod):
     """
-    Implements the Adaptive CFA Net architecture for image forgery detection.
-    This network applies spatial convolutions to extract pixel-wise features,
+    Implements the Adaptive CFA Net architecture [Bammey, et al] for image forgery
+    detection. This network applies spatial convolutions to extract pixel-wise features,
     separates grid pixels for detailed analysis, and uses block-wise convolutions
     to analyze larger image regions. It outputs a heatmap indicating the likelihood
     of forgery in different image areas.

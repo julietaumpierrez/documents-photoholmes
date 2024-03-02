@@ -40,13 +40,13 @@ class BlockwiseConfig(BaseModel):
 
 
 class AdaptiveCFANetArchConfig(BaseModel):
-    skip_double_dir_full_dir_config: SkipDoubleDirFullDilConfig
+    skip_double_dir_full_dil_config: SkipDoubleDirFullDilConfig
     pixelwise_config: PixelwiseConfig
     blockwise_config: BlockwiseConfig
 
 
 pretrained_arch = AdaptiveCFANetArchConfig(
-    skip_double_dir_full_dir_config=SkipDoubleDirFullDilConfig(
+    skip_double_dir_full_dil_config=SkipDoubleDirFullDilConfig(
         channels_in=3,
         convolutions_1=DirFullDilConfig(n_dir=10, n_full=5, n_dir_dil=10, n_full_dil=5),
         convolutions_2=DirFullDilConfig(n_dir=10, n_full=5, n_dir_dil=10, n_full_dil=5),
