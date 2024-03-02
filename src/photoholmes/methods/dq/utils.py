@@ -3,23 +3,27 @@ from numpy.typing import NDArray
 from scipy.signal import find_peaks
 
 
-def histogram_period(dct_histogram: NDArray, alpha: float = 1) -> int:
+def histogram_period(histogram: NDArray, alpha: float = 1) -> int:
     """
-    Calculate the period of a DCT histogram using a histogram-based method.
+    Detects the repeating period of a histogram using a weighting factor.
 
-    :param dct_histogram: Input DCT histogram.
-    :param alpha: Weighting factor, defaults to 1.
-    :return: Detected period.
+    Args:
+        histogram (NDArray): The histogram to evaluate for repeating patterns.
+        alpha (float): A weighting factor applied during histogram evaluation.
+        Defaults to 1.
+
+    Returns:
+        int: The detected period of the histogram.
     """
     Hmax = 0
     period = 1
-    k0 = np.argmax(dct_histogram)
-    kmin, kmax = 0, len(dct_histogram) - 1
+    k0 = np.argmax(histogram)
+    kmin, kmax = 0, len(histogram) - 1
 
     for p in range(1, kmax // 20):
         imin, imax = np.floor((kmin - k0) / p), np.ceil((kmax - k0) / p)
         i = np.arange(imin, imax, dtype=int)
-        H = np.sum(dct_histogram[i * p + k0] ** alpha) / (imax - imin + 1)
+        H = np.sum(histogram[i * p + k0] ** alpha) / (imax - imin + 1)
         if H > Hmax:
             Hmax = H
             period = p
@@ -27,14 +31,17 @@ def histogram_period(dct_histogram: NDArray, alpha: float = 1) -> int:
     return period
 
 
-def fft_period(dct_histogram: NDArray) -> int:
+def fft_period(histogram: NDArray) -> int:
     """
-    Calculate the period of a DCT histogram using FFT.
+    Determines the dominant period of a histogram using FFT.
 
-    :param dct_histogram: Input DCT histogram.
-    :return: Detected period.
+    Args:
+        histogram (NDArray): The input histogram to evaluate for repeating patterns.
+
+    Returns:
+        int: The detected period of the histogram.
     """
-    spectrogram = np.abs(np.fft.fftshift(np.fft.fft(dct_histogram)))
+    spectrogram = np.abs(np.fft.fftshift(np.fft.fft(histogram)))
     log_spectrogram = np.log(spectrogram)
     c = len(log_spectrogram) // 2
 
@@ -43,7 +50,7 @@ def fft_period(dct_histogram: NDArray) -> int:
 
     if len(main_peaks) > 1:
         main_peak = np.sort(main_peaks)[1]
-        period = np.round(len(dct_histogram) / main_peak).astype(int)
+        period = np.round(len(histogram) / main_peak).astype(int)
     else:
         period = 1
 
