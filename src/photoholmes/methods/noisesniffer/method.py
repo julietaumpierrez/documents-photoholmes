@@ -7,8 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 from skimage.util import view_as_windows
 
-from photoholmes.methods.base import BaseMethod
-from photoholmes.postprocessing.image import to_tensor_dict
+from photoholmes.methods.base import BaseMethod, BenchmarkOutput
 
 from .utils import (
     all_image_means,
@@ -153,6 +152,21 @@ class Noisesniffer(BaseMethod):
             S = np.concatenate((S, S_ch))
 
         mask, img_paint = compute_output(image, self.w, self.W, self.m, V, S)
+        return mask, img_paint
+
+    def benchmark(self, image: NDArray) -> BenchmarkOutput:  # type: ignore[override]
+        """
+        Wrapper for the predict method for the benchmark
+        """
+        mask, _ = self.predict(image)
+
         detection = float(np.any(mask))
-        output = {"mask": mask, "detection": detection, "img_paint": img_paint}
-        return to_tensor_dict(output)
+        detection_tensor = torch.tensor(detection).unsqueeze(0)
+
+        mask_tensor = torch.from_numpy(mask)
+
+        return BenchmarkOutput(
+            heatmap=None,
+            mask=mask_tensor,
+            detection=detection_tensor,
+        )
