@@ -9,6 +9,11 @@ from torchmetrics.functional.classification.auroc import binary_auroc
 class mAuroc(Metric):
     """
     Compute the mean Area Under the Receiver Operating Characteristic curve (mAuroc).
+
+    Note:
+        The mAuroc is defined when the target tensor contains both positive and
+        negative examples. If the target tensor is all zeros or all ones, the
+        metric will be zero.
     """
 
     def __init__(self, thresholds: Union[int, List[float], None] = None, **kwargs):
@@ -19,10 +24,7 @@ class mAuroc(Metric):
         self.add_state("total", default=torch.tensor(0.0))
 
     def update(self, preds: Tensor, target: Tensor):
-        """ """
         bauroc = binary_auroc(preds, target, thresholds=self.thresholds)
-        if bauroc == 0:
-            return  # target is all 0 or all 1, not useful for mAuroc
         self.auroc += bauroc
         self.total += 1
 
