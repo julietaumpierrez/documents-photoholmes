@@ -51,6 +51,7 @@ class Splicebuster(BaseMethod):
         saturation_prob: float = 0.85,
         pca_dim: int = 25,
         mixture: Literal["uniform", "gaussian"] = "uniform",
+        seed: Union[int, None] = 0,
         weights: Union[WeightConfig, Literal["original"], None] = None,
         **kwargs,
     ):
@@ -82,6 +83,7 @@ class Splicebuster(BaseMethod):
             self.weight_params = weights
 
         self.mixture = mixture
+        self.seed = seed
 
     def filter_and_encode(
         self, image: NDArray
@@ -286,7 +288,7 @@ class Splicebuster(BaseMethod):
                     "pi": [],
                     "loss": [],
                 }
-                gu_mixt = GaussianUniformEM(debug_series=debug_series, seed=SEED)
+                gu_mixt = GaussianUniformEM(debug_series=debug_series, seed=self.seed)
                 # np.random.seed(SEED)
                 print(flat_features.shape, valid_features.shape)
                 mus, covs, _ = gu_mixt.fit(valid_features)
@@ -314,10 +316,6 @@ class Splicebuster(BaseMethod):
         heatmap = labels.reshape(features.shape[:2])
 
         checkpoint(heatmap, "heatmap.npy", load_gt=False)
-        # print("Number of fits = ", gu_mixt.debug_amount_of_fits)
-        # print(
-        #     "Number of random initializations = ", gu_mixt.debug_amount_of_random_inits
-        # )
         heatmap = heatmap / np.max(labels)
         heatmap = upscale_mask(coords, heatmap, (X, Y), method="linear", fill_value=0)
         heatmap = torch.from_numpy(heatmap).float()

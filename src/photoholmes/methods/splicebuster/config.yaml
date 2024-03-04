@@ -4,6 +4,7 @@ q: 2
 T: 1
 pca_dim: 25
 mixture: uniform
+seed: 0
 weights: 
   low_th: 6
   high_th: 252
