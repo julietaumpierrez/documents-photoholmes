@@ -24,15 +24,14 @@ from .models.utils.layer import weighted_statistics_pooling
 logger = logging.getLogger(__name__)
 
 
-def preprc_imagenet_torch(x):
-    """
-    Normalizes an image tensor using ImageNet's mean and standard deviation.
+def preprc_imagenet_torch(x: Tensor) -> Tensor:
+    """Normalizes an image tensor using ImageNet's mean and standard deviation.
 
     Args:
-        - x (Tensor): input image tensor.
+        x (Tensor): input image tensor.
 
     Returns:
-        - x (Tensor): normalized image tensor.
+        Tensor: normalized image tensor.
     """
     mean = torch.Tensor([0.485, 0.456, 0.406]).to(x.device)
     std = torch.Tensor([0.229, 0.224, 0.225]).to(x.device)
@@ -40,17 +39,18 @@ def preprc_imagenet_torch(x):
     return x
 
 
-def create_backbone(typ: Literal["mit_b2"], norm_layer: Type[nn.Module]):
-    """
-    Initializes a backbone network based on the specified type and normalization layer.
+def create_backbone(
+    typ: Literal["mit_b2"], norm_layer: Type[nn.Module]
+) -> Tuple[nn.Module, list[int]]:
+    """Initializes a backbone network based on the specified type and normalization
+    layer.
 
     Args:
-        - typ (Literal["mit_b2"]): type of the backbone.
-        - norm_layer (Type[nn.Module]): normalization layer type.
+        typ (Literal["mit_b2"]): type of the backbone.
+        norm_layer (Type[nn.Module]): normalization layer type.
 
     Returns:
-        - backbone (nn.Module): backbone network.
-        - channels (List[int]): list of channel numbers.
+        Tuple[nn.Module, list[int]]: backbone network and list of channels.
     """
     channels = [64, 128, 320, 512]
     if typ == "mit_b2":
@@ -81,10 +81,12 @@ class TruFor(BaseTorchMethod):
     ):
         """
         Attributes:
-            - arch_config (Union[TruForArchConfig, Literal["pretrained"]]): specifies
+            arch_config (Union[TruForArchConfig, Literal["pretrained"]]): specifies
                 the architecture configuration.
-            - weights (Optional[Union[str, dict]]): path to the weights file or a
+            weights (Optional[Union[str, dict]]): path to the weights file or a
                 dictionary containing model weights.
+            use_confidence (bool): whether to use confidence maps to multiply the
+                output heatmap in the benchmark method.
         """
         super().__init__(**kwargs)
 
@@ -211,18 +213,19 @@ class TruFor(BaseTorchMethod):
             nonlinearity="relu",
         )
 
-    def encode_decode(self, rgb, modal_x):
+    def encode_decode(
+        self, rgb: Optional[Tensor], modal_x: Optional[Tensor]
+    ) -> Tuple[Tensor, Optional[Tensor], Optional[Tensor]]:
         """
         Processes input RGB and modal data to produce output maps.
 
         Args:
-            - rgb (Optional[Tensor]): RGB image tensor.
-            - modal_x (Optional[Tensor]): modal information tensor.
+            rgb (Optional[Tensor]): RGB image tensor.
+            modal_x (Optional[Tensor]): modal information tensor.
 
         Returns:
-            - out (Tensor): output heatmap.
-            - conf (Optional[Tensor]): output confidence map.
-            - det (Optional[Tensor]): output detection map.
+            Tuple[Tensor, Optional[Tensor], Optional[Tensor]]: output heatmap,
+            confidence map, and detection map.
         """
         if rgb is not None:
             orisize = rgb.shape
@@ -263,18 +266,18 @@ class TruFor(BaseTorchMethod):
 
         return out, conf, det
 
-    def forward(self, rgb: torch.Tensor):
+    def forward(
+        self, rgb: torch.Tensor
+    ) -> Tuple[Tensor, Optional[Tensor], Optional[Tensor], Optional[Tensor]]:
         """
         Forward pass of the TruFor model.
 
         Args:
-            - rgb (torch.Tensor): input RGB image tensor.
+            rgb (torch.Tensor): input RGB image tensor.
 
         Returns:
-            - out (Tensor): output heatmap.
-            - conf (Optional[Tensor]): output confidence map.
-            - det (Optional[Tensor]): output detection map.
-            - modal_x (Optional[Tensor]): output Noiseprint++ map.
+            Tuple[Tensor, Optional[Tensor], Optional[Tensor], Optional[Tensor]]: output
+            heatmap, confidence map, detection score, and Noiseprint++ map.
         """
         # Noiseprint++ extraction
         if "NP++" in self.mods:
@@ -296,13 +299,11 @@ class TruFor(BaseTorchMethod):
         Runs Trufor on an image.
 
         Args:
-            - image (torch.Tensor): input image tensor.
+            image (torch.Tensor): input image tensor.
 
         Returns:
-            - heatmap (Tensor): output heatmap map of the image.
-            - conf (Optional[Tensor]): output confidence map of the image.
-            - det (Optional[Tensor]): output detection score of the image.
-            - npp (Optional[Tensor]): output Noiseprint++ map of the image.
+            Tuple[Tensor, Optional[Tensor], Optional[Tensor], Optional[Tensor]]: output
+            heatmap, confidence map, detection score, and Noiseprint++ map.
         """
         if image.ndim == 3:
             image = image.unsqueeze(0)
