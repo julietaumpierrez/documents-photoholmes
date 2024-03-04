@@ -24,20 +24,6 @@ from .utils import (
     third_order_residual,
 )
 
-ATTEMPTS = "data/debug/splicebuster/attempts/"
-GROUND_TRUTHS = "data/debug/splicebuster/ground-truths/"
-DEBUG_SERIES = "data/debug/splicebuster/debug_series/attempt/"
-
-SEED = 9019010
-
-
-def checkpoint(array, array_name: str, load_gt: bool = True):
-    np.save(ATTEMPTS + array_name, array)
-    true_array = np.load(GROUND_TRUTHS + array_name)
-    # assert true_array.shape == array.shape
-    return true_array if load_gt else array
-
-
 warnings.filterwarnings("error", category=LinAlgWarning)
 
 
@@ -251,21 +237,15 @@ class Splicebuster(BaseMethod):
         X, Y = image.shape[:2]
 
         features, weights, coords = self.compute_features(image)
-        features = checkpoint(features, "features.npy")
-        weights = checkpoint(weights, "weights.npy")
 
         valid = weights >= self.saturation_prob
         flat_features = features.reshape(-1, features.shape[-1])
-        print(flat_features.shape)
         valid_features = flat_features[valid.flatten()]
-        print(flat_features.shape)
 
         if self.pca_dim > 0:
             pca = PCA(n_components=self.pca_dim)
             valid_features = pca.fit_transform(valid_features)
             flat_features = pca.transform(flat_features)
-            flat_features = checkpoint(flat_features, "pca_features.npy")
-            valid_features = checkpoint(valid_features, "pca_valid_features.npy")
 
         if self.mixture == "gaussian":
             try:
@@ -281,26 +261,10 @@ class Splicebuster(BaseMethod):
                 print("LinAlgWarning, returning zeros")
         elif self.mixture == "uniform":  # CURRENT CASE
             try:
-                debug_series = {
-                    # "nlogl": [],
-                    "mean": [],
-                    "covariance": [],
-                    "pi": [],
-                    "loss": [],
-                }
-                gu_mixt = GaussianUniformEM(debug_series=debug_series, seed=self.seed)
-                # np.random.seed(SEED)
-                print(flat_features.shape, valid_features.shape)
+                gu_mixt = GaussianUniformEM(seed=self.seed)
                 mus, covs, _ = gu_mixt.fit(valid_features)
-                gu_mixt.mean = checkpoint(mus, "mean.npy", load_gt=False)
-                gu_mixt.covariance_matrix = checkpoint(
-                    covs, "covariance.npy", load_gt=False
-                )
                 _, labels = gu_mixt.predict(flat_features)
-                labels[~valid.flatten()] = 0  # np.nan
-                for k, v in gu_mixt.debug_series.items():
-                    np.save(DEBUG_SERIES + k, np.array(v))
-                # labels = checkpoint(labels, "labels.npy", load_gt=False)
+                labels[~valid.flatten()] = 0
             except LinAlgWarning:
                 labels = np.zeros(flat_features.shape[0])
                 print("LinAlgWarning, returning zeros")
@@ -311,11 +275,7 @@ class Splicebuster(BaseMethod):
                     'Please select either "uniform" or "gaussian"'
                 )
             )
-        print("LABELS SHAPE", labels.shape)
-        print("FEATURES SHAPE", features.shape)
         heatmap = labels.reshape(features.shape[:2])
-
-        checkpoint(heatmap, "heatmap.npy", load_gt=False)
         heatmap = heatmap / np.max(labels)
         heatmap = upscale_mask(coords, heatmap, (X, Y), method="linear", fill_value=0)
         heatmap = torch.from_numpy(heatmap).float()
