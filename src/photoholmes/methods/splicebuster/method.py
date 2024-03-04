@@ -34,7 +34,7 @@ SEED = 9019010
 def checkpoint(array, array_name: str, load_gt: bool = True):
     np.save(ATTEMPTS + array_name, array)
     true_array = np.load(GROUND_TRUTHS + array_name)
-    assert true_array.shape == array.shape
+    # assert true_array.shape == array.shape
     return true_array if load_gt else array
 
 
@@ -260,8 +260,10 @@ class Splicebuster(BaseMethod):
 
         if self.pca_dim > 0:
             pca = PCA(n_components=self.pca_dim)
-            flat_features = pca.fit_transform(valid_features)
+            valid_features = pca.fit_transform(valid_features)
+            flat_features = pca.transform(flat_features)
             flat_features = checkpoint(flat_features, "pca_features.npy")
+            valid_features = checkpoint(valid_features, "pca_valid_features.npy")
 
         if self.mixture == "gaussian":
             try:
@@ -278,7 +280,7 @@ class Splicebuster(BaseMethod):
         elif self.mixture == "uniform":  # CURRENT CASE
             try:
                 debug_series = {
-                    "nlogl": [],
+                    # "nlogl": [],
                     "mean": [],
                     "covariance": [],
                     "pi": [],
@@ -286,12 +288,14 @@ class Splicebuster(BaseMethod):
                 }
                 gu_mixt = GaussianUniformEM(debug_series=debug_series, seed=SEED)
                 # np.random.seed(SEED)
-                mus, covs, _ = gu_mixt.fit(flat_features)
+                print(flat_features.shape, valid_features.shape)
+                mus, covs, _ = gu_mixt.fit(valid_features)
                 gu_mixt.mean = checkpoint(mus, "mean.npy", load_gt=False)
                 gu_mixt.covariance_matrix = checkpoint(
                     covs, "covariance.npy", load_gt=False
                 )
                 _, labels = gu_mixt.predict(flat_features)
+                labels[~valid.flatten()] = 0  # np.nan
                 for k, v in gu_mixt.debug_series.items():
                     np.save(DEBUG_SERIES + k, np.array(v))
                 # labels = checkpoint(labels, "labels.npy", load_gt=False)

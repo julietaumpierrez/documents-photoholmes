@@ -11,7 +11,7 @@ from photoholmes.preprocessing.image import ZeroOneRange
 from photoholmes.utils.generic import load_yaml
 from photoholmes.utils.image import plot_multiple, read_image
 
-IMAGE_PATH = "data/debug/img02.png"
+IMAGE_PATH = "data/debug/img03.png"
 RERUN_METHOD = True
 
 # Debug array paths
