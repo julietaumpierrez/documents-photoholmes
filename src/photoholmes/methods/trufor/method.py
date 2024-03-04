@@ -76,6 +76,7 @@ class TruFor(BaseTorchMethod):
         self,
         arch_config: Union[TruForArchConfig, Literal["pretrained"]] = "pretrained",
         weights: Optional[Union[str, dict]] = None,
+        use_confidence: bool = True,
         **kwargs,
     ):
         """
@@ -90,8 +91,8 @@ class TruFor(BaseTorchMethod):
         if arch_config == "pretrained":
             arch_config = pretrained_arch
 
+        self.use_confidence = use_confidence
         self.arch_config = arch_config
-
         self.norm_layer = nn.BatchNorm2d
         self.mods = arch_config.mods
 
@@ -298,10 +299,10 @@ class TruFor(BaseTorchMethod):
             - image (torch.Tensor): input image tensor.
 
         Returns:
-            - heatmap (Tensor): output heatmap.
-            - conf (Optional[Tensor]): output confidence map.
-            - det (Optional[Tensor]): output detection map.
-            - npp (Optional[Tensor]): output Noiseprint++ map.
+            - heatmap (Tensor): output heatmap map of the image.
+            - conf (Optional[Tensor]): output confidence map of the image.
+            - det (Optional[Tensor]): output detection score of the image.
+            - npp (Optional[Tensor]): output Noiseprint++ map of the image.
         """
         if image.ndim == 3:
             image = image.unsqueeze(0)
@@ -309,16 +310,27 @@ class TruFor(BaseTorchMethod):
         with torch.no_grad():
             out, conf, det, npp = self.forward(image)
 
-        # select the map with the smallest sum (smallest anomaly area)
-        sum_maps = torch.sum(out, dim=[-1, -2])
-        heatmap = out[:, torch.argmin(sum_maps[0, :]), :, :]
+        if conf is not None:
+            conf = torch.squeeze(conf, 0)
+            conf = torch.sigmoid(conf)[0]
+
+        if npp is not None:
+            npp = torch.squeeze(npp, 0)[0]
+
+        if det is not None:
+            det = torch.sigmoid(det)[0]
+
+        out = torch.squeeze(out, 0)
+        heatmap = F.softmax(out, dim=0)[1]
         return heatmap, conf, det, npp
 
     def benchmark(self, image: torch.Tensor) -> BenchmarkOutput:
         """
         Wrapper for the predict method for the benchmark
         """
-        heatmap, _, det, _ = self.predict(image)
+        heatmap, conf, det, _ = self.predict(image)
+        if self.use_confidence:
+            heatmap = heatmap * conf
         return {"heatmap": heatmap, "mask": None, "detection": det}
 
     @classmethod
@@ -333,4 +345,8 @@ class TruFor(BaseTorchMethod):
 
         trufor_config = TruForConfig(**config)
 
-        return cls(arch_config=trufor_config.arch, weights=trufor_config.weights)
+        return cls(
+            arch_config=trufor_config.arch,
+            weights=trufor_config.weights,
+            use_confidence=trufor_config.use_confidence,
+        )
