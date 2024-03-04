@@ -268,7 +268,7 @@ class Splicebuster(BaseMethod):
         if self.mixture == "gaussian":
             try:
                 gg_mixt = GaussianMixture()
-                mus, covs = gg_mixt.fit(flat_features)
+                mus, covs = gg_mixt.fit(valid_features)
                 labels = mahalanobis_distance(
                     flat_features, mus[1], covs[1]
                 ) / mahalanobis_distance(flat_features, mus[0], covs[0])
@@ -314,10 +314,10 @@ class Splicebuster(BaseMethod):
         heatmap = labels.reshape(features.shape[:2])
 
         checkpoint(heatmap, "heatmap.npy", load_gt=False)
-        print("Number of fits = ", gu_mixt.debug_amount_of_fits)
-        print(
-            "Number of random initializations = ", gu_mixt.debug_amount_of_random_inits
-        )
+        # print("Number of fits = ", gu_mixt.debug_amount_of_fits)
+        # print(
+        #     "Number of random initializations = ", gu_mixt.debug_amount_of_random_inits
+        # )
         heatmap = heatmap / np.max(labels)
         heatmap = upscale_mask(coords, heatmap, (X, Y), method="linear", fill_value=0)
         heatmap = torch.from_numpy(heatmap).float()
