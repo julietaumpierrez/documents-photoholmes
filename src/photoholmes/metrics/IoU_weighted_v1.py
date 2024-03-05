@@ -8,17 +8,19 @@ class IoU_weighted_v1(Metric):
     The IoU weighted (Intersection over Union weighted) metric calculates the IoU taking
     into account the value of the heatmap as a probability and uses weighted true
     positives, weighted false positives, weighted true negatives and weighted false
-    negatives to calculate the IoU.
+    negatives to calculate the IoU. This class computes de mean weighted IoU over
+    the whole dataset. It calculates the weighted IoU score for each image and then
+    averages to output a single result.
 
     Attributes:
         IoU weighted (torch.Tensor): A tensor that accumulates the count of IoU weighted
-                                        across batches.
+                                        across the dataset.
 
     Methods:
         __init__(**kwargs): Initializes the IoU weighted metric object.
-        update(preds: Tensor, target: Tensor): Updates the states with a new batch of
-                                               predictions and targets.
-        compute() -> Tensor: Computes the IoU weighted over all batches.
+        update(preds: Tensor, target: Tensor): Updates the states with a new set of
+                                               prediction and target.
+        compute() -> Tensor: Computes the IoU weighted over the full dataset.
 
     Example:
         >>> IoU_weighted_metric = IoU_weighted()
@@ -40,8 +42,8 @@ class IoU_weighted_v1(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the IoU weighted counts with a new batch of
-        predictions and targets. It assumes both predictions as heatmap or binary
+        Updates the IoU weighted counts with a new pair of
+        prediction and target. It assumes both predictions as heatmap or binary
         and binary targets.
 
         Args:
