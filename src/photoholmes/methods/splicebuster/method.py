@@ -39,6 +39,7 @@ class Splicebuster(BaseMethod):
         pca_dim: int = 25,
         mixture: Literal["uniform", "gaussian"] = "uniform",
         pca: Literal["original", "uncentered", "correct"] = "original",
+        seed: Union[int, None] = 0,
         weights: Union[WeightConfig, Literal["original"], None] = None,
         **kwargs,
     ):
@@ -50,6 +51,7 @@ class Splicebuster(BaseMethod):
         - q: quantization level.
         - T: Truncation level.
         - pca_dim: number of dimensions to keep after PCA. If 0, PCA is not used.
+        - seed: random seed for mixture model initialization.
         - weight_params: provides parameters for weighted feature computation.Options:
             - None: do not use weights.
             - "original": use parameters from the original implementation.
@@ -71,6 +73,7 @@ class Splicebuster(BaseMethod):
             self.weight_params = weights
 
         self.mixture = mixture
+        self.seed = seed
 
     def filter_and_encode(
         self, image: NDArray
@@ -247,6 +250,7 @@ class Splicebuster(BaseMethod):
             if self.pca == "original":
                 t = feat_reduce_matrix(self.pca_dim, valid_features)
                 flat_features = np.matmul(flat_features, t)
+                valid_features = np.matmul(valid_features, t)
             elif self.pca == "uncentered":
                 pca = PCA(n_components=self.pca_dim, whiten=True)
                 pca.fit(valid_features)
@@ -254,28 +258,35 @@ class Splicebuster(BaseMethod):
                 flat_features = pca.transform(
                     flat_features + valid_features.mean(axis=0)
                 )
+                valid_features = pca.transform(
+                    flat_features + valid_features.mean(axis=0)
+                )
             else:
                 pca = PCA(self.pca_dim)
-                pca.fit(valid_features)
+                valid_features = pca.fit_transform(valid_features)
                 flat_features = pca.transform(flat_features)
 
         if self.mixture == "gaussian":
             try:
-                gg_mixt = GaussianMixture()
-                mus, covs = gg_mixt.fit(flat_features)
+                gg_mixt = GaussianMixture(seed=self.seed)
+                mus, covs = gg_mixt.fit(valid_features)
                 labels = mahalanobis_distance(
                     flat_features, mus[1], covs[1]
                 ) / mahalanobis_distance(flat_features, mus[0], covs[0])
                 labels_comp = 1 / labels
+                labels[~valid.flatten()] = 0
+                labels_comp[~valid.flatten()] = 0
                 labels = labels if labels.sum() < labels_comp.sum() else labels_comp
+                labels[~valid.flatten()] = 0
             except LinAlgWarning:
                 labels = np.zeros(flat_features.shape[0])
                 print("LinAlgWarning, returning zeros")
-        elif self.mixture == "uniform":
+        elif self.mixture == "uniform":  # CURRENT CASE
             try:
-                gu_mixt = GaussianUniformEM()
-                mus, covs, _ = gu_mixt.fit(flat_features)
+                gu_mixt = GaussianUniformEM(seed=self.seed)
+                mus, covs, _ = gu_mixt.fit(valid_features)
                 _, labels = gu_mixt.predict(flat_features)
+                labels[~valid.flatten()] = 0
             except LinAlgWarning:
                 labels = np.zeros(flat_features.shape[0])
                 print("LinAlgWarning, returning zeros")
@@ -286,9 +297,7 @@ class Splicebuster(BaseMethod):
                     'Please select either "uniform" or "gaussian"'
                 )
             )
-
         heatmap = labels.reshape(features.shape[:2])
-
         heatmap = heatmap / np.max(labels)
         heatmap = upscale_mask(coords, heatmap, (X, Y), method="linear", fill_value=0)
         heatmap = torch.from_numpy(heatmap).float()
