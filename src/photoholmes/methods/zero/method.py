@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -6,39 +6,73 @@ from scipy.fftpack import dctn
 from torch import any as torch_any
 from torch import from_numpy
 
-from photoholmes.methods.base import BaseMethod
+from photoholmes.methods.base import BaseMethod, BenchmarkOutput
 
 from .utils import log_nfa
 
 
 class Zero(BaseMethod):
+    """
+    Implementation of the Zero method [Nikoukhah et al., 2021].
+
+    The method is based on the detection of JPEG compression and grid
+    alignment abnormalities. It is also capable of detecting local image
+    forgeries such as copy-move.
+
+    For more details and instruction to download the weights, see the
+    original implementation at:
+    https://github.com/tinankh/ZERO?tab=readme-ov-file
+    """
+
     def __init__(self, no_vote: int = -1, **kwargs) -> None:
         """
-        Initialize the Zero class.
+        Attributes:
+            no_vote (int): value to be used as no vote. Default is -1.
+            kwargs: additional arguments to be passed to the BaseMethod class.
         """
         self.no_vote = no_vote
         super().__init__(**kwargs)
 
-    def predict(self, image: NDArray) -> Dict[str, Any]:
+    def predict(self, image: NDArray) -> Tuple[NDArray, NDArray, int]:
         """
-        Applies the method over an image's luminance (first cannel of input).
-        Returns a dictionary with the predicted mask.
+        Run Zero on a image. The image is expected to be in YCbCr format. The
+        methods is run over the luminance channel.
+
+        Args:
+            image (np.ndarray): input image.
+
+        Returns:
+            Tuple[NDArray, NDArray, int]: forgery mask, votes and main grid.
         """
         luminance = image[..., 0]
         votes = self.compute_grid_votes_per_pixel(luminance)
         main_grid = self.detect_global_grids(votes)
-        forgery_mask = from_numpy(self.detect_forgeries(votes, main_grid))
-        detection = torch_any(forgery_mask).float().unsqueeze(0)
+        forgery_mask = self.detect_forgeries(votes, main_grid)
 
-        return {"mask": forgery_mask, "detection": detection}
+        return forgery_mask, votes, main_grid
+
+    def benchmark(self, image: NDArray) -> BenchmarkOutput:
+        """
+        Wrapper for the predict method for the benchmark
+        """
+        forgery_mask, _, _ = self.predict(image)
+        mask = from_numpy(forgery_mask)
+        detection = torch_any(mask).float().unsqueeze(0)
+        return {
+            "heatmap": None,
+            "mask": mask,
+            "detection": detection,
+        }
 
     def compute_grid_votes_per_pixel(self, luminance: NDArray) -> NDArray:
         """
         Compute the grid votes per pixel.
-        Input:
-          - luminance: Luminance image.
-        Output:
-         - votes: Grid votes per pixel.
+
+        Args:
+            luminance (np.ndarray): input luminance channel.
+
+        Returns:
+            np.ndarray: grid votes per pixel.
         """
         Y, X = luminance.shape
         zeros = np.zeros_like(luminance, dtype=np.int32)
@@ -69,11 +103,14 @@ class Zero(BaseMethod):
 
     def detect_global_grids(self, votes: NDArray) -> int:
         """
-        Detects the main detected grid.
-        Input:
-          - votes: Grid votes per pixel. Each pixel votes 1 of the 64 possible grids.
-        Output:
-          - most_voted_grid: Main detected grid.
+        Detects the main estimated grid.
+
+        Args:
+            votes (np.ndarray): grid votes per pixel. Each pixel votes 1 of the 64
+                possible grids.
+
+        Returns:
+            int: main detected grid.
         """
         Y, X = votes.shape
         grid_votes = np.zeros(64)
@@ -105,11 +142,14 @@ class Zero(BaseMethod):
     def detect_forgeries(self, votes: NDArray, grid_to_exclude: int) -> NDArray:
         """
         Detects forgery mask from a grid votes map and a grid index to exclude.
-        Input:
-          - votes: Grid votes per pixel. Each pixel votes 1 of the 64 possible grids.
-          - grid_to_exclude: Grid index to exclude.
-        Output:
-            - forgery_mask: Forgery mask.
+
+        Args:
+            votes (np.ndarray): Grid votes per pixel. Each pixel votes 1 of the 64
+                possible grids.
+            grid_to_exclude (int): Grid index to exclude.
+
+        Returns:
+            np.ndarray: forgery mask.
         """
         W = 9
         grid_max = 63
