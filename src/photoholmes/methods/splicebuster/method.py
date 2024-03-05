@@ -257,7 +257,8 @@ class Splicebuster(BaseMethod):
                     flat_features, mus[1], covs[1]
                 ) / mahalanobis_distance(flat_features, mus[0], covs[0])
                 labels_comp = 1 / labels
-                print(labels.sum(), labels_comp.sum())
+                labels[~valid.flatten()] = 0
+                labels_comp[~valid.flatten()] = 0
                 labels = labels if labels.sum() < labels_comp.sum() else labels_comp
                 labels[~valid.flatten()] = 0
             except LinAlgWarning:
