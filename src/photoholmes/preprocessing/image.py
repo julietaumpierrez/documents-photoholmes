@@ -1,5 +1,6 @@
-from typing import Dict, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Optional, Tuple, TypeVar, Union
 
+import cv2 as cv
 import numpy as np
 import torch
 from numpy.typing import NDArray

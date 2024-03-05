@@ -13,3 +13,4 @@ class MethodName(Enum):
     PSCCNET = "psccnet"
     TRUFOR = "trufor"
     FOCAL = "focal"
+    ZERO = "zero"
