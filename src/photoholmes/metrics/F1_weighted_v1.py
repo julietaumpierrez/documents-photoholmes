@@ -8,17 +8,20 @@ class F1_weighted_v1(Metric):
     The F1 weighted (F1 score weighted) metric calculates the F1 score taking
     into account the value of the heatmap as a probability and uses weighted true
     positives, weighted false positives, weighted true negatives and weighted false
-    negatives to calculate the F1 score.
+    negatives to calculate the F1 score. This class computes de mean weighted F1 over
+    the whole dataset. It calculates the weighted F1 score for each image and then
+    averages to output a single result.
+
 
     Attributes:
         F1 score weighted (torch.Tensor): A tensor that accumulates the count of F1
-                                        score weighted across batches.
+                                        score weighted across the dataset.
 
     Methods:
         __init__(**kwargs): Initializes the F1 score weighted metric object.
-        update(preds: Tensor, target: Tensor): Updates the states with a new batch of
-                                               predictions and targets.
-        compute() -> Tensor: Computes the F1 score weighted over all batches.
+        update(preds: Tensor, target: Tensor): Updates the states with a new set of
+                                               prediction and target.
+        compute() -> Tensor: Computes the F1 score weighted over the full dataset.
 
     Example:
         >>> F1_weighted_metric = F1_weighted()
@@ -40,8 +43,8 @@ class F1_weighted_v1(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the F1 score weighted counts with a new batch of
-        predictions and targets. It assumes both predictions as heatmap or binary
+        Updates the F1 score weighted counts with a new pair of
+        prediction and target. It assumes both predictions as heatmap or binary
         and binary targets.
 
         Args:
