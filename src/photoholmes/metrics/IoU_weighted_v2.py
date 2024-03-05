@@ -23,9 +23,9 @@ class IoU_weighted_v2(Metric):
 
     Methods:
         __init__(**kwargs): Initializes the IoU weighted metric object.
-        update(preds: Tensor, target: Tensor): Updates the states with a new batch of
-                                               predictions and targets.
-        compute() -> Tensor: Computes the IoU weighted over all batches.
+        update(preds: Tensor, target: Tensor): Updates the states with a new pair of
+                                               prediction and target.
+        compute() -> Tensor: Computes the IoU weighted over the full dataset.
 
     Example:
         >>> IoU_weighted_metric = IoU_weighted_V2()

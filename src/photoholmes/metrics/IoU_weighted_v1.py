@@ -70,7 +70,7 @@ class IoU_weighted_v1(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the IoU weighted over all the batches averaging all the
+        Computes the IoU weighted over the full dataset averaging all the
         IoU wighted of each image.
 
         Returns:

@@ -41,8 +41,8 @@ class FPR(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the false positives and total negatives counts with a new batch of
-        predictions and targets. It assumes both predictions and targets are binary.
+        Updates the false positives and total negatives counts with a new pair of
+        prediction and target. It assumes both predictions and targets are binary.
 
         Args:
             preds (Tensor): The predictions from the model.

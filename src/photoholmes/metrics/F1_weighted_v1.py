@@ -72,7 +72,7 @@ class F1_weighted_v1(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the F1 weighted over all the batches averaging all the
+        Computes the F1 weighted over all the full dataset averaging all the
         F1 wighted of each image.
 
         Returns:
