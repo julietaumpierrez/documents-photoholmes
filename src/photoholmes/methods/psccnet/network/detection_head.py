@@ -59,7 +59,7 @@ class Bottleneck(nn.Module):
 
 
 class DetectionHead(nn.Module):
-    def __init__(self, config: PSCCArchConfig, crop_size: List[int]):
+    def __init__(self, config: PSCCArchConfig, crop_size: Tuple[int, int]):
         """Detection head for PSCCNet
              Args:
         config (PSCCArchConfig): PSCCNet architecture config.

@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Literal, Optional, Union
+from typing import List, Literal, Optional, Tuple, Union
+
+from pydantic import BaseModel
 
 
-@dataclass
-class StageConfig:
+class StageConfig(BaseModel):
     num_modules: int
     num_branches: int
     num_blocks: List[int]
@@ -13,23 +14,14 @@ class StageConfig:
     fuse_method: Literal["SUM"]
 
 
-@dataclass
-class PSCCArchConfig:
+class PSCCArchConfig(BaseModel):
     stage1: StageConfig
     stage2: StageConfig
     stage3: StageConfig
     stage4: StageConfig
     stem_inplanes: int = 64
     final_conv_kernel: int = 1
-
-    @classmethod
-    def load_from_dict(cls, config_dict: dict):
-        for k, v in config_dict.items():
-            if isinstance(v, dict):
-                config_dict[k] = StageConfig(**v)
-            else:
-                config_dict[k] = v
-        return cls(**config_dict)
+    crop_size: Tuple[int, int] = (256, 256)
 
 
 pretrained_arch = PSCCArchConfig(
@@ -67,6 +59,7 @@ pretrained_arch = PSCCArchConfig(
         block="BASIC",
         fuse_method="SUM",
     ),
+    crop_size=(256, 256),
 )
 
 
