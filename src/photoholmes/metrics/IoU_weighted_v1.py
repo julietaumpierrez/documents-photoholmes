@@ -15,6 +15,7 @@ class IoU_weighted_v1(Metric):
     Attributes:
         IoU weighted (torch.Tensor): A tensor that accumulates the count of IoU weighted
                                         across the dataset.
+        total_images (torch.Tensor): A tensor that accumulates the count of images.
 
     Methods:
         __init__(**kwargs): Initializes the IoU weighted metric object.
@@ -23,9 +24,9 @@ class IoU_weighted_v1(Metric):
         compute() -> Tensor: Computes the IoU weighted over the full dataset.
 
     Example:
-        >>> IoU_weighted_metric = IoU_weighted()
-        >>> for preds_batch, targets_batch in data_loader:
-        >>>     IoU_weighted_metric.update(preds_batch, targets_batch)
+        >>> IoU_weighted_metric = IoU_weighted_v1()
+        >>> for pred, targets in data_loader:
+        >>>     IoU_weighted_metric.update(preds, targets)
         >>> iou_weighted = IoU_weighted_metric.compute()
     """
 

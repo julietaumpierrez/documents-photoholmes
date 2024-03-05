@@ -15,6 +15,7 @@ class MCC_weighted_v1(Metric):
     Attributes:
         MCC score weighted (torch.Tensor): A tensor that accumulates the count of MCC
                                                 score weighted across batches.
+        total_images (torch.Tensor): A tensor that accumulates the count of images.
 
     Methods:
         __init__(**kwargs): Initializes the MCC score weighted metric object.
@@ -23,9 +24,9 @@ class MCC_weighted_v1(Metric):
         compute() -> Tensor: Computes the MCC score weighted over all batches.
 
     Example:
-        >>> MCC_weighted_metric = MCC_weighted()
-        >>> for preds_batch, targets_batch in data_loader:
-        >>>     MCC_weighted_metric.update(preds_batch, targets_batch)
+        >>> MCC_weighted_metric = MCC_weighted_v1()
+        >>> for preds, targets in data_loader:
+        >>>     MCC_weighted_metric.update(preds, targets)
         >>> mcc_weighted = MCC_weighted_metric.compute()
     """
 

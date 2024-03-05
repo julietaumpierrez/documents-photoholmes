@@ -23,8 +23,8 @@ class FPR(Metric):
 
     Example:
         >>> fpr_metric = FPR()
-        >>> for preds_batch, targets_batch in data_loader:
-        >>>     fpr_metric.update(preds_batch, targets_batch)
+        >>> for preds, targets in data_loader:
+        >>>     fpr_metric.update(preds, targets)
         >>> fpr = fpr_metric.compute()
     """
 
@@ -60,7 +60,8 @@ class FPR(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the False Positive Rate over the full dataset.
+        Computes the False Positive Rate over the full dataset by using the accumulared
+        false_positives and total_negatives.
 
         Returns:
             Tensor: The computed False Positive Rate. If the total number of negatives

@@ -14,8 +14,9 @@ class F1_weighted_v1(Metric):
 
 
     Attributes:
-        F1 score weighted (torch.Tensor): A tensor that accumulates the count of F1
+        F1_weighted (torch.Tensor): A tensor that accumulates the count of F1
                                         score weighted across the dataset.
+        total_images (torch.Tensor): A tensor that accumulates the count of images.
 
     Methods:
         __init__(**kwargs): Initializes the F1 score weighted metric object.
@@ -24,9 +25,9 @@ class F1_weighted_v1(Metric):
         compute() -> Tensor: Computes the F1 score weighted over the full dataset.
 
     Example:
-        >>> F1_weighted_metric = F1_weighted()
-        >>> for preds_batch, targets_batch in data_loader:
-        >>>     F1_weighted_metric.update(preds_batch, targets_batch)
+        >>> F1_weighted_metric = F1_weighted_v1()
+        >>> for preds, targets in data_loader:
+        >>>     F1_weighted_metric.update(preds, targets)
         >>> f1_weighted = F1_weighted_metric.compute()
     """
 

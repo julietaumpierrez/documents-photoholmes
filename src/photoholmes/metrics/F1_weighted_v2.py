@@ -28,9 +28,9 @@ class F1_weighted_v2(Metric):
         compute() -> Tensor: Computes the F1 score weighted over the full dataset.
 
     Example:
-        >>> F1_weighted_metric = F1_weighted()
-        >>> for preds_batch, targets_batch in data_loader:
-        >>>     F1_weighted_metric.update(preds_batch, targets_batch)
+        >>> F1_weighted_metric = F1_weighted_v2()
+        >>> for preds, targets in data_loader:
+        >>>     F1_weighted_metric.update(preds, targets)
         >>> f1_weighted = F1_weighted_metric.compute()
     """
 
@@ -49,7 +49,7 @@ class F1_weighted_v2(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the F1 score weighted counts with a new pair of
+        Updates the TPw, FPW and FNw counts with a new pair of
         prediction and target. It assumes both predictions as heatmap or binary
         and binary targets.
 

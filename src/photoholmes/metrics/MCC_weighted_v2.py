@@ -30,9 +30,9 @@ class MCC_weighted_v2(Metric):
         compute() -> Tensor: Computes the MCC score weighted over the full dataset.
 
     Example:
-        >>> MCC_weighted_metric = MCC_weighted()
-        >>> for preds_batch, targets_batch in data_loader:
-        >>>     MCC_weighted_metric.update(preds_batch, targets_batch)
+        >>> MCC_weighted_metric = MCC_weighted_v2()
+        >>> for preds, targets in data_loader:
+        >>>     MCC_weighted_metric.update(preds, targets)
         >>> mcc_weighted = MCC_weighted_metric.compute()
     """
 
@@ -52,8 +52,8 @@ class MCC_weighted_v2(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the MCC score weighted counts with a new batch of
-        predictions and targets. It assumes both predictions as heatmap or binary
+        Updates the TPw, FNw, FPw and TNw counts with a new pair of
+        prediction and target. It assumes both predictions as heatmap or binary
         and binary targets.
 
         Args:

@@ -28,9 +28,9 @@ class IoU_weighted_v2(Metric):
         compute() -> Tensor: Computes the IoU weighted over all batches.
 
     Example:
-        >>> IoU_weighted_metric = IoU_weighted()
-        >>> for preds_batch, targets_batch in data_loader:
-        >>>     IoU_weighted_metric.update(preds_batch, targets_batch)
+        >>> IoU_weighted_metric = IoU_weighted_V2()
+        >>> for preds, targets in data_loader:
+        >>>     IoU_weighted_metric.update(preds, targets)
         >>> iou_weighted = IoU_weighted_metric.compute()
     """
 
@@ -49,7 +49,7 @@ class IoU_weighted_v2(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the IoU weighted counts with a new pair of
+        Updates the Tpw, Fpw and FNw counts with a new pair of
         prediction and target. It assumes both predictions as heatmap or binary
         and binary targets.
 
