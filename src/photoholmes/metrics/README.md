@@ -21,36 +21,22 @@ $$TPR = \frac{TP}{TP + FN}$$
     These metrics allow the comparison of performance between methods whose outputs are masks with methods whose outputs are heatmaps by regarding said heatmaps as maps of probability in which the value of each pixel corresponds to the probability of the pixel being forged. The same works with the detection problem in which the output is a single number that indicates the probability of the image as whole being forged. To accomplish that [Gardella, 2023](https://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000341) and [Bammey, 2021](https://openaccess.thecvf.com/content/WACV2022/papers/Bammey_Non-Semantic_Evaluation_of_Image_Forensics_Tools_Methodology_and_Database_WACV_2022_paper.pdf) define 
     weighted true positives, weighted false positives, weighted true negatives, and weighted false negatives as follows:
 
-    $$
-    TP_w = \sum_xH(x)M(x)
-    $$
+    $$TP_w = \sum_xH(x)M(x)$$
 
-    $$
-    FP_w = \sum_x(1-H(x))M(x)
-    $$
+    $$FP_w = \sum_x(1-H(x))M(x)$$
 
-    $$
-    TN_w = \sum_x(1-H(x))(1-M(x))
-    $$
+    $$TN_w = \sum_x(1-H(x))(1-M(x))$$
 
-    $$
-    FN_w = \sum_xH(x)(1-M(x))
-    $$
+    $$FN_w = \sum_xH(x)(1-M(x))$$
     in which $H(x)$ corresponds to the predicted output and $M(x)$ corresponds to the mask.
 
     The implemented weighted metrics are:
     - Weighted MCC: Mathews Correlation Coefficient
-        $$
-        MCC_{weighted} = \frac{TP_w \times TN_w - FP_w \times  FN_w}{\sqrt{(TP_w + FP_w)(TP_w+FN_w)(TN_w+FP_W)(TN_w+FN_w)}}
-        $$
+        $$MCC_{weighted} = \frac{TP_w \times TN_w - FP_w \times  FN_w}{\sqrt{(TP_w + FP_w)(TP_w+FN_w)(TN_w+FP_W)(TN_w+FN_w)}}$$
     - Weighted IoU: Intersection over Union
-        $$
-        IoU_{weighted} = \frac{TP_w}{TP_w + FN_w + FP_w}
-        $$
+        $$IoU_{weighted} = \frac{TP_w}{TP_w + FN_w + FP_w}$$
     - Weighted F1: F1 score
-        $$
-        F1_{weighted} = \frac{2TP_w}{2TP_w + FN_w + FP_w}
-        $$
+        $$F1_{weighted} = \frac{2TP_w}{2TP_w + FN_w + FP_w}$$
     
     There are two versions of the weighted metrics:
     - v1: Corresponds to the mean version of each weighted metric. Those metrics accumulate the value of the metric for each image and then the output is the average of the metric over the full dataset. 
