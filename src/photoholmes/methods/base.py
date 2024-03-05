@@ -92,5 +92,5 @@ class BaseTorchMethod(BaseMethod, Module):
         )  # FIXME: asign limits torch version to >=2.1
 
     def to_device(self, device: Union[str, torch.device]):
-        self.to(self.device)
+        self.to(device)
         self.device = torch.device(device)
