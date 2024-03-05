@@ -18,6 +18,7 @@ from photoholmes.utils.pca import PCA
 from .config import WeightConfig
 from .utils import (
     encode_matrix,
+    feat_reduce_matrix,
     get_saturated_region_mask,
     mahalanobis_distance,
     quantize,
@@ -37,6 +38,7 @@ class Splicebuster(BaseMethod):
         saturation_prob: float = 0.85,
         pca_dim: int = 25,
         mixture: Literal["uniform", "gaussian"] = "uniform",
+        pca: Literal["original", "uncentered", "correct"] = "original",
         weights: Union[WeightConfig, Literal["original"], None] = None,
         **kwargs,
     ):
@@ -60,6 +62,7 @@ class Splicebuster(BaseMethod):
         self.T = T
         self.saturation_prob = saturation_prob
         self.pca_dim = pca_dim
+        self.pca = pca
 
         self.weight_params: Optional[WeightConfig]
         if weights == "original":
@@ -241,8 +244,20 @@ class Splicebuster(BaseMethod):
         valid_features = flat_features[valid.flatten()]
 
         if self.pca_dim > 0:
-            pca = PCA(n_components=self.pca_dim)
-            flat_features = pca.fit_transform(valid_features)
+            if self.pca == "original":
+                t = feat_reduce_matrix(self.pca_dim, valid_features)
+                flat_features = np.matmul(flat_features, t)
+            elif self.pca == "uncentered":
+                pca = PCA(n_components=self.pca_dim, whiten=True)
+                pca.fit(valid_features)
+                # apply PCA over uncentered features as original implementation
+                flat_features = pca.transform(
+                    flat_features + valid_features.mean(axis=0)
+                )
+            else:
+                pca = PCA(self.pca_dim)
+                pca.fit(valid_features)
+                flat_features = pca.transform(flat_features)
 
         if self.mixture == "gaussian":
             try:

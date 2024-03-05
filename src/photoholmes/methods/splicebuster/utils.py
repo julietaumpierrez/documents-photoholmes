@@ -141,3 +141,27 @@ def get_saturated_region_mask(
     mask = reduce(np.logical_or, mask)
     mask = binary_dilation(mask, np.ones((dilation_kernel_size, dilation_kernel_size)))
     return ~mask * 1.0
+
+
+def feat_reduce_matrix(pca_dim: int, X: NDArray, whitten: bool = True) -> NDArray:
+    """
+    Calculates the matrix transformation to reduce the features using PCA.
+
+    Params:
+        - pca_dim (int): number of principal components to keep.
+        - X (NDArray): input features. Dims (n_samples, n_features)
+        - whitten (bool): whether to whitten the features or not.
+    Returns:
+        - NDArray: eigenvector matrix to project the features into the reduced space.
+    """
+    inds = np.arange(pca_dim)
+    cov = np.cov(X, rowvar=False, bias=True)
+    w, v = np.linalg.eigh(cov)
+    w = w[::-1]
+    v = v[:, ::-1]
+    v = v[:, inds]
+
+    if whitten:
+        v = v / np.sqrt(w[inds])
+
+    return v
