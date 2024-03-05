@@ -1,7 +1,7 @@
 # Code derived from https://github.com/grip-unina/noiseprint and CODIGO MARINA
 # FIXME: add license a Marina and Co.
 # FIXME: citar repo origianl y el de noiseprint para GU
-from typing import Tuple
+from typing import Tuple, Union
 
 import numpy as np
 import scipy as sp
@@ -18,7 +18,7 @@ class GaussianUniformEM:
         tol: float = 1e-5,
         max_iter: int = 100,
         n_init: int = 30,
-        seed=None,
+        seed: Union[int, None] = None,
     ) -> None:
         """
         Gaussian Uniform Expectation Maximization algorithm.
@@ -28,7 +28,7 @@ class GaussianUniformEM:
         - tol: tolerance used in a single run of the expectation step
         - max_iter: maximum number of iterations in a single run of the expectation step
         - n_init: number of iterations of EM to run
-        - seed: random seed for reproducibility
+        - seed: random seed for parameter initialization
         """
         self.p_outlier_init = p_outlier_init
         self.outlier_nlogl = outlier_nlogl

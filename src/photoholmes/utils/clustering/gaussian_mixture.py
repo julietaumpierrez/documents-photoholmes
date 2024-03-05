@@ -8,9 +8,11 @@ from sklearn.mixture import GaussianMixture as sklearn_gmm
 class GaussianMixture:
     """Wrapper to use Gaussian Mixtures from scikit-learn library"""
 
-    def __init__(self, n_components: int = 2):
+    def __init__(self, n_components: int = 2, seed: Union[int, None] = None):
         self.n_components = n_components
-        self.gm = sklearn_gmm(n_components=n_components)
+        self.gm = sklearn_gmm(
+            n_components=n_components, random_state=np.random.RandomState(seed)
+        )
 
     def fit(self, features: Union[List[NDArray], NDArray]) -> Tuple[NDArray, NDArray]:
         """Predicts masks from a list of images."""

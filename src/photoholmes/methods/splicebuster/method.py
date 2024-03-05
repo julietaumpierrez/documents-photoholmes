@@ -49,6 +49,7 @@ class Splicebuster(BaseMethod):
         - q: quantization level.
         - T: Truncation level.
         - pca_dim: number of dimensions to keep after PCA. If 0, PCA is not used.
+        - seed: random seed for mixture model initialization.
         - weight_params: provides parameters for weighted feature computation.Options:
             - None: do not use weights.
             - "original": use parameters from the original implementation.
@@ -249,13 +250,16 @@ class Splicebuster(BaseMethod):
 
         if self.mixture == "gaussian":
             try:
-                gg_mixt = GaussianMixture()
+                print(self.seed)
+                gg_mixt = GaussianMixture(seed=self.seed)
                 mus, covs = gg_mixt.fit(valid_features)
                 labels = mahalanobis_distance(
                     flat_features, mus[1], covs[1]
                 ) / mahalanobis_distance(flat_features, mus[0], covs[0])
                 labels_comp = 1 / labels
+                print(labels.sum(), labels_comp.sum())
                 labels = labels if labels.sum() < labels_comp.sum() else labels_comp
+                labels[~valid.flatten()] = 0
             except LinAlgWarning:
                 labels = np.zeros(flat_features.shape[0])
                 print("LinAlgWarning, returning zeros")
