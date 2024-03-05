@@ -8,6 +8,7 @@ class DatasetName(Enum):
     OSN = "osn"
     COVERAGE = "coverage"
     REALISTIC_TAMPERING = "realistic_tampering"
+    REALISTIC_TAMPERING_WEBP = "realistic_tampering_webp"
     DSO1 = "dso1"
     DSO1_OSN = "dso1_osn"
     CASIA1_COPY_MOVE = "casia1_copy_move"

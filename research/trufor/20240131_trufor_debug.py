@@ -32,6 +32,8 @@ print("detection", out["detection"].shape, out["detection"])
 print("npp", out["noiseprints"].shape, out["noiseprints"])
 
 # %%
+plt.imshow(out["heatmap"])
+# %%
 noiseprint = out["noiseprints"][0].permute(1, 2, 0)
 noiseprint = (noiseprint - noiseprint.min()) / (noiseprint.max() - noiseprint.min())
 plt.imshow(noiseprint)

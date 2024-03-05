@@ -15,20 +15,18 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from photoholmes.data.input.coverage import CoverageDataset
-from photoholmes.data.input.osn import OSNDataset
-from photoholmes.data.input.reaslistic_tampering import RealisticTamperingDataset
-from photoholmes.models.splicebuster import Splicebuster
+from photoholmes.datasets.realistic_tampering_webp import RealisticTamperingWebPDataset
+from photoholmes.methods.DQ import DQ
 from photoholmes.utils.image import plot_multiple
 
-# %%
 # Elegir Dataset
-DATASET_NAME = "OSN"
+DATASET_NAME = "Realistic Tampering WebP"
 DATA_PATH = "/home/dsense/extra/tesis/datos/"
 FOLDER_NAME = "_".join((DATASET_NAME.lower()).split(" "))  # Replace if necessary
 DATASET_PATH = DATA_PATH + FOLDER_NAME
+print(DATASET_PATH)
 
-dataset_class = OSNDataset
+dataset_class = RealisticTamperingWebPDataset
 
 # %%
 SEED = 42
@@ -37,11 +35,14 @@ ims = []
 mks = []
 rnd = np.random.default_rng(SEED)
 idxs = rnd.choice(range(len(dataset)), 12).astype(int)
-
+labels = []
 for n in idxs:
-    x, mk = dataset[n]
+    x, mk, name = dataset[n]
     ims.append(x["image"])
     mks.append(mk)
+    labels.append(name)
 
-plot_multiple(ims, title="Imágenes " + DATASET_NAME)
-plot_multiple(mks, title="Máscaras " + DATASET_NAME)
+plot_multiple(ims, titles=labels, title="Imágenes " + DATASET_NAME)
+plot_multiple(mks, titles=labels, title="Máscaras " + DATASET_NAME)
+
+# %%
