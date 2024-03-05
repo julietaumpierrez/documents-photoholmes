@@ -76,7 +76,6 @@ class MetricFactory:
         for metric_name in metric_names:
             if isinstance(metric_name, str):
                 metric_name = MetricName(metric_name.lower())
-            # TODO: Add mAP metric
             match metric_name:
                 case MetricName.AUROC:
                     from torchmetrics import AUROC
