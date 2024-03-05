@@ -229,6 +229,23 @@ class Splicebuster(BaseMethod):
 
         return block_features, block_weights, coords
 
+    def _reduce_dimensions(self, flat_features, valid_features):
+        if self.pca == "original":
+            t = feat_reduce_matrix(self.pca_dim, valid_features)
+            flat_features = np.matmul(flat_features, t)
+            valid_features = np.matmul(valid_features, t)
+        elif self.pca == "uncentered":
+            pca = PCA(n_components=self.pca_dim, whiten=True)
+            pca.fit(valid_features)
+            # apply PCA over uncentered features as original implementation
+            flat_features = pca.transform(flat_features + valid_features.mean(axis=0))
+            valid_features = pca.transform(flat_features + valid_features.mean(axis=0))
+        else:
+            pca = PCA(self.pca_dim)
+            valid_features = pca.fit_transform(valid_features)
+            flat_features = pca.transform(flat_features)
+        return flat_features, valid_features
+
     def predict(self, image: NDArray) -> Dict[str, Tensor]:
         """Run splicebuster on an image.
         Params:
@@ -247,24 +264,9 @@ class Splicebuster(BaseMethod):
         valid_features = flat_features[valid.flatten()]
 
         if self.pca_dim > 0:
-            if self.pca == "original":
-                t = feat_reduce_matrix(self.pca_dim, valid_features)
-                flat_features = np.matmul(flat_features, t)
-                valid_features = np.matmul(valid_features, t)
-            elif self.pca == "uncentered":
-                pca = PCA(n_components=self.pca_dim, whiten=True)
-                pca.fit(valid_features)
-                # apply PCA over uncentered features as original implementation
-                flat_features = pca.transform(
-                    flat_features + valid_features.mean(axis=0)
-                )
-                valid_features = pca.transform(
-                    flat_features + valid_features.mean(axis=0)
-                )
-            else:
-                pca = PCA(self.pca_dim)
-                valid_features = pca.fit_transform(valid_features)
-                flat_features = pca.transform(flat_features)
+            flat_features, valid_features = self._reduce_dimensions(
+                flat_features, valid_features
+            )
 
         if self.mixture == "gaussian":
             try:
