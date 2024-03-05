@@ -6,9 +6,11 @@ from torchmetrics import Metric
 class MCC_weighted_v1(Metric):
     """
     The MCC weighted (Mathews Correlation Coefficient weighted) metric calculates the
-    F1 score taking into account the value of the heatmap as a probability and uses
+    MCC score taking into account the value of the heatmap as a probability and uses
     weighted true positives, weighted false positives, weighted true negatives and
     weighted false negatives to calculate the MCC score.
+    This class computes de mean weighted MCC over the whole dataset. It calculates
+    the weighted MCC score for each image and then averages to output a single result.
 
     Attributes:
         MCC score weighted (torch.Tensor): A tensor that accumulates the count of MCC
@@ -16,8 +18,8 @@ class MCC_weighted_v1(Metric):
 
     Methods:
         __init__(**kwargs): Initializes the MCC score weighted metric object.
-        update(preds: Tensor, target: Tensor): Updates the states with a new batch of
-                                               predictions and targets.
+        update(preds: Tensor, target: Tensor): Updates the states with a new pair of
+                                               prediction and target.
         compute() -> Tensor: Computes the MCC score weighted over all batches.
 
     Example:
@@ -40,8 +42,8 @@ class MCC_weighted_v1(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the MCC score weighted counts with a new batch of
-        predictions and targets. It assumes both predictions as heatmap or binary
+        Updates the MCC score weighted counts with a new pair of
+        prediction and target. It assumes both predictions as heatmap or binary
         and binary targets.
 
         Args:
