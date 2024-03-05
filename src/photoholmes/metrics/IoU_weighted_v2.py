@@ -9,10 +9,17 @@ class IoU_weighted_v2(Metric):
     into account the value of the heatmap as a probability and uses weighted true
     positives, weighted false positives, weighted true negatives and weighted false
     negatives to calculate the IoU.
+    This metric computes the IoU weighted score for the full dataset. It accumulates
+    True Positives, False Negatives and False Positives to then calculate the IoU
+    weighted score over the full dataset.
 
     Attributes:
-        IoU weighted (torch.Tensor): A tensor that accumulates the count of IoU weighted
-                                        across batches.
+        TPw (torch.Tensor): A tensor that accumulates the count of weighted true
+        positives.
+        FNw (torch.Tensor): A tensor that accumulates the count of weighted false
+        negatives.
+        FPw (torch.Tensor): A tensor that accumulates the count of weighted false
+        positives.
 
     Methods:
         __init__(**kwargs): Initializes the IoU weighted metric object.
@@ -42,8 +49,8 @@ class IoU_weighted_v2(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the IoU weighted counts with a new batch of
-        predictions and targets. It assumes both predictions as heatmap or binary
+        Updates the IoU weighted counts with a new pair of
+        prediction and target. It assumes both predictions as heatmap or binary
         and binary targets.
 
         Args:
@@ -70,8 +77,8 @@ class IoU_weighted_v2(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the IoU weighted over all the batches averaging all the
-        IoU wighted of each image.
+        Computes the IoU weighted over the full dataset by using the accumulated TPw,
+        FNw and FPw in the IoU weighted equation.
 
         Returns:
             Tensor: The computed IoU weighted over the full dataset.
