@@ -7,7 +7,6 @@ from photoholmes.metrics.registry import MetricName
 
 
 class MetricFactory:
-    # TODO: redo docstring
     """
     MetricFactory class responsible for creating metric instances.
 
@@ -19,6 +18,19 @@ class MetricFactory:
         - Precision
         - ROC (Receiver Operating Characteristic curve)
         - TPR (True Positive Rate, synonymous with Recall)
+        - IoU_WEIGHTED_V1 (Weighted Intersection over Union, version 1)
+        - F1_WEIGHTED_V1 (Weighted F1 Score, version 1)
+        - MCC_WEIGHTED_V1 (Weighted Matthews Correlation Coefficient, version 1)
+        - IoU_WEIGHTED_V2 (Weighted Intersection over Union, version 2)
+        - F1_WEIGHTED_V2 (Weighted F1 Score, version 2)
+        - MCC_WEIGHTED_V2 (Weighted Matthews Correlation Coefficient, version 2)
+        - F1 (F1 Score)
+        - mAUROC (mean Area Under the Receiver Operating Characteristic curve)
+
+    Note:
+     - The v1 metrics correspond to the mean versions of the metrics, while the v2
+       correspond to the weighted versions of the metrics implemented by torchmetrics.
+       Please refer to the documentation of the respective metrics for more details.
 
     Methods:
         load(metric_names: List[Union[str, MetricName]]) -> List[Metric]:
@@ -28,7 +40,6 @@ class MetricFactory:
 
     @staticmethod
     def load(metric_names: List[Union[str, MetricName]]) -> MetricCollection:
-        # TODO: redo docstring
         """
         Instantiates and returns a list of metric objects corresponding to the specified
         metric names.
