@@ -19,9 +19,9 @@ class Zero(BaseMethod):
     alignment abnormalities. It is also capable of detecting local image
     forgeries such as copy-move.
 
-    For more details and instruction to download the weights, see the
-    original implementation at:
-    https://github.com/tinankh/ZERO?tab=readme-ov-file
+    The original implementation(languages: C, Python) is available at:
+    https://github.com/tinankh/ZERO
+
     """
 
     def __init__(self, no_vote: int = -1, **kwargs) -> None:
