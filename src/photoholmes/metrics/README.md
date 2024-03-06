@@ -1,48 +1,42 @@
 # Metrics Module
 
-This module provides a collection of metrics for evaluating the performance of the 
-implemented methods in the PhotoHolmes library with the provided datasets. 
+## Overview
+This module provides a collection of metrics for evaluating the performance of a method for image forgery detection and localization.
+
+The metrics are divided into two categories:
+- Metrics imported from [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/).
+- Custom metrics using torch-metrics.
 
 ## Available Metrics
 
-Imported from [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/):
-- AUROC: Area Under the Receiver Operating Characteristic curve. [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/auroc.html) 
-- IoU: Intersection over Union, also known as Jaccard Index. [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/jaccard_index.html)
-- MCC: Matthews Correlation Coefficient. [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/matthews_corr_coef.html)
-- Precision: [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/precision.html)
-- ROC: Receiver Operating Characteristic curve. [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/roc.html)
-- F1 score: [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/f1_score.html)
+### Torch-metrics:
+- `AUROC`: Area Under the Receiver Operating Characteristic curve. [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/auroc.html) 
+- `IoU`: Intersection over Union, also known as Jaccard Index. [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/jaccard_index.html)
+- `MCC`: Matthews Correlation Coefficient. [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/matthews_corr_coef.html)
+- `Precision`: [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/precision.html)
+- `ROC`: Receiver Operating Characteristic curve. [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/roc.html)
+- `F1 score`: [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/f1_score.html)
 
-Our implementations:
-- TPR: True Positive Rate defined as 
-$$TPR = \frac{TP}{TP + FN}$$
-- meanAUROC: Calculates de auroc for each image and then averages those values over the full dataset.
-- Weighted metrics:
-    These metrics allow the comparison of performance between methods whose outputs are masks with methods whose outputs are heatmaps by regarding said heatmaps as maps of probability in which the value of each pixel corresponds to the probability of the pixel being forged. The same works with the detection problem in which the output is a single number that indicates the probability of the image as whole being forged. To accomplish that [Gardella, 2023](https://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000341) and [Bammey, 2021](https://openaccess.thecvf.com/content/WACV2022/papers/Bammey_Non-Semantic_Evaluation_of_Image_Forensics_Tools_Methodology_and_Database_WACV_2022_paper.pdf) define 
-    weighted true positives, weighted false positives, weighted true negatives, and weighted false negatives as follows:
+For more information about the available metrics in torch-metrics please refer to the [documentation](https://lightning.ai/docs/torchmetrics/stable/).
 
-    $$TP_w = \sum_xH(x)M(x)$$
 
-    $$FP_w = \sum_x(1-H(x))M(x)$$
+### Custom metrics:
+- `TPR`: True Positive Rate or sensitivity.
+- `meanAUROC`: Mean Area Under the Receiver Operating Characteristic curve.
+- `IoU_weighted_v1`: Weighted Intersection over Union v1.
+- `IoU_weighted_v2`: Weighted Intersection over Union v2.
+- `MCC_weighted_v1`: Weighted Mathews Correlation Coefficient v1.
+- `MCC_weighted_v2`: Weighted Mathews Correlation Coefficient v2.
+- `F1_weighted_v1`: Weighted F1 score v1.
+- `F1_weighted_v2`: Weighted F1 score v2.
 
-    $$TN_w = \sum_x(1-H(x))(1-M(x))$$
+For more information about the custom metrics please refer to the [documentation](custom_metrics.md).
 
-    $$FN_w = \sum_xH(x)(1-M(x))$$
-    in which $H(x)$ corresponds to the predicted output and $M(x)$ corresponds to the mask.
+## Metric Factory
 
-    The implemented weighted metrics are:
-    - Weighted MCC: Mathews Correlation Coefficient
-        $$MCC_{weighted} = \frac{TP_w \times TN_w - FP_w \times  FN_w}{\sqrt{(TP_w + FP_w)(TP_w+FN_w)(TN_w+FP_W)(TN_w+FN_w)}}$$
-    - Weighted IoU: Intersection over Union
-        $$IoU_{weighted} = \frac{TP_w}{TP_w + FN_w + FP_w}$$
-    - Weighted F1: F1 score
-        $$F1_{weighted} = \frac{2TP_w}{2TP_w + FN_w + FP_w}$$
-    
-    There are two versions of the weighted metrics:
-    - v1: Corresponds to the mean version of each weighted metric. Those metrics accumulate the value of the metric for each image and then the output is the average of the metric over the full dataset. 
-    This version of the metric is recommended to evaluate localization performance.
-    - v2: Corresponds to the value of the metric over the full dataset as defined in [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/). For each image the metric accumulates the FPw, TPW, TNw and FNw and then with those accumulations outputs the value of the metric for the full dataset. 
-    This version of the metric is recommended to evaluate detection performance.
+The `MetricFactory` class provides a way to load multiple metrics at once. It is useful when you need to evaluate the performance of a method using multiple metrics.
+
+It returns a [MetricCollection](https://lightning.ai/docs/torchmetrics/stable/pages/overview.html#metriccollection) object that contains all the metrics loaded.
 
 ## Examples of Use
 
@@ -50,53 +44,144 @@ Here are some examples of how to use the metrics in this module:
 
 ### Using a single metric:
 
+You can use the metrics directly by instantiating the class and passing the predictions and the ground truth masks as arguments. Here is an example using the `AUROC` metric:
+```python
+from photoholmes.metrics import AUROC
+
+import torch
+
+# generate a random mask of size 256x256
+mask = torch.randint(0, 2, (256, 256))
+# generate a random prediction of probabilities of size 256x256 
+pred = torch.rand(256, 256)
+# instantiate the metric
+auroc_metric = AUROC(task = "binary")
+# calculate the metric
+auroc = auroc_metric(pred, mask)
+
+print("AUROC:", auroc)
+```
+For computing the emtrics over several images, call the `update` method to update the metric with the predictions and the ground truth masks. Then, call the `compute` method to get the value of the metric. Here is an example using the `AUROC` metric:
+
+```python
+from photoholmes.metrics import AUROC
+
+import torch
+
+auroc_metric = AUROC()
+
+# Generate random data
+data = [(torch.rand(256, 256), torch.randint(0, 2, (256, 256))) for _ in range(10)]
+
+for pred, mask in data:
+    auroc_metric.update(pred, mask)
+auroc = auroc_metric.compute()
+
+print("AUROC:", auroc)
+```
+
+Using the custom metrics is the same as using the metrics from
+torch-metrics. Here is an example using the `IoU_weighted_v1` metric:
+
 ```python
 from photoholmes.metrics.IoU_weighted_v1 import IoU_weighted_v1
 
-iou_weighted_v1_metric = IoU_weighted_v1
+import torch
+
+iou_weighted_v1_metric = IoU_weighted_v1()
+
+# Generate random data
+data = [(torch.rand(256, 256), torch.randint(0, 2, (256, 256))) for _ in range(10)]
 
 for pred, mask in data:
     iou_weighted_v1_metric.update(pred, mask)
 iou_weighted_v1 = iou_weighted_v1_metric.compute()
+
+print("IoU_weighted_v1:", iou_weighted_v1)
 ```
+
+### Using the MetricFactory:
+
+Metrics can be loaded by passing a list of metric names to the `load` method. Here is an example using the `MetricFactory` to load the `MCC` and `F1_weighted_v2` metrics:
 
 ```python
-from torchmetrics import AUROC
+from photoholmes.metrics import MetricFactory
 
-auroc_metric = AUROC()
+import torch
+
+metric = MetricFactory.load(["mcc", "f1_weighted_v2"])
+
+# Generate random data
+data = [(torch.rand(256, 256), torch.randint(0, 2, (256, 256))) for _ in range(10)]
+
 for pred, mask in data:
-    auroc_metric.update(pred, mask)
-auroc_v1 = auroc_metric.compute()
+    metric.update(pred, mask)
+metric_value = metric.compute()
+
+print(metric_value)
 ```
 
-### Using the metric factory
+Metrics can also be loaded by passing a list of `MetricName` objects to the `load` method. Here is an example using the `MetricFactory` to load the `mAUROC` metric:
 
 ```python
-from src.photoholmes.metrics.metric_factory import MetricFactory
-from src.photoholmes.metrics.registry import MetricName
+from photoholmes.metrics import MetricFactory, MetricName
 
-# How to import all the available metrics in the registry
+import torch
 
-metric_names = list(MetricName)
-metrics = [metric.value for metric in metric_names]
-metrics_objects = MetricFactory.load(metrics)
+# Generate random data
+data = [(torch.rand(256, 256), torch.randint(0, 2, (256, 256))) for _ in range(10)]
 
-# Use one of them
+metric_collection = MetricFactory.load(MetricName.mAUROC)
 
-metric = metrics_objects["iou_weighted_v2"]
 for pred, mask in data:
-    metroc.update(pred,mask)
-metric_value = metric.compute()
+    metric_collection.update(pred, mask)
+metric_value = metric_collection.compute()
 
-# Load directly form the factory
-
-metric = MetricFactory.load(["auroc"])
-for pred, mask in data:
-    metroc.update(pred,mask)
-metric_value = metric.compute()
-
+print(metric_value)
 ```
-## How to add a new metric
+
+With the `MetricName` class you can get all the available metrics and load them all at once. Here is an example using the `MetricFactory` to load all the available metrics:
+
+```python
+from photoholmes.metrics import MetricFactory, MetricName
+
+import torch
+
+# Generate random data
+data = [(torch.rand(256, 256), torch.randint(0, 2, (256, 256))) for _ in range(10)]
+
+metric_names = MetricName.get_all_metrics()
+metric_collection = MetricFactory.load(metric_names)
+
+for pred, mask in data:
+    metric_collection.update(pred, mask)
+metric_value = metric_collection.compute()
+
+print(metric_value)
+```
+
+For adding a metric to the `MetricCollection`, you can use the `add` method of the `MetricCollection` object. For more information about the `MetricCollection` object please refer to the [documentation](https://lightning.ai/docs/torchmetrics/stable/pages/overview.html#metriccollection). Here is an example using the `MetricCollection` to add the `AUROC` metric:
+
+```python
+from photoholmes.metrics import MetricFactory, MetricName
+import torch
+from torchmetrics import Precision
+
+# Generate random data
+data = [(torch.rand(256, 256), torch.randint(0, 2, (256, 256))) for _ in range(10)]
+
+metric_collection = MetricFactory.load([MetricName.AUROC])
+metric_collection.add_metrics(Precision(task="binary"))
+
+for pred, mask in data:
+    metric_collection.update(pred, mask)
+metric_value = metric_collection.compute()
+
+print(metric_value)
+```
+
+
+## Contribute: Adding a new metric
 If the metric already exists in [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/) the steps to follow are:
 1. Add metric to registry
     ```python
@@ -123,26 +208,4 @@ If the metric does not exist in [torch-metrics](https://lightning.ai/docs/torchm
         metrics.append(FNM(task="binary"))
     ```
 
-## References
-
-```tex
-@article{Noisesniffer,
-  title={Image Forgery Detection Based on Noise Inspection: Analysis and Refinement of the Noisesniffer Method},
-  author={Gardella, Marina and Mus{\'e}, Pablo and Colom, Miguel and Morel, Jean-Michel},
-  journal={Preprint},
-  year={2023},
-  month={March},
-  institution={Universitè Paris-Saclay, ENS Paris-Saclay, Centre Borelli, F-91190 Gif-sur-Yvette, France; IIE, Facultad de Ingenieria, Universidad de la Republica, Uruguay},
-}
-```
-
-```tex
-@misc{bammey2021nonsemantic,
-      title={Non-Semantic Evaluation of Image Forensics Tools: Methodology and Database}, 
-      author={Quentin Bammey and Tina Nikoukhah and Marina Gardella and Rafael Grompone and Miguel Colom and Jean-Michel Morel},
-      year={2021},
-      eprint={2105.02700},
-      archivePrefix={arXiv},
-      primaryClass={eess.IV}
-}
-```
+Make a pull request to the repository with the new metric following the instructions of the [CONTRIBUTING.md](../CONTRIBUTING.md) file.
