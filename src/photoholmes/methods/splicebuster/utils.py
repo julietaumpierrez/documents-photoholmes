@@ -3,7 +3,7 @@ from typing import Union
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.ndimage import binary_dilation, binary_opening
+from scipy.ndimage import binary_erosion, binary_opening
 
 
 def third_order_residual(x: NDArray, axis: int = 0) -> NDArray:
@@ -107,11 +107,10 @@ def get_disk_kernel(radius: int) -> np.ndarray:
 
 def get_saturated_region_mask(
     img: np.ndarray,
-    low_th: float = 6 / 255,
-    high_th: float = 252 / 255,
-    opening_kernel_radius: int = 3,
-    dilation_kernel_size: int = 9,
-) -> NDArray:
+    low_th: float = 6 / 256,
+    high_th: float = 252 / 256,
+    erotion_kernel_size: int = 9,
+):
     """
     Creates a binary mask of the saturated regions in the image.
 
@@ -130,17 +129,22 @@ def get_saturated_region_mask(
     if img.ndim == 2:
         img = img[:, :, None]
     img = img.transpose(2, 0, 1)
-    kernel = get_disk_kernel(opening_kernel_radius)
+    kernel_high = get_disk_kernel(2)
+    kernel_low = get_disk_kernel(3)
     mask_low = np.array(
-        [binary_opening(ch < low_th, kernel) for ch in img], dtype=np.float32
+        [binary_opening(ch < low_th, kernel_low) for ch in img],
+        dtype=np.float32,
     )
     mask_high = np.array(
-        [binary_opening(ch > high_th, kernel) for ch in img], dtype=np.float32
+        [binary_opening(ch > high_th, kernel_high) for ch in img],
+        dtype=np.float32,
     )
     mask = mask_low + mask_high
-    mask = reduce(np.logical_or, mask)
-    mask = binary_dilation(mask, np.ones((dilation_kernel_size, dilation_kernel_size)))
-    return ~mask * 1.0
+    mask = np.logical_not(reduce(np.logical_or, mask))
+    mask = binary_erosion(
+        mask, np.ones((erotion_kernel_size, erotion_kernel_size), dtype=bool)
+    )
+    return mask * 1.0
 
 
 def feat_reduce_matrix(pca_dim: int, X: NDArray, whitten: bool = True) -> NDArray:

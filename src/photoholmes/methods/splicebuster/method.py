@@ -186,8 +186,7 @@ class Splicebuster(BaseMethod):
                 image,
                 self.weight_params.low_th / 255,
                 self.weight_params.high_th / 255,
-                self.weight_params.opening_kernel_radius,
-                self.weight_params.dilation_kernel_size,
+                self.weight_params.erotion_kernel_size,
             )
             mask = mask[4:-4, 4:-4]
             features, weights, feat_dim, coords = self.compute_histograms(
