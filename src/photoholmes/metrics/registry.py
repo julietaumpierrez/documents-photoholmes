@@ -18,3 +18,9 @@ class MetricName(Enum):
     F1_WEIGHTED_V2 = "f1_weighted_v2"
     MCC_WEIGHTED_V2 = "mcc_weighted_v2"
     F1 = "f1"
+
+    @classmethod
+    def get_all_metrics(cls):
+        metric_names = list(MetricName)
+        metrics = [metric.value for metric in metric_names]
+        return metrics

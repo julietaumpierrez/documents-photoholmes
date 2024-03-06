@@ -10,21 +10,22 @@ class FPR(Metric):
     negative samples.
 
     Attributes:
-        false_positives (torch.Tensor): A tensor that accumulates the count of false
-                                        positive predictions across batches.
-        total_negatives (torch.Tensor): A tensor that accumulates the count of true
-                                        negative instances across batches.
+        false_positives (Tensor): A tensor that accumulates the count of false
+            positive predictions in a single image.
+        total_negatives (Tensor): A tensor that accumulates the count of true
+            negative instances in a single image.
 
     Methods:
         __init__(**kwargs): Initializes the FPR metric object.
-        update(preds: Tensor, target: Tensor): Updates the states with a new batch of
-                                               predictions and targets.
-        compute() -> Tensor: Computes the False Positive Rate over all batches.
+        update(preds: Tensor, target: Tensor): Updates the states with a new pair of
+            prediction and target.
+        compute() -> Tensor: Computes the False Positive Rate from the state of the
+            metric.
 
     Example:
         >>> fpr_metric = FPR()
-        >>> for preds_batch, targets_batch in data_loader:
-        >>>     fpr_metric.update(preds_batch, targets_batch)
+        >>> for preds, targets in data_loader:
+        >>>     fpr_metric.update(preds, targets)
         >>> fpr = fpr_metric.compute()
     """
 
@@ -41,8 +42,8 @@ class FPR(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the false positives and total negatives counts with a new batch of
-        predictions and targets. It assumes both predictions and targets are binary.
+        Updates the false positives and total negatives counts with a new pair of
+        prediction and target. It assumes both predictions and targets are binary.
 
         Args:
             preds (Tensor): The predictions from the model.
@@ -60,11 +61,15 @@ class FPR(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the False Positive Rate over all the batches.
+        Computes the False Positive Rate from the state of the metric by using the
+        accumulared false_positives and total_negatives.
 
         Returns:
-            Tensor: The computed False Positive Rate. If the total number of negatives
-                    is zero, it returns 0.0 to avoid division by zero.
+            Tensor: The computed False Positive Rate.
+
+        Note:
+            If the total number of negatives is zero, it returns 0.0 to avoid division
+            by zero.
 
         """
         false_positives = self.false_positives.float()
