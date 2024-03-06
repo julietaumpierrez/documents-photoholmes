@@ -21,7 +21,6 @@ class Zero(BaseMethod):
 
     The original implementation(languages: C, Python) is available at:
     https://github.com/tinankh/ZERO
-
     """
 
     def __init__(self, no_vote: int = -1, **kwargs) -> None:
