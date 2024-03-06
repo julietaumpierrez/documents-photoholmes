@@ -5,7 +5,7 @@ This module provides a collection of metrics for evaluating the performance of a
 
 The metrics are divided into two categories:
 - Metrics imported from [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/).
-- Custom metrics using torch-metrics.
+- [Custom metrics](custom_metrics.md) using torch-metrics.
 
 ## Available Metrics
 
@@ -61,7 +61,7 @@ auroc = auroc_metric(pred, mask)
 
 print("AUROC:", auroc)
 ```
-For computing the emtrics over several images, call the `update` method to update the metric with the predictions and the ground truth masks. Then, call the `compute` method to get the value of the metric. Here is an example using the `AUROC` metric:
+For computing the metrics over several images, call the `update` method to update the metric with the predictions and the ground truth masks. Then, call the `compute` method to get the value of the metric. Here is an example using the `AUROC` metric:
 
 ```python
 from photoholmes.metrics import AUROC
