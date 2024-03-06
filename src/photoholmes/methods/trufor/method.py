@@ -24,6 +24,8 @@ from .models.utils.layer import weighted_statistics_pooling
 logger = logging.getLogger(__name__)
 
 
+# This function is not in the `preprocessing` module as is used in the middle of the
+# method's forward pass. The unormalized image is needed to compute the Noiseprint++
 def preprc_imagenet_torch(x: Tensor) -> Tensor:
     """Normalizes an image tensor using ImageNet's mean and standard deviation.
 
