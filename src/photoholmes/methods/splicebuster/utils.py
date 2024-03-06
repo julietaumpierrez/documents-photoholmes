@@ -2,8 +2,8 @@ from functools import reduce
 from typing import Union
 
 import numpy as np
+import skimage.morphology as ski
 from numpy.typing import NDArray
-from scipy.ndimage import binary_erosion, binary_opening
 
 
 def third_order_residual(x: NDArray, axis: int = 0) -> NDArray:
@@ -132,16 +132,16 @@ def get_saturated_region_mask(
     kernel_high = get_disk_kernel(2)
     kernel_low = get_disk_kernel(3)
     mask_low = np.array(
-        [binary_opening(ch < low_th, kernel_low) for ch in img],
+        [ski.binary_opening(ch < low_th, kernel_low) for ch in img],
         dtype=np.float32,
     )
     mask_high = np.array(
-        [binary_opening(ch > high_th, kernel_high) for ch in img],
+        [ski.binary_opening(ch > high_th, kernel_high) for ch in img],
         dtype=np.float32,
     )
     mask = mask_low + mask_high
     mask = np.logical_not(reduce(np.logical_or, mask))
-    mask = binary_erosion(
+    mask = ski.binary_erosion(
         mask, np.ones((erotion_kernel_size, erotion_kernel_size), dtype=bool)
     )
     return mask * 1.0
