@@ -9,23 +9,24 @@ class F1_weighted_v2(Metric):
     into account the value of the heatmap as a probability and uses weighted true
     positives, weighted false positives, weighted true negatives and weighted false
     negatives to calculate the F1 score.
-    This metric computes the F1 weighted score for the full dataset. It accumulates True
-    Positives, False Negatives and False Positives to then calculate the F1 weighted
-    score over the full dataset.
+    This metric computes the F1 weighted score. It accumulates True Positives,
+    False Negatives and False Positives to then calculate the F1 weighted
+    score.
 
     Attributes:
-        TPw (torch.Tensor): A tensor that accumulates the count of weighted true
+        TPw (Tensor): A tensor that accumulates the count of weighted true
         positives.
-        FNw (torch.Tensor): A tensor that accumulates the count of weighted false
+        FNw (Tensor): A tensor that accumulates the count of weighted false
         negatives.
-        FPw (torch.Tensor): A tensor that accumulates the count of weighted false
+        FPw (Tensor): A tensor that accumulates the count of weighted false
         positives.
 
     Methods:
         __init__(**kwargs): Initializes the F1 score weighted metric object.
         update(preds: Tensor, target: Tensor): Updates the states with a new pair of
                                                prediction and target.
-        compute() -> Tensor: Computes the F1 score weighted over the full dataset.
+        compute() -> Tensor: Computes the F1 score weighted from the state of the
+            metric.
 
     Example:
         >>> F1_weighted_metric = F1_weighted_v2()
@@ -77,13 +78,14 @@ class F1_weighted_v2(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the F1 weighted over the full dataset by using the accumulated TPw, FNw
-        and FPw in the F1 weighted equation.
+        Computes the F1 weighted from the state of the metric.
 
         Returns:
-            Tensor: The computed F1 weighted over the full dataset.
-                    If the total number of true positives is zero,
-                    it returns 0.0 to avoid division by zero.
+            Tensor: The computed F1 weighted score.
+
+        Note:
+            If the total number of true positives is zero, it returns 0.0 to avoid
+            division by zero.
         """
         if not self.total_images:
             return torch.tensor(0.0)

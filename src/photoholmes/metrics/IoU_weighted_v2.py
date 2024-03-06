@@ -9,23 +9,23 @@ class IoU_weighted_v2(Metric):
     into account the value of the heatmap as a probability and uses weighted true
     positives, weighted false positives, weighted true negatives and weighted false
     negatives to calculate the IoU.
-    This metric computes the IoU weighted score for the full dataset. It accumulates
-    True Positives, False Negatives and False Positives to then calculate the IoU
-    weighted score over the full dataset.
+    This metric computes the IoU weighted score from the state of the metric. It
+    accumulates True Positives, False Negatives and False Positives to then calculate
+    the IoU weighted score.
 
     Attributes:
-        TPw (torch.Tensor): A tensor that accumulates the count of weighted true
+        TPw (Tensor): A tensor that accumulates the count of weighted true
         positives.
-        FNw (torch.Tensor): A tensor that accumulates the count of weighted false
+        FNw (Tensor): A tensor that accumulates the count of weighted false
         negatives.
-        FPw (torch.Tensor): A tensor that accumulates the count of weighted false
+        FPw (Tensor): A tensor that accumulates the count of weighted false
         positives.
 
     Methods:
         __init__(**kwargs): Initializes the IoU weighted metric object.
         update(preds: Tensor, target: Tensor): Updates the states with a new pair of
                                                prediction and target.
-        compute() -> Tensor: Computes the IoU weighted over the full dataset.
+        compute() -> Tensor: Computes the IoU weighted from the state of the metric.
 
     Example:
         >>> IoU_weighted_metric = IoU_weighted_V2()
@@ -77,13 +77,16 @@ class IoU_weighted_v2(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the IoU weighted over the full dataset by using the accumulated TPw,
-        FNw and FPw in the IoU weighted equation.
+        Computes the IoU weighted by using the accumulated TPw,
+        FNw and FPw in the IoU weighted equation and then calculates the IoU weighted
+        score.
 
         Returns:
-            Tensor: The computed IoU weighted over the full dataset.
-                    If the total number of images is zero,
-                    it returns 0.0 to avoid division by zero.
+            Tensor: The computed IoU weighted from the state of the metric.
+
+        Note:
+            If the total number of images is zero, it returns 0.0 to avoid division by
+            zero.
         """
         if not self.total_images:
             return torch.tensor(0.0)

@@ -8,21 +8,21 @@ class F1_weighted_v1(Metric):
     The F1 weighted (F1 score weighted) metric calculates the F1 score taking
     into account the value of the heatmap as a probability and uses weighted true
     positives, weighted false positives, weighted true negatives and weighted false
-    negatives to calculate the F1 score. This class computes de mean weighted F1 over
-    the whole dataset. It calculates the weighted F1 score for each image and then
-    averages to output a single result.
-
+    negatives to calculate the F1 score.
+    This class computes de mean weighted F1. It calculates the weighted F1 score for
+    each image and then averages to get the mean weighted F1 score.
 
     Attributes:
-        F1_weighted (torch.Tensor): A tensor that accumulates the count of F1
-                                        score weighted across the dataset.
-        total_images (torch.Tensor): A tensor that accumulates the count of images.
+        F1_weighted (Tensor): A tensor that accumulates the count of F1
+            score weighted across all the images.
+        total_images (Tensor): A tensor that accumulates the count of images.
 
     Methods:
         __init__(**kwargs): Initializes the F1 score weighted metric object.
         update(preds: Tensor, target: Tensor): Updates the states with a new set of
-                                               prediction and target.
-        compute() -> Tensor: Computes the F1 score weighted over the full dataset.
+            prediction and target.
+        compute() -> Tensor: Computes the F1 score weighted from the state of the
+            metric.
 
     Example:
         >>> F1_weighted_metric = F1_weighted_v1()
@@ -49,8 +49,8 @@ class F1_weighted_v1(Metric):
         and binary targets.
 
         Args:
-            preds (Tensor): The predictions from the model.
-                Expected to be a binary tensor or a heatmap.
+            preds (Tensor): The predictions from the model. Expected to be a binary
+                tensor or a heatmap.
             target (Tensor): The ground truth labels. Expected to be a binary tensor.
 
         Raises:
@@ -72,13 +72,14 @@ class F1_weighted_v1(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the F1 weighted over all the full dataset averaging all the
-        F1 wighted of each image.
+        Computes the F1 weighted from the state of the metric.
 
         Returns:
-            Tensor: The computed F1 weighted over the full dataset.
-                    If the total number of images is zero,
-                    it returns 0.0 to avoid division by zero.
+            Tensor: The computed F1 weighted score.
+
+        Note:
+            If the total number of images is zero, it returns 0.0 to avoid division by
+            zero.
         """
         f1_weighted = self.F1_weighted.float()
         total_images = self.total_images.float()

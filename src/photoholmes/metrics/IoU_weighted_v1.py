@@ -8,20 +8,20 @@ class IoU_weighted_v1(Metric):
     The IoU weighted (Intersection over Union weighted) metric calculates the IoU taking
     into account the value of the heatmap as a probability and uses weighted true
     positives, weighted false positives, weighted true negatives and weighted false
-    negatives to calculate the IoU. This class computes de mean weighted IoU over
-    the whole dataset. It calculates the weighted IoU score for each image and then
-    averages to output a single result.
+    negatives to calculate the IoU.
+    This class computes de mean weighted IoU from the state of the metric. It calculates
+    the weighted IoU score for each image and then averages to output a single result.
 
     Attributes:
-        IoU weighted (torch.Tensor): A tensor that accumulates the count of IoU weighted
-                                        across the dataset.
-        total_images (torch.Tensor): A tensor that accumulates the count of images.
+        IoU weighted (Tensor): A tensor that accumulates the IoU weighted across
+            all the images.
+        total_images (Tensor): A tensor that accumulates the count of images.
 
     Methods:
         __init__(**kwargs): Initializes the IoU weighted metric object.
         update(preds: Tensor, target: Tensor): Updates the states with a new set of
                                                prediction and target.
-        compute() -> Tensor: Computes the IoU weighted over the full dataset.
+        compute() -> Tensor: Computes the IoU weighted from the state of the metric.
 
     Example:
         >>> IoU_weighted_metric = IoU_weighted_v1()
@@ -70,13 +70,14 @@ class IoU_weighted_v1(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the IoU weighted over the full dataset averaging all the
-        IoU wighted of each image.
+        Computes the IoU weighted score.
 
         Returns:
-            Tensor: The computed IoU weighted over the full dataset.
-                    If the total number of images is zero,
-                    it returns 0.0 to avoid division by zero.
+            Tensor: The computed IoU weighted score.
+
+        Note:
+            If the total number of images is zero, it returns 0.0 to avoid division by
+            zero.
         """
         IoU_weighted = self.IoU_weighted.float()
         total_images = self.total_images.float()

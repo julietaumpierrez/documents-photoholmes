@@ -12,15 +12,15 @@ class mAuroc(Metric):
     It accumulates de AUROC of every image and then outputs the mean value.
 
     Attributes:
-        auroc (torch.Tensor): A tensor that accumulates the the auroc values of each
+        auroc (Tensor): A tensor that accumulates the the auroc values of each
                                 image.
-        total (torch.Tensor): A tensor that accumulates the count of images.
+        total (Tensor): A tensor that accumulates the count of images.
 
     Methods:
         __init__(**kwargs): Initializes the mAUROC  metric object.
         update(preds: Tensor, target: Tensor): Updates the states with a new pair of
                                                prediction and target.
-        compute() -> Tensor: Computes the mAUROC over the full dataset.
+        compute() -> Tensor: Computes the mAUROC from the state of the metric.
 
     Example:
         >>> meanAUROC_metric = mAuroc()
@@ -71,8 +71,10 @@ class mAuroc(Metric):
         Computes the meanAUROC over all the batches averaging the AUROCs of each image.
 
         Returns:
-            Tensor: The computed meanAUROC over the full dataset.
-                    If the total number of images is zero,
-                    it returns 0.0 to avoid division by zero.
+            Tensor: The computed meanAUROC from the state of the metric.
+
+        Note:
+            If the total number of images is zero, it returns 0.0 to avoid division by
+            zero.
         """
         return self.auroc / self.total if self.total != 0 else torch.tensor(0.0)

@@ -9,25 +9,26 @@ class MCC_weighted_v2(Metric):
     MCC score taking into account the value of the heatmap as a probability and uses
     weighted true positives, weighted false positives, weighted true negatives and
     weighted false negatives to calculate the MCC score.
-    This metric computes the MCC weighted score for the full dataset. It accumulates
+    This metric computes the MCC weighted score. It accumulates
     True Positives, False Negatives, False Positives and True Negatives to then
-    calculate the MCC weighted score over the full dataset.
+    calculate the MCC weighted score.
 
       Attributes:
-        TPw (torch.Tensor): A tensor that accumulates the count of weighted true
+        TPw (Tensor): A tensor that accumulates the count of weighted true
         positives.
-        FNw (torch.Tensor): A tensor that accumulates the count of weighted false
+        FNw (Tensor): A tensor that accumulates the count of weighted false
         negatives.
-        FPw (torch.Tensor): A tensor that accumulates the count of weighted false
+        FPw (Tensor): A tensor that accumulates the count of weighted false
         positives.
-        TNw (torch.Tensor): A tensor that accumulates the count of weighted true
+        TNw (Tensor): A tensor that accumulates the count of weighted true
         negatives.
 
     Methods:
         __init__(**kwargs): Initializes the MCC score weighted metric object.
         update(preds: Tensor, target: Tensor): Updates the states with a new pair of
                                                prediction and target.
-        compute() -> Tensor: Computes the MCC score weighted over the full dataset.
+        compute() -> Tensor: Computes the MCC score weighted from the state of the
+            metric.
 
     Example:
         >>> MCC_weighted_metric = MCC_weighted_v2()
@@ -82,13 +83,15 @@ class MCC_weighted_v2(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the MCC weighted over the full dataset by using the accumulated TPw,
-        FNw, FPw and TNw in the MCC weighted equation.
+        Computes the MCC weighted by using the accumulated TPw, FNw, FPw and TNw in the
+        MCC weighted equation.
 
         Returns:
-            Tensor: The computed MCC weighted over the full dataset.
-                    If the total number of images is zero,
-                    it returns 0.0 to avoid division by zero.
+            Tensor: The computed MCC weighted from the state of the metric.
+
+        Note:
+            If the total number of images is zero, it returns 0.0 to avoid division by
+            zero.
         """
         if self.total_images == 0:
             return torch.tensor(0.0)
