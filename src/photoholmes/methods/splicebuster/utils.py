@@ -175,7 +175,10 @@ def feat_reduce_matrix(pca_dim: int, X: NDArray, whitten: bool = True) -> NDArra
 
 
 def gaussian_mixture_mahalanobis(
-    seed: int, valid_features: NDArray, flat_features: NDArray, valid: NDArray
+    seed: Union[None, int],
+    valid_features: NDArray,
+    flat_features: NDArray,
+    valid: NDArray,
 ) -> NDArray:
     """
     Gaussian Mixture model fit over valid features and prediction of the mahalanobis distance.
@@ -202,7 +205,10 @@ def gaussian_mixture_mahalanobis(
 
 
 def gaussian_uniform_mahalanobis(
-    seed: int, valid_features: NDArray, flat_features: NDArray, valid: NDArray
+    seed: Union[None, int],
+    valid_features: NDArray,
+    flat_features: NDArray,
+    valid: NDArray,
 ) -> NDArray:
     """
     Gaussian-Uniform model fit over valid features and prediction of the mahalanobis distance.
