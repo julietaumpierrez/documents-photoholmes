@@ -40,7 +40,7 @@ class Splicebuster(BaseMethod):
         mixture: Literal["uniform", "gaussian"] = "uniform",
         pca: Literal["original", "uncentered", "correct"] = "original",
         seed: Union[int, None] = 0,
-        weights: Union[WeightConfig, Literal["original"], None] = None,
+        weights: Union[WeightConfig, Literal["original"], None] = "original",
         **kwargs,
     ):
         """
@@ -184,10 +184,10 @@ class Splicebuster(BaseMethod):
         if self.weight_params is not None:
             mask = get_saturated_region_mask(
                 image,
-                self.weight_params.low_th / 255,
-                self.weight_params.high_th / 255,
-                self.weight_params.erotion_kernel_size,
+                float(self.weight_params.low_th) / 256,
+                float(self.weight_params.high_th) / 256,
             )
+
             mask = mask[4:-4, 4:-4]
             features, weights, feat_dim, coords = self.compute_histograms(
                 qhh, qhv, qvh, qvv, mask
@@ -215,16 +215,17 @@ class Splicebuster(BaseMethod):
             for j in range(block_features.shape[1]):
                 block_weights[i, j] = weights[
                     i : i + strides_x_block, j : j + strides_x_block
-                ].sum(axis=(0, 1))
+                ].mean(axis=(0, 1))
                 block_features[i, j] = features[
                     i : i + strides_x_block, j : j + strides_x_block
-                ].sum(axis=(0, 1))
-                block_features[i, j] /= max(np.sum(block_weights[i, j]), 1e-20)
+                ].mean(axis=(0, 1))
 
-        coords = self.correct_coords(coords)
+                block_features[i, j] /= np.maximum(block_weights[i, j], 1e-20)
 
         if self.pca_dim > 0:
             block_features = np.sqrt(block_features)
+
+        coords = self.correct_coords(coords)
 
         return block_features, block_weights, coords
 
@@ -257,6 +258,7 @@ class Splicebuster(BaseMethod):
         X, Y = image.shape[:2]
 
         features, weights, coords = self.compute_features(image)
+        print(features.shape, coords[0].shape, coords[1].shape)
 
         valid = weights >= self.saturation_prob
         flat_features = features.reshape(-1, features.shape[-1])
@@ -299,11 +301,10 @@ class Splicebuster(BaseMethod):
                 )
             )
         heatmap = labels.reshape(features.shape[:2])
-        heatmap = heatmap / np.max(labels)
+        heatmap = heatmap / max(np.max(labels), 1)
         heatmap = upscale_mask(coords, heatmap, (X, Y), method="linear", fill_value=0)
-        heatmap = torch.from_numpy(heatmap).float()
 
-        return {"heatmap": heatmap}
+        return {"heatmap": torch.tensor(heatmap, dtype=torch.float32)}
 
     @classmethod
     def from_config(
