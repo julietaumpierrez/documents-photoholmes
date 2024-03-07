@@ -155,24 +155,28 @@ class Splicebuster(BaseMethod):
                     qhh[i : i + self.stride, j : j + self.stride],
                     bins=bins,
                     weights=block_weights,
+                    density=True,
                 )[0].astype(float)
                 Hvv = np.histogram(
                     qvv[i : i + self.stride, j : j + self.stride],
                     bins=bins,
                     weights=block_weights,
+                    density=True,
                 )[0].astype(float)
                 Hhv = np.histogram(
                     qhv[i : i + self.stride, j : j + self.stride],
                     bins=bins,
                     weights=block_weights,
+                    density=True,
                 )[0].astype(float)
                 Hvh = np.histogram(
                     qvh[i : i + self.stride, j : j + self.stride],
                     bins=bins,
                     weights=block_weights,
+                    density=True,
                 )[0].astype(float)
 
-                features[x_i, x_j] = np.concatenate((Hhh + Hvv, Hhv + Hvh))
+                features[x_i, x_j] = np.concatenate((Hhv + Hvh, Hhh + Hvv))
 
         weights /= self.stride**2
 
@@ -282,7 +286,8 @@ class Splicebuster(BaseMethod):
         return flat_features, valid_features
 
     def predict(self, image: NDArray) -> Dict[str, Tensor]:
-        """Run splicebuster on an image.
+        """
+        Run splicebuster on an image.
         Params:
             image: normalized image
         Returns:
