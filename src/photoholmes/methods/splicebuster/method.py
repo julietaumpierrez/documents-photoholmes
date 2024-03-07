@@ -10,8 +10,6 @@ from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
 from photoholmes.postprocessing.resizing import upscale_mask
-from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
-from photoholmes.utils.clustering.gaussian_uniform import GaussianUniformEM
 from photoholmes.utils.generic import load_yaml
 from photoholmes.utils.pca import PCA
 
@@ -19,8 +17,9 @@ from .config import WeightConfig
 from .utils import (
     encode_matrix,
     feat_reduce_matrix,
+    gaussian_mixture_mahalanobis,
+    gaussian_uniform_mahalanobis,
     get_saturated_region_mask,
-    mahalanobis_distance,
     quantize,
     third_order_residual,
 )
@@ -72,8 +71,24 @@ class Splicebuster(BaseMethod):
         else:
             self.weight_params = weights
 
-        self.mixture = mixture
+        self.mahalanobis_estimation = self._init_mahal_estimation(mixture)
         self.seed = seed
+
+    def _init_mahal_estimation(self, mixture: str):
+        """
+        Obtains the corresponding mahalanobis distance from a mixture model, according to the input 'mixture'.
+        """
+        if mixture == "gaussian":
+            return gaussian_mixture_mahalanobis
+        elif mixture == "uniform":
+            return gaussian_uniform_mahalanobis
+        else:
+            raise ValueError(
+                (
+                    f"mixture {mixture} is not a valid mixture model. "
+                    'Please select either "uniform" or "gaussian"'
+                )
+            )
 
     def filter_and_encode(
         self, image: NDArray
@@ -184,8 +199,8 @@ class Splicebuster(BaseMethod):
         if self.weight_params is not None:
             mask = get_saturated_region_mask(
                 image,
-                float(self.weight_params.low_th) / 256,
-                float(self.weight_params.high_th) / 256,
+                float(self.weight_params.low_th) / 255,
+                float(self.weight_params.high_th) / 255,
             )
 
             mask = mask[4:-4, 4:-4]
@@ -258,8 +273,6 @@ class Splicebuster(BaseMethod):
         X, Y = image.shape[:2]
 
         features, weights, coords = self.compute_features(image)
-        print(features.shape, coords[0].shape, coords[1].shape)
-
         valid = weights >= self.saturation_prob
         flat_features = features.reshape(-1, features.shape[-1])
         valid_features = flat_features[valid.flatten()]
@@ -269,37 +282,12 @@ class Splicebuster(BaseMethod):
                 flat_features, valid_features
             )
 
-        if self.mixture == "gaussian":
-            try:
-                gg_mixt = GaussianMixture(seed=self.seed)
-                mus, covs = gg_mixt.fit(valid_features)
-                labels = mahalanobis_distance(
-                    flat_features, mus[1], covs[1]
-                ) / mahalanobis_distance(flat_features, mus[0], covs[0])
-                labels_comp = 1 / labels
-                labels[~valid.flatten()] = 0
-                labels_comp[~valid.flatten()] = 0
-                labels = labels if labels.sum() < labels_comp.sum() else labels_comp
-                labels[~valid.flatten()] = 0
-            except LinAlgWarning:
-                labels = np.zeros(flat_features.shape[0])
-                print("LinAlgWarning, returning zeros")
-        elif self.mixture == "uniform":  # CURRENT CASE
-            try:
-                gu_mixt = GaussianUniformEM(seed=self.seed)
-                mus, covs, _ = gu_mixt.fit(valid_features)
-                _, labels = gu_mixt.predict(flat_features)
-                labels[~valid.flatten()] = 0
-            except LinAlgWarning:
-                labels = np.zeros(flat_features.shape[0])
-                print("LinAlgWarning, returning zeros")
-        else:
-            raise ValueError(
-                (
-                    f"mixture {self.mixture} is not a valid mixture model. "
-                    'Please select either "uniform" or "gaussian"'
-                )
+        try:
+            labels = self.mahalanobis_estimation(
+                self.seed, valid_features, flat_features, valid
             )
+        except LinAlgWarning:
+            labels = np.zeros(flat_features.shape[0])
         heatmap = labels.reshape(features.shape[:2])
         heatmap = heatmap / max(np.max(labels), 1)
         heatmap = upscale_mask(coords, heatmap, (X, Y), method="linear", fill_value=0)

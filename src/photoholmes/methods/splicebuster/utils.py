@@ -5,6 +5,9 @@ import numpy as np
 import skimage.morphology as ski
 from numpy.typing import NDArray
 
+from photoholmes.utils.clustering.gaussian_mixture import GaussianMixture
+from photoholmes.utils.clustering.gaussian_uniform import GaussianUniformEM
+
 
 def third_order_residual(x: NDArray, axis: int = 0) -> NDArray:
     """
@@ -169,3 +172,25 @@ def feat_reduce_matrix(pca_dim: int, X: NDArray, whitten: bool = True) -> NDArra
         v = v / np.sqrt(w[inds])
 
     return v
+
+
+def gaussian_mixture_mahalanobis(seed, valid_features, flat_features, valid):
+    gg_mixt = GaussianMixture(seed=seed)
+    mus, covs = gg_mixt.fit(valid_features)
+    labels = mahalanobis_distance(
+        flat_features, mus[1], covs[1]
+    ) / mahalanobis_distance(flat_features, mus[0], covs[0])
+    labels_comp = 1 / labels
+    labels[~valid.flatten()] = 0
+    labels_comp[~valid.flatten()] = 0
+    labels = labels if labels.sum() < labels_comp.sum() else labels_comp
+    labels[~valid.flatten()] = 0
+    return labels
+
+
+def gaussian_uniform_mahalanobis(seed, valid_features, flat_features, valid):
+    gu_mixt = GaussianUniformEM(seed=seed)
+    mus, covs, _ = gu_mixt.fit(valid_features)
+    _, labels = gu_mixt.predict(flat_features)
+    labels[~valid.flatten()] = 0
+    return labels
