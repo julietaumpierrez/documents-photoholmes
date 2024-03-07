@@ -28,6 +28,13 @@ warnings.filterwarnings("error", category=LinAlgWarning)
 
 
 class Splicebuster(BaseMethod):
+    """Implementation of the Splicebuster method [Cozzolino et al., 2015].
+
+    This method is based on detecting splicing from features extracted from the image's residuals.
+
+    The original implementation(language: Python) is available at:
+    https://www.grip.unina.it/download/prog/Splicebuster/"""
+
     def __init__(
         self,
         block_size: int = 128,
@@ -43,7 +50,7 @@ class Splicebuster(BaseMethod):
         **kwargs,
     ):
         """
-        Splicebuster implementation.
+        Initializes Splicebuster method class.
         Params:
         - block_size: size of the blocks used for feature extraction.
         - stride: stride used for feature extraction.
@@ -77,6 +84,10 @@ class Splicebuster(BaseMethod):
     def _init_mahal_estimation(self, mixture: str):
         """
         Obtains the corresponding mahalanobis distance from a mixture model, according to the input 'mixture'.
+        Input:
+            - mixture: string indicating the mixture model to use. Options: 'uniform', 'gaussian'.
+        Output:
+            - mahalanobis from features function.
         """
         if mixture == "gaussian":
             return gaussian_mixture_mahalanobis
@@ -194,6 +205,9 @@ class Splicebuster(BaseMethod):
     def compute_features(
         self, image: NDArray
     ) -> Tuple[NDArray, NDArray, Tuple[NDArray, NDArray]]:
+        """
+        Computes features, weights and coordinates for an image.
+        """
         qhh, qhv, qvh, qvv = self.filter_and_encode(image)
 
         if self.weight_params is not None:
@@ -244,7 +258,13 @@ class Splicebuster(BaseMethod):
 
         return block_features, block_weights, coords
 
-    def _reduce_dimensions(self, flat_features, valid_features):
+    def _reduce_dimensions(
+        self, flat_features: NDArray, valid_features: NDArray
+    ) -> Tuple[NDArray, NDArray]:
+        """
+        Reduces the dimensions of a set of features using PCA, computing it differently
+        according to attribute 'pca'.
+        """
         if self.pca == "original":
             t = feat_reduce_matrix(self.pca_dim, valid_features)
             flat_features = np.matmul(flat_features, t)

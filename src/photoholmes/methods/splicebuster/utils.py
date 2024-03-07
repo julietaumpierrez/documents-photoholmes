@@ -174,7 +174,20 @@ def feat_reduce_matrix(pca_dim: int, X: NDArray, whitten: bool = True) -> NDArra
     return v
 
 
-def gaussian_mixture_mahalanobis(seed, valid_features, flat_features, valid):
+def gaussian_mixture_mahalanobis(
+    seed: int, valid_features: NDArray, flat_features: NDArray, valid: NDArray
+) -> NDArray:
+    """
+    Gaussian Mixture model fit over valid features and prediction of the mahalanobis distance.
+    Non-valid features are labeled as 0.
+    Inputs:
+        - seed: seed for the random number generator.
+        - valid_features: non-saturated (flat) features.
+        - flat_features: all (flat) features.
+        - valid: mask of the valid pixels.
+    Output:
+        - labels: mahalanobis distance labels.
+    """
     gg_mixt = GaussianMixture(seed=seed)
     mus, covs = gg_mixt.fit(valid_features)
     labels = mahalanobis_distance(
@@ -188,7 +201,20 @@ def gaussian_mixture_mahalanobis(seed, valid_features, flat_features, valid):
     return labels
 
 
-def gaussian_uniform_mahalanobis(seed, valid_features, flat_features, valid):
+def gaussian_uniform_mahalanobis(
+    seed: int, valid_features: NDArray, flat_features: NDArray, valid: NDArray
+) -> NDArray:
+    """
+    Gaussian-Uniform model fit over valid features and prediction of the mahalanobis distance.
+    Non-valid features are labeled as 0.
+    Inputs:
+        - seed: seed for the random number generator.
+        - valid_features: non-saturated (flat) features.
+        - flat_features: all (flat) features.
+        - valid: mask of the valid pixels.
+    Output:
+        - labels: mahalanobis distance labels.
+    """
     gu_mixt = GaussianUniformEM(seed=seed)
     mus, covs, _ = gu_mixt.fit(valid_features)
     _, labels = gu_mixt.predict(flat_features)
