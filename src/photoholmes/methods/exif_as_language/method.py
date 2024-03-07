@@ -1,6 +1,7 @@
 # Derived from https://github.com/hellomuffin/exif-as-language
 import random
-from typing import Dict, Literal, Optional, Tuple
+from pathlib import Path
+from typing import Literal, Optional, Tuple, Union
 
 import cv2
 import numpy as np
@@ -8,8 +9,13 @@ import torch
 from numpy.typing import NDArray
 from torch import Tensor
 
-from photoholmes.methods.base import BaseMethod
+from photoholmes.methods.base import BaseMethod, BenchmarkOutput
 from photoholmes.methods.exif_as_language.clip import ClipModel
+from photoholmes.methods.exif_as_language.config import (
+    EXIFAsLanguageArchConfig,
+    EXIFAsLanguageConfig,
+    pretrained_arch,
+)
 from photoholmes.methods.exif_as_language.postprocessing import (
     exif_as_language_postprocessing,
 )
@@ -18,66 +24,52 @@ from photoholmes.methods.exif_as_language.utils import (
     mean_shift,
     normalized_cut,
 )
+from photoholmes.utils.generic import load_yaml
 from photoholmes.utils.patched_image import PatchedImage
 from photoholmes.utils.pca import PCA
 
 
-# FIXME fix docstrings
 class EXIFAsLanguage(BaseMethod):
     def __init__(
         self,
-        transformer: Literal["distilbert"] = "distilbert",
-        visual: Literal["resnet50"] = "resnet50",
-        patch_size: int = 128,
-        num_per_dim: int = 30,
-        feat_batch_size: int = 32,
-        pred_batch_size: int = 1024,
+        weights: Optional[Union[str, dict]] = None,
+        arch_config: Union[
+            EXIFAsLanguageArchConfig, Literal["pretrained"]
+        ] = "pretrained",
         device: str = "cpu",
-        ms_window: int = 10,
-        ms_iter: int = 5,
-        pooling: Literal["cls", "mean"] = "mean",
-        state_dict_path: Optional[str] = None,
         seed: int = 44,
     ):
-        """
-        Parameters
-        ----------
-        transformer: Transformer used for text embedding
-        vision: Vision model used for image embedding
-        patch_size : int, optional
-            Size of patches, by default 128
-        num_per_dim : int, optional
-            Number of patches to use along the largest dimension,
-            by default None (stride using patch_size)
-        device : str, optional
-            , by default "cuda:0"
-        ms_window: Window size for mean shift
-        ms_iter: Number of iterations for mean shift
-        state_dict_path: Path to weights
-        """
+        if arch_config == "pretrained":
+            arch_config = pretrained_arch
+
         random.seed(seed)
         super().__init__()
 
-        clipNet = ClipModel(vision=visual, text=transformer, pooling=pooling)
-        if state_dict_path:
-            checkpoint = torch.load(state_dict_path, map_location=device)
+        clipNet = ClipModel(
+            vision=arch_config.clip_model.vision,
+            text=arch_config.clip_model.text,
+            pooling=arch_config.clip_model.pooling,
+        )
+
+        if weights:
+            checkpoint = torch.load(weights, map_location=device)  # type: ignore
             clipNet.load_state_dict(checkpoint)
 
-        self.patch_size = patch_size
-        self.num_per_dim = num_per_dim
-        self.feat_batch_size = feat_batch_size
-        self.pred_batch_size = pred_batch_size
-        self.device = torch.device(device)
-        self.ms_window, self.ms_iter = ms_window, ms_iter
-        self.net = clipNet
+        self.patch_size = arch_config.patch_size
+        self.num_per_dim = arch_config.num_per_dim
+        self.feat_batch_size = arch_config.feat_batch_size
+        self.pred_batch_size = arch_config.pred_batch_size
 
-        self.method_to_device(device=device)
+        self.ms_window, self.ms_iter = arch_config.ms_window, arch_config.ms_iter
+        self.net = clipNet
+        self.net.eval()
+
+        self.device = torch.device(device)
 
     def predict(
         self,
         image: Tensor,
-        original_image_size: Tuple[int, int],
-    ) -> Dict[str, Tensor]:
+    ) -> Tuple[NDArray, NDArray, float, NDArray, Tensor]:
         """
         Parameters
         ----------
@@ -96,16 +88,14 @@ class EXIFAsLanguage(BaseMethod):
             score : float
                 Prediction score, higher indicates existence of manipulation
         """
-        self.net.eval()
         # Initialize image and attributes
-        height, width = original_image_size
+        height, width = image.shape[1:]
         p_img = self.init_img(image)
         # Precompute features for each patch
         with torch.no_grad():
             patch_features = self.get_patch_feats(
                 p_img, batch_size=self.feat_batch_size
             )
-
         # PCA visualization
         pca = PCA(n_components=3, whiten=True)
         feature_transform = pca.fit_transform(patch_features.cpu().numpy())
@@ -148,20 +138,16 @@ class EXIFAsLanguage(BaseMethod):
         score = pred_maps.mean()
         affinity_matrix = self.generate_afinity_matrix(patch_features)
 
-        detection = float(np.any(out_ncuts))
+        return out_ms, out_ncuts, score, out_pca, affinity_matrix
 
-        output_dict = {
-            "heatmap": out_ms,
-            "mask": out_ncuts,
-            "score": score,
-            "output_pca": out_pca,
-            "affinity_matrix": affinity_matrix,
-            "pred_maps": pred_maps,
-            "detection": detection,
-        }
-        return exif_as_language_postprocessing(output_dict, self.device)
+    def benchmark(self, image: Tensor) -> BenchmarkOutput:
+        ms, ncuts, score, _, _ = self.predict(image)
 
-    def method_to_device(self, device: str):
+        return exif_as_language_postprocessing(
+            {"heatmap": ms, "mask": ncuts, "detection": score}, self.device
+        )
+
+    def to_device(self, device: str):
         """Move method to device"""
         self.net.to(device)
         self.device = torch.device(device)
@@ -345,3 +331,25 @@ class EXIFAsLanguage(BaseMethod):
             valid_mask.append(positive_mask.long() - negative_mask.long())
         valid_mask = torch.cat(valid_mask, dim=0)
         return valid_mask
+
+    @classmethod
+    def from_config(
+        cls,
+        config: Optional[EXIFAsLanguageConfig | dict | str | Path],
+    ):
+        if isinstance(config, EXIFAsLanguageConfig):
+            return cls(**config.__dict__)
+
+        if isinstance(config, str) or isinstance(config, Path):
+            config = load_yaml(str(config))
+        elif config is None:
+            config = {}
+
+        exif_as_language_config = EXIFAsLanguageConfig(**config)
+
+        return cls(
+            arch_config=exif_as_language_config.arch_config,
+            weights=exif_as_language_config.weights,
+            device=exif_as_language_config.device,
+            seed=exif_as_language_config.seed,
+        )
