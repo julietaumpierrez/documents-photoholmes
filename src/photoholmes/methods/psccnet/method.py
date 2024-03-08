@@ -10,7 +10,8 @@ Aug 22, 2020
 """
 import logging
 import random
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from pathlib import Path
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -18,7 +19,11 @@ import torch.nn.functional as F
 from torch import Tensor
 
 from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
-from photoholmes.methods.psccnet.config import PSCCArchConfig, pretrained_arch
+from photoholmes.methods.psccnet.config import (
+    PSCCNetArchConfig,
+    PSCCNetConfig,
+    pretrained_arch,
+)
 from photoholmes.methods.psccnet.network.detection_head import DetectionHead
 from photoholmes.methods.psccnet.network.NLCDetection import NLCDetection
 from photoholmes.methods.psccnet.network.seg_hrnet import HighResolutionNet
@@ -44,7 +49,7 @@ class PSCCNet(BaseTorchMethod):
 
     def __init__(
         self,
-        arch_config: Union[PSCCArchConfig, Literal["pretrained"]] = "pretrained",
+        arch_config: Union[PSCCNetArchConfig, Literal["pretrained"]] = "pretrained",
         weights_paths: Dict[str, str] = {},
         device: str = "cpu",
         device_ids: Optional[List] = None,
@@ -60,7 +65,7 @@ class PSCCNet(BaseTorchMethod):
                 the FENet from a pretrained version, pass the path to the
                 pretrained weights in the key "pretrained".
 
-            arch_config (PSCCArchConfig | "pretrained"): the architecture configuration
+            arch_config (PSCCNetArchConfig | "pretrained"): the architecture configuration
                 for the PSSC Network. If "pretrained" is passed, the architecture from
                 the paper will be used.
             device (str): device to run the network. Default is "cuda:0".
@@ -185,15 +190,21 @@ class PSCCNet(BaseTorchMethod):
         }
 
     @classmethod
-    def from_config(cls, config: Optional[str | Dict[str, Any]]) -> "PSCCNet":
+    def from_config(
+        cls, config: Optional[PSCCNetConfig | dict | str | Path]
+    ) -> "PSCCNet":
         """
-        Instantiate the model from configuration dictionary or yaml.
+        Instantiate the model from configuration dictionary, yaml file or
+        PSCCNetConfig object.
 
         Params:
             config: path to the yaml configuration or a dictionary with
                     the parameters for the model.
         """
-        if isinstance(config, str):
+        if isinstance(config, PSCCNetConfig):
+            return cls(**config.__dict__)
+
+        if isinstance(config, (str, Path)):
             config = load_yaml(config)
 
         if config is None:
@@ -201,6 +212,6 @@ class PSCCNet(BaseTorchMethod):
 
         arch_config = config.get("arch_config", "pretrained")
         if isinstance(arch_config, dict):
-            config["arch_config"] = PSCCArchConfig(**arch_config)
+            config["arch_config"] = PSCCNetArchConfig(**arch_config)
 
         return cls(**config)
