@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from photoholmes.methods.psccnet.config import PSCCArchConfig
+from photoholmes.methods.psccnet.config import PSCCNetArchConfig
 
 
 class NonLocalMask(nn.Module):
@@ -134,11 +134,11 @@ class NonLocalMask(nn.Module):
 
 
 class NLCDetection(nn.Module):
-    def __init__(self, config: PSCCArchConfig, crop_size: Tuple[int, int]):
+    def __init__(self, config: PSCCNetArchConfig, crop_size: Tuple[int, int]):
         """
         Localization head of PSCCNet.
         Args:
-           config (PSCCArchConfig): PSCCNet architecture config.
+           config (PSCCNetArchConfig): PSCCNet architecture config.
            crop_size (List[int]): feature map crop size.
         """
         super(NLCDetection, self).__init__()

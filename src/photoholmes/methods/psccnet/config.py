@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Literal, Optional, Tuple, Union
 
@@ -63,7 +62,6 @@ pretrained_arch = PSCCNetArchConfig(
 )
 
 
-@dataclass
-class PSCCNetConfig:
+class PSCCNetConfig(BaseModel):
     weights: Optional[Union[str, Path, dict]]
     arch_config: Union[PSCCNetArchConfig, Literal["pretrained"]] = "pretrained"

@@ -19,15 +19,12 @@ import torch.nn.functional as F
 from torch import Tensor
 
 from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
-from photoholmes.methods.psccnet.config import (
-    PSCCNetArchConfig,
-    PSCCNetConfig,
-    pretrained_arch,
-)
-from photoholmes.methods.psccnet.network.detection_head import DetectionHead
-from photoholmes.methods.psccnet.network.NLCDetection import NLCDetection
-from photoholmes.methods.psccnet.network.seg_hrnet import HighResolutionNet
 from photoholmes.utils.generic import load_yaml
+
+from .config import PSCCNetArchConfig, PSCCNetConfig, pretrained_arch
+from .network.detection_head import DetectionHead
+from .network.NLCDetection import NLCDetection
+from .network.seg_hrnet import HighResolutionNet
 
 logger = logging.getLogger(__name__)
 
