@@ -14,3 +14,9 @@ class MethodName(Enum):
     TRUFOR = "trufor"
     FOCAL = "focal"
     ZERO = "zero"
+
+    @classmethod
+    def get_all_methods(cls):
+        methods_names = list(MethodName)
+        methods = [method.value for method in methods_names]
+        return methods
