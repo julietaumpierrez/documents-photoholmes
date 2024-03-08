@@ -2,7 +2,7 @@ from photoholmes.preprocessing import PreProcessingPipeline
 from photoholmes.preprocessing.image import GrayToRGB, Normalize, ZeroOneRange
 from photoholmes.preprocessing.input import InputSelection
 
-exif_preprocessing = PreProcessingPipeline(
+exif_as_language_preprocessing = PreProcessingPipeline(
     [
         ZeroOneRange(),
         GrayToRGB(),

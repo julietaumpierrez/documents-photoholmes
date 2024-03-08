@@ -30,6 +30,21 @@ from photoholmes.utils.pca import PCA
 
 
 class EXIFAsLanguage(BaseMethod):
+    """
+    Implementation of Exif as Language method [Zheng et al., 2023].
+
+    In this method the content of the image is contrasted with the exif information to
+    detect any inconsistencies between what is "said" about the image and what the
+    image is.
+
+    For more details and instruction to download the weights, see the
+    original implementation at:
+        https://github.com/hellomuffin/exif-as-language
+
+    Run the photoholmes CLI with the `adapt-weights` command to prune the weights
+    to be used with this method.
+    """
+
     def __init__(
         self,
         weights: Optional[Union[str, dict]] = None,
@@ -39,6 +54,16 @@ class EXIFAsLanguage(BaseMethod):
         device: str = "cpu",
         seed: int = 44,
     ):
+        """
+        Attributes:
+            weights (Optional[Union[str, dict]]): path to the weights for the
+                CLIP model. If None, the model will be initialized from scratch.
+            arch_config (EXIFAsLanguageArchConfig | "pretrained"): the architecture
+                configuration for the CLIP model. If "pretrained" is passed, the
+                architecture from the paper will be used.
+            device (str): device to run the network. Default is "cpu".
+            seed (int): seed to be used in random operations.
+        """
         if arch_config == "pretrained":
             arch_config = pretrained_arch
 
@@ -71,22 +96,21 @@ class EXIFAsLanguage(BaseMethod):
         image: Tensor,
     ) -> Tuple[NDArray, NDArray, float, NDArray, Tensor]:
         """
-        Parameters
-        ----------
-        img : torch.Tensor
-            [C, H, W], range: [0, 1]
-        original_image_size : Tuple[int, int]
-            [H, W]
+        Run ExifAsLanguage on an image. The image is expected to be in the range [0, 1].
+        You can use the exif_as_language_preprocessing pipeline from
+        photoholmes.methods.exif_as_language to preprocess the image.
 
-        Returns
-        -------
-        Dict[str, Any]
-            ms : np.ndarray (float32)
-                Consistency map, [H, W], range [0, 1]
-            ncuts : np.ndarray (float32)
-                Localization map, [H, W], range [0, 1]
-            score : float
-                Prediction score, higher indicates existence of manipulation
+        Args:
+            image (Tensor): the preprocessed input image. [C, H, W], range: [0, 1].
+
+        Returns:
+            Tuple[NDArray, NDArray, float, NDArray, Tensor]:
+                ms (np.ndarray): Consistency map, [H, W], range [0, 1].
+                ncuts (np.ndarray): Localization map, [H, W], range [0, 1].
+                score (float): Prediction score, higher indicates existence of
+                    manipulation.
+                out_pca (np.ndarray): PCA visualization, [H, W, 3].
+                affinity_matrix (Tensor): Affinity matrix, [n_patches, n_patches].
         """
         # Initialize image and attributes
         height, width = image.shape[1:]
@@ -141,6 +165,9 @@ class EXIFAsLanguage(BaseMethod):
         return out_ms, out_ncuts, score, out_pca, affinity_matrix
 
     def benchmark(self, image: Tensor) -> BenchmarkOutput:
+        """
+        Wrapper for the predict method for the benchmark
+        """
         ms, ncuts, score, _, _ = self.predict(image)
 
         return exif_as_language_postprocessing(
@@ -153,6 +180,16 @@ class EXIFAsLanguage(BaseMethod):
         self.device = torch.device(device)
 
     def init_img(self, img: Tensor) -> PatchedImage:
+        """
+        Initialize the image to be used in the method. It will be divided into patches
+        and preprocessed.
+
+        Args:
+            img (Tensor): the preprocessed input image. [C, H, W], range: [0, 1].
+
+        Returns:
+            PatchedImage: the image to be used in the method.
+        """
         # Initialize image and attributes
         _, height, width = img.shape
         assert (
@@ -164,8 +201,19 @@ class EXIFAsLanguage(BaseMethod):
         return p_img
 
     def predict_consistency_maps(
-        self, img: PatchedImage, patch_features: Tensor, batch_size=64
+        self, img: PatchedImage, patch_features: Tensor, batch_size: int = 64
     ):
+        """
+        Predict consistency maps for an image.
+
+        Args:
+            img (PatchedImage): the image to be used in the method.
+            patch_features (Tensor): the features for each patch in the image.
+            batch_size (int): batch size to be used in the prediction.
+
+        Returns:
+            Tensor: the consistency maps for the image.
+        """
         # For each patch, how many overlapping patches?
         spread = max(1, img.patch_size // img.stride)
 
@@ -231,8 +279,20 @@ class EXIFAsLanguage(BaseMethod):
         return responses / vote_counts
 
     def predict_pca_map(
-        self, img: PatchedImage, patch_features: NDArray, batch_size=64
+        self, img: PatchedImage, patch_features: NDArray, batch_size: int = 64
     ) -> NDArray:
+        """
+        Predict PCA visualization for an image.
+
+        Args:
+            img (PatchedImage): the image to be used in the method.
+            patch_features (NDArray): the features for each patch in the image.
+            batch_size (int): batch size to be used in the prediction.
+                Defaults to 64.
+
+        Returns:
+            NDArray: the PCA visualization for the image.
+        """
         # For each patch, how many overlapping patches?
         spread = max(1, img.patch_size // img.stride)
 
@@ -276,25 +336,32 @@ class EXIFAsLanguage(BaseMethod):
         return responses / vote_counts
 
     def patch_similarity(self, a_feats: Tensor, b_feats: Tensor) -> Tensor:
+        """
+        Compute similarity between two patches.
+
+        Args:
+            a_feats (Tensor): features for patch a.
+            b_feats (Tensor): features for patch b.
+
+        Returns:
+            Tensor: similarity between the two patches.
+        """
         cos = cosine_similarity(a_feats, b_feats).diagonal()
         cos = 1 - cos
         cos = cos.cpu()
         return cos
 
-    def get_patch_feats(self, img: PatchedImage, batch_size=32):
+    def get_patch_feats(self, img: PatchedImage, batch_size: int = 32):
         """
-        Get features for every patch in the image.
-        Features used to compute if two patches share the same EXIF attributes.
+        Get features for every patch in the image. Features used to compute if two
+        patches share the same EXIF attributes.
 
-        Parameters
-        ----------
-        batch_size : int, optional
-            Batch size to be fed into the network, by default 32
+        Args:
+            img (PatchedImage): the image to be used in the method.
+            batch_size (int): batch size to be fed into the network. Defaults to 32.
 
-        Returns
-        -------
-        torch.Tensor
-            [n_patches, 4096]
+        Returns:
+            Tensor: features for each patch in the image.
         """
         # Compute feature vector for each image patch
         patch_features = []
@@ -314,12 +381,31 @@ class EXIFAsLanguage(BaseMethod):
         return patch_features
 
     def generate_afinity_matrix(self, patch_features: Tensor) -> Tensor:
+        """
+        Generate affinity matrix for the patches in the image.
+
+        Args:
+            patch_features (Tensor): features for each patch in the image.
+
+        Returns:
+            Tensor: affinity matrix for the patches in the image.
+        """
         patch_features = torch.nn.functional.normalize(patch_features)
         result = torch.matmul(patch_features, patch_features.t())
 
         return result
 
-    def get_valid_patch_mask(self, mask: PatchedImage, batch_size=32):
+    def get_valid_patch_mask(self, mask: PatchedImage, batch_size: int = 32):
+        """
+        Get a mask for the valid patches in the image.
+
+        Args:
+            mask (PatchedImage): the mask to be used in the method.
+            batch_size (int): batch size to be fed into the network. Defaults to 32.
+
+        Returns:
+            Tensor: mask for the valid patches in the image.
+        """
         valid_mask = []
         for patches in mask.patches_gen(batch_size):
             patches = patches.reshape(
@@ -337,6 +423,13 @@ class EXIFAsLanguage(BaseMethod):
         cls,
         config: Optional[EXIFAsLanguageConfig | dict | str | Path],
     ):
+        """
+        Instantiate the model from configuration dictionary or yaml.
+
+        Params:
+            config: path to the yaml configuration or a dictionary with
+                    the parameters for the model.
+        """
         if isinstance(config, EXIFAsLanguageConfig):
             return cls(**config.__dict__)
 

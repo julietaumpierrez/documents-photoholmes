@@ -16,7 +16,8 @@ except ImportError:
 def load_vision_model(model_name: Literal["resnet50"]) -> nn.Module:
     """
     Load a vision encoder model.
-    Params:
+
+    Args:
         model_name(str): name of the model to load.
     """
     match model_name.lower():
@@ -33,7 +34,8 @@ def load_vision_model(model_name: Literal["resnet50"]) -> nn.Module:
 def load_text_model(model_name: Literal["distilbert"]) -> nn.Module:
     """
     Load a text encoder model.
-    Params:
+
+    Args:
         model_name(str): name of the model to load.
     """
     match model_name.lower():
