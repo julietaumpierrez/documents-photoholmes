@@ -47,7 +47,7 @@ class BaseMethod(ABC):
         return {"heatmap": None, "mask": None, "detection": None}
 
     @classmethod
-    def from_config(cls, config: Optional[str | Dict[str, Any]]):
+    def from_config(cls, config: Optional[str | Dict[str, Any] | Path]):
         """
         Instantiate the model from configuration dictionary or yaml.
 
