@@ -18,7 +18,10 @@ def load_vision_model(model_name: Literal["resnet50"]) -> nn.Module:
     Load a vision encoder model.
 
     Args:
-        model_name(str): name of the model to load.
+        model_name (Literal["resnet50"]): name of the model to load.
+
+    Returns:
+        nn.Module: vision encoder model.
     """
     match model_name.lower():
         case "resnet50":
@@ -36,7 +39,10 @@ def load_text_model(model_name: Literal["distilbert"]) -> nn.Module:
     Load a text encoder model.
 
     Args:
-        model_name(str): name of the model to load.
+        model_name (Literal["distilbert"]): name of the model to load.
+
+    Returns:
+        nn.Module: text encoder model.
     """
     match model_name.lower():
         case "distilbert":
@@ -78,6 +84,11 @@ class ClipModel(nn.Module):
     ):
         """
         Simple clip model using HF transformers and torchvision models.
+
+        Args:
+            vision (Literal["resnet50"]): vision encoder model name.
+            text (Literal["distilbert"]): text encoder model name.
+            pooling (Literal["cls", "mean"]): pooling strategy to use.
         """
         super().__init__()
         self.visual = load_vision_model(vision)
@@ -92,9 +103,27 @@ class ClipModel(nn.Module):
                 self.pooler = MeanPooler()
 
     def encode_image(self, image: Tensor) -> Tensor:
+        """
+        Encode an image.
+
+        Args:
+            image (Tensor): image tensor.
+
+        Returns:
+            Tensor: image embeddings.
+        """
         return self.visual(image)
 
     def encode_text(self, inputs: Dict[str, Tensor]) -> Tensor:
+        """
+        Encode text.
+
+        Args:
+            inputs (Dict[str, Tensor]): input tensors.
+
+        Returns:
+            Tensor: text embeddings.
+        """
         out = self.transformer(**inputs)
         out = self.pooler(out, inputs["attention_mask"])
         return out
@@ -102,6 +131,17 @@ class ClipModel(nn.Module):
     def forward(
         self, image: Tensor, attention_mask: Tensor, input_ids: Tensor
     ) -> Tuple[Tensor, Tensor, Tensor]:
+        """
+        Forward pass.
+
+        Args:
+            image (Tensor): image tensor.
+            attention_mask (Tensor): attention mask tensor.
+            input_ids (Tensor): input ids tensor.
+
+        Returns:
+            Tuple[Tensor, Tensor, Tensor]: image embeddings, text embeddings, logit scale.
+        """
         text = {"attention_mask": attention_mask, "input_ids": input_ids}
         image_embeds = self.encode_image(image)
         text_embeds = self.encode_text(text)

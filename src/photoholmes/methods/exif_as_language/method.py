@@ -62,7 +62,7 @@ class EXIFAsLanguage(BaseMethod):
                 configuration for the CLIP model. If "pretrained" is passed, the
                 architecture from the paper will be used.
             device (str): device to run the network. Default is "cpu".
-            seed (int): seed to be used in random operations.
+            seed (int): seed to be used in random operations. Default is 44.
         """
         if arch_config == "pretrained":
             arch_config = pretrained_arch
@@ -209,7 +209,7 @@ class EXIFAsLanguage(BaseMethod):
         Args:
             img (PatchedImage): the image to be used in the method.
             patch_features (Tensor): the features for each patch in the image.
-            batch_size (int): batch size to be used in the prediction.
+            batch_size (int): batch size to be used in the prediction. Defaults to 64.
 
         Returns:
             Tensor: the consistency maps for the image.
