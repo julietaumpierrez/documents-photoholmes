@@ -10,18 +10,15 @@ logger = logging.getLogger(__name__)
 
 def prune_original_weights(weights: Union[str, Path, Dict[str, Tensor]], out_path: str):
     """
-    Prune the original weights from the model to match the photoholmes model implementation.
+    Prune the original weights from the model to match the photoholmes model
+    implementation.
 
-    Parameters
-    ----------
-    weights : Union[str, Path, Dict[str, Tensor]]
-        Path to the original weights or the weights themselves.
-    out_path : str
-        Path to save the pruned weights.
+    Args:
+        weights (Union[str, Path, Dict[str, Tensor]]): Path to the original weights.
+        out_path (str): Path to save the pruned weights.
 
-    Returns
-    -------
-    None
+    Returns:
+        None
     """
     if isinstance(weights, (str, Path)):
         logger.info(f"Loading weights from {weights}")
