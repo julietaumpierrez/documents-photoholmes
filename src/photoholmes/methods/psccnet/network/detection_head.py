@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-from photoholmes.methods.psccnet.config import PSCCArchConfig
+from photoholmes.methods.psccnet.config import PSCCNetArchConfig
 
 BN_MOMENTUM = 0.01
 
@@ -59,10 +59,10 @@ class Bottleneck(nn.Module):
 
 
 class DetectionHead(nn.Module):
-    def __init__(self, config: PSCCArchConfig, crop_size: Tuple[int, int]):
+    def __init__(self, config: PSCCNetArchConfig, crop_size: Tuple[int, int]):
         """Detection head for PSCCNet
              Args:
-        config (PSCCArchConfig): PSCCNet architecture config.
+        config (PSCCNetArchConfig): PSCCNet architecture config.
         crop_size (List[int]): feature map crop size."""
         super(DetectionHead, self).__init__()
         self.crop_size = crop_size

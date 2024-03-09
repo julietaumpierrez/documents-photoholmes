@@ -47,7 +47,7 @@ class BaseMethod(ABC):
         return {"heatmap": None, "mask": None, "detection": None}
 
     @classmethod
-    def from_config(cls, config: Optional[str | Dict[str, Any]]):
+    def from_config(cls, config: Optional[str | Dict[str, Any] | Path]):
         """
         Instantiate the model from configuration dictionary or yaml.
 
@@ -55,7 +55,7 @@ class BaseMethod(ABC):
             config: path to the yaml configuration or a dictionary with
                     the parameters for the model.
         """
-        if isinstance(config, str):
+        if isinstance(config, (str, Path)):
             config = load_yaml(config)
 
         if config is None:
