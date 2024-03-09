@@ -55,7 +55,7 @@ class BaseMethod(ABC):
             config: path to the yaml configuration or a dictionary with
                     the parameters for the model.
         """
-        if isinstance(config, str):
+        if isinstance(config, (str, Path)):
             config = load_yaml(config)
 
         if config is None:
