@@ -9,22 +9,29 @@ class F1_weighted_v2(Metric):
     into account the value of the heatmap as a probability and uses weighted true
     positives, weighted false positives, weighted true negatives and weighted false
     negatives to calculate the F1 score.
+    This metric computes the F1 weighted score. It accumulates True Positives,
+    False Negatives and False Positives to then calculate the F1 weighted
+    score.
 
     Attributes:
-        TPw (torch.Tensor): A tensor that accumulates the count of weighted true positives.
-        FNw (torch.Tensor): A tensor that accumulates the count of weighted false negatives.
-        FPw (torch.Tensor): A tensor that accumulates the count of weighted false positives.
+        TPw (Tensor): A tensor that accumulates the count of weighted true
+        positives.
+        FNw (Tensor): A tensor that accumulates the count of weighted false
+        negatives.
+        FPw (Tensor): A tensor that accumulates the count of weighted false
+        positives.
 
     Methods:
         __init__(**kwargs): Initializes the F1 score weighted metric object.
-        update(preds: Tensor, target: Tensor): Updates the states with a new batch of
-                                               predictions and targets.
-        compute() -> Tensor: Computes the F1 score weighted over all batches.
+        update(preds: Tensor, target: Tensor): Updates the states with a new pair of
+                                               prediction and target.
+        compute() -> Tensor: Computes the F1 score weighted from the state of the
+            metric.
 
     Example:
-        >>> F1_weighted_metric = F1_weighted()
-        >>> for preds_batch, targets_batch in data_loader:
-        >>>     F1_weighted_metric.update(preds_batch, targets_batch)
+        >>> F1_weighted_metric = F1_weighted_v2()
+        >>> for preds, targets in data_loader:
+        >>>     F1_weighted_metric.update(preds, targets)
         >>> f1_weighted = F1_weighted_metric.compute()
     """
 
@@ -43,8 +50,8 @@ class F1_weighted_v2(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the F1 score weighted counts with a new batch of
-        predictions and targets. It assumes both predictions as heatmap or binary
+        Updates the TPw, FPW and FNw counts with a new pair of
+        prediction and target. It assumes both predictions as heatmap or binary
         and binary targets.
 
         Args:
@@ -71,13 +78,14 @@ class F1_weighted_v2(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the F1 weighted over all the batches averaging all the
-        F1 weighted of each image.
+        Computes the F1 weighted from the state of the metric.
 
         Returns:
-            Tensor: The computed F1 weighted over the full dataset.
-                    If the total number of true positives is zero,
-                    it returns 0.0 to avoid division by zero.
+            Tensor: The computed F1 weighted score.
+
+        Note:
+            If the total number of true positives is zero, it returns 0.0 to avoid
+            division by zero.
         """
         if not self.total_images:
             return torch.tensor(0.0)

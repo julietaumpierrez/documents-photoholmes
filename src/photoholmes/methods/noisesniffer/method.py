@@ -4,6 +4,7 @@
 from typing import List, Tuple
 
 import numpy as np
+import torch
 from numpy.typing import NDArray
 from skimage.util import view_as_windows
 
