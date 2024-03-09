@@ -54,6 +54,7 @@ class Focal(BaseTorchMethod):
 
             self.clustering = KMeans(verbose=False)
         self.to_device(device)
+        self.eval()
 
     def forward(self, x: torch.Tensor):
         """
@@ -95,9 +96,9 @@ class Focal(BaseTorchMethod):
             raise ValueError("Input image should be of shape (C, H, W)")
         _, im_H, im_W = image.shape
 
-        # This operation destroys any traces of forgery the method might
-        # exploit. This indicates the method is most likely overfitted to
-        # the dataset.
+        # This operation destroys traces that typically indicate the presence of a
+        # forgery. This indicates the method is most likely overfitted to
+        # the dataset or to semantic forgery.
         image = resize(image, [1024, 1024])
 
         with torch.no_grad():
