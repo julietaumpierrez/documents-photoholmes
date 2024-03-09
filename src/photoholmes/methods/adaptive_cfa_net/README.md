@@ -1,4 +1,4 @@
-# Adaptive CFA net: An Adaptive Neural Network for Unsupervised Mosaic Consistency Analysis in Image Forensics 
+# Adaptive CFA Net: An Adaptive Neural Network for Unsupervised Mosaic Consistency Analysis in Image Forensics 
 
 This is the implemenattion of the method by Bammey et al than can be found [here](https://openaccess.thecvf.com/content_CVPR_2020/papers/Bammey_An_Adaptive_Neural_Network_for_Unsupervised_Mosaic_Consistency_Analysis_in_CVPR_2020_paper.pdf).
 
@@ -38,7 +38,8 @@ method = AdaptiveCFANet(
     arch_config="pretrained",
     weights="path_to_weights",
 )
-method.to_device("name_of_device")
+device = "cpu"
+method.to_device(device)
 
 # Use predict to get the final result
 output = method.predict(**input)
