@@ -1,8 +1,10 @@
-# "An Adaptive Neural Network for Unsupervised Mosaic Consistency Analysis in Image Forensics"
+# Adaptive CFA net: An Adaptive Neural Network for Unsupervised Mosaic Consistency Analysis in Image Forensics 
 
-This is the implemenattion of the model presented in [[1]](https://openaccess.thecvf.com/content_CVPR_2020/papers/Bammey_An_Adaptive_Neural_Network_for_Unsupervised_Mosaic_Consistency_Analysis_in_CVPR_2020_paper.pdf).
+This is the implemenattion of the method by Bammey et al than can be found [here](https://openaccess.thecvf.com/content_CVPR_2020/papers/Bammey_An_Adaptive_Neural_Network_for_Unsupervised_Mosaic_Consistency_Analysis_in_CVPR_2020_paper.pdf).
 
-The code contained in this library was derived from [the original implementation](https://github.com/qbammey/adaptive_cfa_forensics), making only minor changes to fit our project structure.
+The code contained in this library was derived from [the original implementation](https://github.com/qbammey/adaptive_cfa_forensics), making only minor changes to fit the PhotoHolmes library structure. 
+
+This is a deep learning based method, the weights can be found [here](https://github.com/qbammey/adaptive_cfa_forensics/tree/master/src/models) under the name [pretrained.pt](https://github.com/qbammey/adaptive_cfa_forensics/blob/master/src/models/pretrained.pt). We last checked this information March 9th 2024, please refer to the authors of the original paper if the weights can not be found.
 
 
 ## Description
@@ -15,18 +17,32 @@ This research addresses the critical challenge of detecting image forgeries, foc
 
 To evaluate this method, the authors created a diverse benchmark database using the Dresden Image Database, processed with various demosaicing algorithms. This database comprises both authentic and forged images, where forgeries are created by splicing parts of images demosaiced differently. This setup allows for a detailed assessment of the network's capacity to detect inconsistencies in mosaic patterns indicative of forgery. The study demonstrates the network's effectiveness in detecting forgeries and its adaptability to different data types and compression formats, making a significant contribution to the field of image forensics by providing a robust, adaptable tool for unsupervised forgery detection.
 
-# TODO: finish README
 ## Usage
 
-Add later usage of method 
+```python
+    from photoholmes.methods.adaptive_cfa_net import (
+    AdaptiveCFANet,
+    adaptive_cfa_net_preprocessing,
+)
 
-## Results on benchmarking dataset
+# Read an image
+from photoholmes.utils.image import read_image
+image = read_image("path_to_image")
 
-Add results of all metrics in our own benchmarking dataset
+# Assign the image to a dictionary and preprocess the image
+image_data = {"image": image}
+input = adaptive_cfa_net_preprocessing(**image_data)
 
-## Results on common datasets
+# Declare the method and use the .to_device if you want to run it on cuda or mps
+method = AdaptiveCFANet(
+    arch_config="pretrained",
+    weights="path_to_weights",
+)
+method.to_device("name_of_device")
 
-Add results on common datasets 
+# Use predict to get the final result
+output = method.predict(**input)
+```
 
 ## Citation
 
