@@ -3,7 +3,7 @@ from typing import List, Union
 import numpy as np
 from torchmetrics import MetricCollection
 
-from photoholmes.metrics.registry import MetricName
+from photoholmes.metrics.registry import MetricRegistry
 
 
 class MetricFactory:
@@ -33,22 +33,22 @@ class MetricFactory:
        Please refer to the documentation of the respective metrics for more details.
 
     Methods:
-        load(metric_names: List[Union[str, MetricName]]) -> List[Metric]:
+        load(metric_names: List[Union[str, MetricRegistry]]) -> List[Metric]:
             Instantiates and returns a list of metric objects corresponding to the
             specified metric names.
     """
 
     @staticmethod
-    def load(metric_names: List[Union[str, MetricName]]) -> MetricCollection:
+    def load(metric_names: List[Union[str, MetricRegistry]]) -> MetricCollection:
         """
         Instantiates and returns a list of metric objects corresponding to the specified
         metric names.
 
         Args:
-            metric_names (List[Union[str, MetricName]]): A list of the names of the
+            metric_names (List[Union[str, MetricRegistry]]): A list of the names of the
                 metrics to load.
                 These can be strings representing the metric names or instances of the
-                MetricName enum.
+                MetricRegistry enum.
 
         Returns:
             List[Metric]: A list of metric objects corresponding to the provided metric
@@ -67,7 +67,7 @@ class MetricFactory:
             >>> metrics = MetricFactory.load(["auroc"])
 
             Loading multiple metrics:
-            >>> metrics = MetricFactory.load(["auroc", MetricName.PRECISION])
+            >>> metrics = MetricFactory.load(["auroc", MetricRegistry.PRECISION])
 
         """
         if not metric_names:
@@ -75,72 +75,68 @@ class MetricFactory:
         metrics = []
         for metric_name in metric_names:
             if isinstance(metric_name, str):
-                metric_name = MetricName(metric_name.lower())
+                metric_name = MetricRegistry(metric_name.lower())
             match metric_name:
-                case MetricName.AUROC:
-                    from torchmetrics import AUROC
+                case MetricRegistry.AUROC:
+                    from photoholmes.metrics import AUROC
 
-                    metrics.append(
-                        AUROC(task="binary", thresholds=list(np.linspace(0, 1, 100)))
-                    )
-                case MetricName.mAUROC:
-                    from photoholmes.metrics.mAuroc import mAuroc
+                    metrics.append(AUROC(thresholds=list(np.linspace(0, 1, 100))))
+                case MetricRegistry.mAUROC:
+                    from photoholmes.metrics import mAuroc
 
                     metrics.append(mAuroc(thresholds=list(np.linspace(0, 1, 100))))
-                case MetricName.FPR:
-                    from photoholmes.metrics.FPR import FPR
+                case MetricRegistry.FPR:
+                    from photoholmes.metrics import FPR
 
                     metrics.append(FPR())
-                case MetricName.IoU:
-                    from torchmetrics import JaccardIndex as IoU
+                case MetricRegistry.IoU:
+                    from photoholmes.metrics import IoU
 
-                    metrics.append(IoU(task="binary"))
-                case MetricName.MCC:
-                    from torchmetrics import MatthewsCorrCoef
+                    metrics.append(IoU())
+                case MetricRegistry.MCC:
+                    from photoholmes.metrics import MCC
 
-                    metrics.append(MatthewsCorrCoef(task="binary"))
-                case MetricName.Precision:
-                    from torchmetrics import Precision
+                    metrics.append(MCC())
+                case MetricRegistry.Precision:
+                    from photoholmes.metrics import Precision
 
-                    metrics.append(Precision(task="binary"))
-                case MetricName.ROC:
-                    from torchmetrics import ROC
+                    metrics.append(Precision())
+                case MetricRegistry.ROC:
+                    from photoholmes.metrics import ROC
 
-                    metrics.append(
-                        ROC(task="binary", thresholds=list(np.linspace(0, 1, 100)))
-                    )
-                case MetricName.TPR:
-                    from torchmetrics import Recall as TPR
+                    metrics.append(ROC(thresholds=list(np.linspace(0, 1, 100))))
+                case MetricRegistry.TPR:
+                    from photoholmes.metrics import TPR
 
-                    metrics.append(TPR(task="binary"))
-                case MetricName.IoU_WEIGHTED_V1:
+                    metrics.append(TPR())
+                case MetricRegistry.IoU_WEIGHTED_V1:
                     from photoholmes.metrics.IoU_weighted_v1 import IoU_weighted_v1
 
                     metrics.append(IoU_weighted_v1())
-                case MetricName.F1_WEIGHTED_V1:
+                case MetricRegistry.F1_WEIGHTED_V1:
                     from photoholmes.metrics.F1_weighted_v1 import F1_weighted_v1
 
                     metrics.append(F1_weighted_v1())
-                case MetricName.MCC_WEIGHTED_V1:
+                case MetricRegistry.MCC_WEIGHTED_V1:
                     from photoholmes.metrics.MCC_weighted_v1 import MCC_weighted_v1
 
                     metrics.append(MCC_weighted_v1())
-                case MetricName.IoU_WEIGHTED_V2:
+                case MetricRegistry.IoU_WEIGHTED_V2:
                     from photoholmes.metrics.IoU_weighted_v2 import IoU_weighted_v2
 
                     metrics.append(IoU_weighted_v2())
-                case MetricName.F1_WEIGHTED_V2:
+                case MetricRegistry.F1_WEIGHTED_V2:
                     from photoholmes.metrics.F1_weighted_v2 import F1_weighted_v2
 
                     metrics.append(F1_weighted_v2())
-                case MetricName.MCC_WEIGHTED_V2:
+                case MetricRegistry.MCC_WEIGHTED_V2:
                     from photoholmes.metrics.MCC_weighted_v2 import MCC_weighted_v2
 
                     metrics.append(MCC_weighted_v2())
-                case MetricName.F1:
-                    from torchmetrics import F1Score
+                case MetricRegistry.F1:
+                    from photoholmes.metrics import F1Score
 
-                    metrics.append(F1Score(task="binary"))
+                    metrics.append(F1Score())
                 case _:
                     raise NotImplementedError(
                         f"Metric '{metric_name}' is not implemented."

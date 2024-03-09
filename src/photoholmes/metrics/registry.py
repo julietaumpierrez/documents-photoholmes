@@ -2,7 +2,7 @@ from enum import Enum, unique
 
 
 @unique
-class MetricName(Enum):
+class MetricRegistry(Enum):
     AUROC = "auroc"
     mAUROC = "mauroc"
     FPR = "fpr"
@@ -21,6 +21,6 @@ class MetricName(Enum):
 
     @classmethod
     def get_all_metrics(cls):
-        metric_names = list(MetricName)
+        metric_names = list(MetricRegistry)
         metrics = [metric.value for metric in metric_names]
         return metrics

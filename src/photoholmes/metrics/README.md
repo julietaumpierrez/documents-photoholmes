@@ -55,7 +55,7 @@ mask = torch.randint(0, 2, (256, 256))
 # generate a random prediction of probabilities of size 256x256 
 pred = torch.rand(256, 256)
 # instantiate the metric
-auroc_metric = AUROC(task = "binary")
+auroc_metric = AUROC()
 # calculate the metric
 auroc = auroc_metric(pred, mask)
 
@@ -84,7 +84,7 @@ Using the custom metrics is the same as using the metrics from
 torch-metrics. Here is an example using the `IoU_weighted_v1` metric:
 
 ```python
-from photoholmes.metrics.IoU_weighted_v1 import IoU_weighted_v1
+from photoholmes.metrics import IoU_weighted_v1
 
 import torch
 
@@ -121,17 +121,17 @@ metric_value = metric.compute()
 print(metric_value)
 ```
 
-Metrics can also be loaded by passing a list of `MetricName` objects to the `load` method. Here is an example using the `MetricFactory` to load the `mAUROC` metric:
+Metrics can also be loaded by passing a list of `MetricRegistry` objects to the `load` method. Here is an example using the `MetricFactory` to load the `mAUROC` metric:
 
 ```python
-from photoholmes.metrics import MetricFactory, MetricName
+from photoholmes.metrics import MetricFactory, MetricRegistry
 
 import torch
 
 # Generate random data
 data = [(torch.rand(256, 256), torch.randint(0, 2, (256, 256))) for _ in range(10)]
 
-metric_collection = MetricFactory.load(MetricName.mAUROC)
+metric_collection = MetricFactory.load([MetricRegistry.mAUROC])
 
 for pred, mask in data:
     metric_collection.update(pred, mask)
@@ -140,17 +140,17 @@ metric_value = metric_collection.compute()
 print(metric_value)
 ```
 
-With the `MetricName` class you can get all the available metrics and load them all at once. Here is an example using the `MetricFactory` to load all the available metrics:
+With the `MetricRegistry` class you can get all the available metrics and load them all at once. Here is an example using the `MetricFactory` to load all the available metrics:
 
 ```python
-from photoholmes.metrics import MetricFactory, MetricName
+from photoholmes.metrics import MetricFactory, MetricRegistry
 
 import torch
 
 # Generate random data
 data = [(torch.rand(256, 256), torch.randint(0, 2, (256, 256))) for _ in range(10)]
 
-metric_names = MetricName.get_all_metrics()
+metric_names = MetricRegistry.get_all_metrics()
 metric_collection = MetricFactory.load(metric_names)
 
 for pred, mask in data:
@@ -163,14 +163,14 @@ print(metric_value)
 For adding a metric to the `MetricCollection`, you can use the `add` method of the `MetricCollection` object. For more information about the `MetricCollection` object please refer to the [documentation](https://lightning.ai/docs/torchmetrics/stable/pages/overview.html#metriccollection). Here is an example using the `MetricCollection` to add the `AUROC` metric:
 
 ```python
-from photoholmes.metrics import MetricFactory, MetricName
+from photoholmes.metrics import MetricFactory, MetricRegistry
 import torch
 from torchmetrics import Precision
 
 # Generate random data
 data = [(torch.rand(256, 256), torch.randint(0, 2, (256, 256))) for _ in range(10)]
 
-metric_collection = MetricFactory.load([MetricName.AUROC])
+metric_collection = MetricFactory.load([MetricRegistry.AUROC])
 metric_collection.add_metrics(Precision(task="binary"))
 
 for pred, mask in data:
@@ -185,27 +185,30 @@ print(metric_value)
 If the metric already exists in [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/) the steps to follow are:
 1. Add metric to registry
     ```python
-    class MetricName(Enum):
+    class MetricRegistry(Enum):
         NEW_TORCHMETRIC = "new_torch_metric"
     ```
-2. Add the metric to the factory by following this template
+2. Add a wrapper for the metric in the torchmetrics_wrapper.py file if necessary. This file contains the wrapper for the metrics from [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/). The wrapper should follow the same pattern as the other metrics in the file. The wrapper should be a class that inherits from the `Metric` class and should have the same signature as the original.
+3. Add the metric to the `__init__.py` file of the metrics module.
+4. Add the metric to the factory by following this template
     ``` python
-    case MetricName.NEW_TORCHMETRIC:
-        from torchmetrics import NewTorchMetric as NTM
-        metrics.append(NTM(task="binary"))
+    case MetricRegistry.NEW_TORCHMETRIC:
+        from photoholmes.metrics import New_Torch_Metric as NTM
+        metrics.append(NTM())
     ```
 If the metric does not exist in [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/) you should follow the instructions provided by [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/) [here](https://lightning.ai/docs/torchmetrics/stable/pages/implement.html), so the steps are as follows:
 1. Create the .py file as explained in the tutorial of [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/).
 2. Add metric to registry
     ```python
-    class MetricName(Enum):
+    class MetricRegistry(Enum):
         FANCY_NEW_METRIC = "fancy_new_metric"
     ```
+3. Add the metric to the `__init__.py` file of the metrics module.
 3. Add the metric to the factory by following this template
     ``` python
-    case MetricName.FANCY_NEW_METRIC:
-        from photoholmes.metrics.fancy_new_metric import Fancy_New_Metric as FNM
-        metrics.append(FNM(task="binary"))
+    case MetricRegistry.FANCY_NEW_METRIC:
+        from photoholmes.metrics import Fancy_New_Metric as FNM
+        metrics.append(FNM())
     ```
 
 Make a pull request to the repository with the new metric following the instructions of the [CONTRIBUTING.md](../CONTRIBUTING.md) file.
