@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from numpy.typing import NDArray
+from torch import Tensor
 
 IMG_FOLDER_PATH = "test_images/images/"
 
@@ -95,7 +96,7 @@ def read_jpeg_data(
     image_path: str,
     num_dct_channels: Optional[int] = None,
     all_quant_tables: bool = False,
-) -> Tuple[NDArray, List[NDArray]]:
+) -> Tuple[Tensor, Tensor]:
     """Reads image from path and returns DCT coefficient matrix for each channel and the
     quantization matrixes. If image is in jpeg format, it decodes the DCT stream and
     returns it. Otherwise, the image is saved into a temporary jpeg file and then the
@@ -118,9 +119,9 @@ def read_jpeg_data(
         save_image(temp.name, img, [cv.IMWRITE_JPEG_QUALITY, 100])
         jpeg = jpegio.read(temp.name)
 
-    return _DCT_from_jpeg(jpeg, num_channels=num_dct_channels), _qtables_from_jpeg(
-        jpeg, all=all_quant_tables
-    )
+    return torch.tensor(
+        _DCT_from_jpeg(jpeg, num_channels=num_dct_channels)
+    ), torch.tensor(_qtables_from_jpeg(jpeg, all=all_quant_tables))
 
 
 def _qtables_from_jpeg(
