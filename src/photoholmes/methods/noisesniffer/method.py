@@ -1,15 +1,14 @@
 # Derived from code provided by Marina Gardella, please refer to
 # https://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000341 for an online demo
 
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
+import torch
 from numpy.typing import NDArray
 from skimage.util import view_as_windows
-from torch import Tensor
 
-from photoholmes.methods.base import BaseMethod
-from photoholmes.postprocessing.image import to_tensor_dict
+from photoholmes.methods.base import BaseMethod, BenchmarkOutput
 
 from .utils import (
     all_image_means,
@@ -26,6 +25,12 @@ from .utils import (
 
 
 class Noisesniffer(BaseMethod):
+    """
+    Noisesniffer [Gardella et al, 2021] implementation.
+    The algorithm operates by analyzing the noise levels across different
+    patches of the image to identify inconsistencies.
+    """
+
     def __init__(
         self,
         w: int = 3,
@@ -36,15 +41,15 @@ class Noisesniffer(BaseMethod):
         **kwargs,
     ):
         """
-        Noisesniffer implementation.
-        Inputs:
-            -w: Block size (default: 3)
-            -b: Number of blocks per bin (default: 20000)
-            -n: Percentile of blocks with the lowest energy in low frequencies (default:
-            0.1)
-            -m: Percentile of blocks with the lowest standard deviation (default: 0.5)
-            -W: Cell size for NFA computation (region growing) (default: 100)
-            -kwargs: Additional arguments to pass to the base class.
+        Attributes:
+            w (int): block size for noise analysis (default: 3).
+            b (int): number of blocks per bin for statistical analysis (default: 20000).
+            n (float): percentile for selecting blocks with the lowest energy in low
+                    frequencies (default: 0.1).
+            m (float): percentile for selecting blocks with the lowest standard
+                    deviation (default: 0.5).
+            W (int): cell size for NFA (Number of False Alarms) computation for region
+                    growing (default: 100).
         """
         super().__init__(**kwargs)
         self.w = w
@@ -66,15 +71,20 @@ class Noisesniffer(BaseMethod):
     ) -> Tuple[List, List]:
         """
         Run Noisesniffer in one channel of input image.
-        Input:
-            - img: Image to test.
-            - w: Block size.
-            - ch: Channel to test.
-            - img_means: Means of all blocks in the image.
-            - valid_blocks_indices: Indices of valid blocks.
-            - b: Number of blocks per bin.
-            - n: Percentile of blocks with the lowest energy in low frequencies.
-            - m: Percentile of blocks with the lowest standard deviation.
+
+        Args:
+            ch (int): index of the channel to be processed.
+            n (float): percentile of blocks with the lowest energy in low frequencies.
+            m (float): percentile of blocks with the lowest standard deviation.
+            image (NDArray): input image array.
+            w (int): block size.
+            img_means (NDArray): means of all blocks in the image.
+            valid_blocks_indices (NDArray): indices of blocks considered valid.
+            b (int): number of blocks per bin.
+
+        Returns:
+            valid_blocks_indeices (List): list of valid blocks in the current channel.
+            subset (List): list of selected blocks.
         """
         V = []
         S = []
@@ -106,11 +116,20 @@ class Noisesniffer(BaseMethod):
                         S.append(pos)
         return V, S
 
-    def predict(self, image: NDArray) -> Dict[str, Tensor]:
+    def predict(  # type: ignore[override]
+        self, image: NDArray
+    ) -> Tuple[NDArray, NDArray]:
         """
         Run Noisesniffer on an image.
-        Input: Image to test.
-        Output: Dictionary containing 'mask' and 'img_paint'.
+
+        Args:
+            - image (NDArray): input image.
+
+        Returns:
+            - mask (NDArray): mask of detected forgeries.
+            - detection (float): detection score.
+            - img_painted (NDArray): image with lowest standard deviation blocks painted
+                red.
         """
         image = image.astype(float)
         valid_blocks_indices = compute_valid_blocks_indices(image, self.w)
@@ -134,6 +153,21 @@ class Noisesniffer(BaseMethod):
             S = np.concatenate((S, S_ch))
 
         mask, img_paint = compute_output(image, self.w, self.W, self.m, V, S)
+        return mask, img_paint
+
+    def benchmark(self, image: NDArray) -> BenchmarkOutput:  # type: ignore[override]
+        """
+        Wrapper for the predict method for the benchmark
+        """
+        mask, _ = self.predict(image)
+
         detection = float(np.any(mask))
-        output = {"mask": mask, "detection": detection, "img_paint": img_paint}
-        return to_tensor_dict(output)
+        detection_tensor = torch.tensor(detection).unsqueeze(0)
+
+        mask_tensor = torch.from_numpy(mask)
+
+        return BenchmarkOutput(
+            heatmap=None,
+            mask=mask_tensor,
+            detection=detection_tensor,
+        )

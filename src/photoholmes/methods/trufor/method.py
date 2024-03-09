@@ -5,16 +5,18 @@ Edited in September 2022
 """
 
 import logging
-from typing import Any, Dict, Literal, Optional, Type, Union
+from pathlib import Path
+from typing import Literal, Optional, Tuple, Type, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
-from photoholmes.methods.base import BaseTorchMethod
+from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
 from photoholmes.utils.generic import load_yaml
 
-from .config import PRETRAINED_CONFIG, TruForConfig
+from .config import TruForArchConfig, TruForConfig, pretrained_arch
 from .models.DnCNN import ActivationOptions, make_net
 from .models.utils.init_func import init_weight
 from .models.utils.layer import weighted_statistics_pooling
@@ -22,9 +24,16 @@ from .models.utils.layer import weighted_statistics_pooling
 logger = logging.getLogger(__name__)
 
 
-def preprc_imagenet_torch(x):
-    """
-    Imagenet preprocessing.
+# This function is not in the `preprocessing` module as is used in the middle of the
+# method's forward pass. The unormalized image is needed to compute the Noiseprint++
+def preprc_imagenet_torch(x: Tensor) -> Tensor:
+    """Normalizes an image tensor using ImageNet's mean and standard deviation.
+
+    Args:
+        x (Tensor): input image tensor.
+
+    Returns:
+        Tensor: normalized image tensor.
     """
     mean = torch.Tensor([0.485, 0.456, 0.406]).to(x.device)
     std = torch.Tensor([0.229, 0.224, 0.225]).to(x.device)
@@ -32,9 +41,18 @@ def preprc_imagenet_torch(x):
     return x
 
 
-def create_backbone(typ: Literal["mit_b2"], norm_layer: Type[nn.Module]):
-    """
-    Create backbone for trufor method.
+def create_backbone(
+    typ: Literal["mit_b2"], norm_layer: Type[nn.Module]
+) -> Tuple[nn.Module, list[int]]:
+    """Initializes a backbone network based on the specified type and normalization
+    layer.
+
+    Args:
+        typ (Literal["mit_b2"]): type of the backbone.
+        norm_layer (Type[nn.Module]): normalization layer type.
+
+    Returns:
+        Tuple[nn.Module, list[int]]: backbone network and list of channels.
     """
     channels = [64, 128, 320, 512]
     if typ == "mit_b2":
@@ -48,63 +66,82 @@ def create_backbone(typ: Literal["mit_b2"], norm_layer: Type[nn.Module]):
 
 
 class TruFor(BaseTorchMethod):
+    """
+    Trufor [Guillaro, et al. 2023] implementation.
+    The method extracts both high-level and low-level features through a
+    transformer-based architecture that combines the RGB image and a learned
+    noise-sensitive fingerprint. The forgeries are detected as deviations from the
+    expected regular pattern that characterizes a pristine image.
+    """
+
     def __init__(
         self,
-        cfg: Union[TruForConfig, Literal["pretrained"]] = "pretrained",
-        norm_layer=nn.BatchNorm2d,
-        device: str = "cpu",
+        arch_config: Union[TruForArchConfig, Literal["pretrained"]] = "pretrained",
+        weights: Optional[Union[str, dict]] = None,
+        use_confidence: bool = True,
         **kwargs,
     ):
+        """
+        Attributes:
+            arch_config (Union[TruForArchConfig, Literal["pretrained"]]): specifies
+                the architecture configuration.
+            weights (Optional[Union[str, dict]]): path to the weights file or a
+                dictionary containing model weights.
+            use_confidence (bool): whether to use confidence maps to multiply the
+                output heatmap in the benchmark method.
+        """
         super().__init__(**kwargs)
 
-        if cfg == "pretrained":
-            cfg = PRETRAINED_CONFIG
+        if arch_config == "pretrained":
+            arch_config = pretrained_arch
 
-        self.cfg = cfg
-
-        self.norm_layer = norm_layer
-        self.mods = cfg.mods
+        self.use_confidence = use_confidence
+        self.arch_config = arch_config
+        self.norm_layer = nn.BatchNorm2d
+        self.mods = arch_config.mods
 
         # import backbone and decoder
-        self.backbone, self.channels = create_backbone(self.cfg.backbone, norm_layer)
+        self.backbone, self.channels = create_backbone(
+            self.arch_config.backbone, self.norm_layer
+        )
 
-        if self.cfg.confidence_backbone is not None:
+        if self.arch_config.confidence_backbone is not None:
             self.confidence_backbone, self.channels_conf = create_backbone(
-                self.cfg.confidence_backbone, norm_layer
+                self.arch_config.confidence_backbone, self.norm_layer
             )
         else:
             self.confidence_backbone = None
 
-        if self.cfg.decoder == "MLPDecoder":
+        if self.arch_config.decoder == "MLPDecoder":
             logger.info("Using MLP Decoder")
             from .models.cmx.decoders.MLPDecoder import DecoderHead
 
             self.decode_head = DecoderHead(
                 in_channels=self.channels,
-                num_classes=self.cfg.num_classes,
-                norm_layer=norm_layer,
-                embed_dim=self.cfg.decoder_embed_dim,
+                num_classes=self.arch_config.num_classes,
+                norm_layer=self.norm_layer,
+                embed_dim=self.arch_config.decoder_embed_dim,
             )
 
             self.decode_head_conf: Optional[nn.Module]
-            if self.cfg.confidence:
+            if self.arch_config.confidence:
                 self.decode_head_conf = DecoderHead(
                     in_channels=self.channels,
                     num_classes=1,
-                    norm_layer=norm_layer,
-                    embed_dim=self.cfg.decoder_embed_dim,
+                    norm_layer=self.norm_layer,
+                    embed_dim=self.arch_config.decoder_embed_dim,
                 )
             else:
                 self.decode_head_conf = None
 
             self.conf_detection = None
-            if self.cfg.detection is not None:
-                if self.cfg.detection is None:
+            if self.arch_config.detection is not None:
+                if self.arch_config.detection is None:
                     pass
 
-                elif self.cfg.detection == "confpool":
+                elif self.arch_config.detection == "confpool":
                     self.conf_detection = "confpool"
-                    assert self.cfg.confidence
+                    assert self.arch_config.confidence
                     self.detection = nn.Sequential(
                         nn.Linear(in_features=8, out_features=128),
                         nn.ReLU(),
@@ -115,7 +152,7 @@ class TruFor(BaseTorchMethod):
                     raise NotImplementedError("Detection mechanism not implemented")
 
         else:
-            raise NotImplementedError("decoder not implemented")
+            raise NotImplementedError("Decoder not implemented")
 
         num_levels = 17
         out_channel = 1
@@ -152,31 +189,46 @@ class TruFor(BaseTorchMethod):
             padding=1,
         )
 
-        if self.cfg.preprocess == "imagenet":  # RGB (mean and variance)
+        if self.arch_config.preprocess == "imagenet":  # RGB (mean and variance)
             self.prepro = preprc_imagenet_torch
         else:
             assert False
 
-        if cfg.weights is not None:
-            self.load_weights(cfg.weights)
+        if weights is not None:
+            self.load_weights(weights)
         else:
             logger.warn("No weight file provided. Initiralizing random weights.")
             self.init_weights()
-
-        self.method_to_device(device)
+        self.eval()
 
     def init_weights(self):
+        """
+        Initializes weights of the decode head using Kaiming normal method.
+        """
         init_weight(
             self.decode_head,
             nn.init.kaiming_normal_,
             self.norm_layer,
-            self.cfg.bn_eps,
-            self.cfg.bn_momentum,
+            self.arch_config.bn_eps,
+            self.arch_config.bn_momentum,
             mode="fan_in",
             nonlinearity="relu",
         )
 
-    def encode_decode(self, rgb, modal_x):
+    def encode_decode(
+        self, rgb: Optional[Tensor], modal_x: Optional[Tensor]
+    ) -> Tuple[Tensor, Optional[Tensor], Optional[Tensor]]:
+        """
+        Processes input RGB and modal data to produce output maps.
+
+        Args:
+            rgb (Optional[Tensor]): RGB image tensor.
+            modal_x (Optional[Tensor]): modal information tensor.
+
+        Returns:
+            Tuple[Tensor, Optional[Tensor], Optional[Tensor]]: output heatmap,
+            confidence map, and detection map.
+        """
         if rgb is not None:
             orisize = rgb.shape
         else:
@@ -216,7 +268,19 @@ class TruFor(BaseTorchMethod):
 
         return out, conf, det
 
-    def forward(self, rgb: torch.Tensor):
+    def forward(
+        self, rgb: torch.Tensor
+    ) -> Tuple[Tensor, Optional[Tensor], Optional[Tensor], Optional[Tensor]]:
+        """
+        Forward pass of the TruFor model.
+
+        Args:
+            rgb (torch.Tensor): input RGB image tensor.
+
+        Returns:
+            Tuple[Tensor, Optional[Tensor], Optional[Tensor], Optional[Tensor]]: output
+            heatmap, confidence map, detection score, and Noiseprint++ map.
+        """
         # Noiseprint++ extraction
         if "NP++" in self.mods:
             modal_x = self.dncnn(rgb)
@@ -230,39 +294,62 @@ class TruFor(BaseTorchMethod):
         out, conf, det = self.encode_decode(rgb, modal_x)
         return out, conf, det, modal_x
 
-    def predict(self, image: torch.Tensor):
-        self.eval()
+    def predict(
+        self, image: torch.Tensor
+    ) -> Tuple[Tensor, Optional[Tensor], Optional[Tensor], Optional[Tensor]]:
+        """
+        Runs Trufor on an image.
+
+        Args:
+            image (torch.Tensor): input image tensor.
+
+        Returns:
+            Tuple[Tensor, Optional[Tensor], Optional[Tensor], Optional[Tensor]]: output
+            heatmap, confidence map, detection score, and Noiseprint++ map.
+        """
         if image.ndim == 3:
             image = image.unsqueeze(0)
 
         with torch.no_grad():
             out, conf, det, npp = self.forward(image)
 
-        pred = torch.squeeze(out, 0)
-        heatmap = F.softmax(pred, dim=0)[1]
+        if conf is not None:
+            conf = torch.squeeze(conf, 0)
+            conf = torch.sigmoid(conf)[0]
 
-        return {
-            "heatmap": heatmap,
-            "confidence": conf,
-            "detection": det,
-            "noiseprint": npp,
-        }
+        if npp is not None:
+            npp = torch.squeeze(npp, 0)[0]
+
+        if det is not None:
+            det = torch.sigmoid(det)[0]
+
+        out = torch.squeeze(out, 0)
+        heatmap = F.softmax(out, dim=0)[1]
+        return heatmap, conf, det, npp
+
+    def benchmark(self, image: torch.Tensor) -> BenchmarkOutput:
+        """
+        Wrapper for the predict method for the benchmark
+        """
+        heatmap, conf, det, _ = self.predict(image)
+        if self.use_confidence:
+            heatmap = heatmap * conf
+        return {"heatmap": heatmap, "mask": None, "detection": det}
 
     @classmethod
-    def from_config(
-        cls, config: Optional[str | Dict[str, Any]], device: Optional[str] = "cpu"
-    ):
-        if isinstance(config, str):
-            config = load_yaml(config)
+    def from_config(cls, config: Optional[TruForConfig | dict | str | Path]):
+        if isinstance(config, TruForConfig):
+            return cls(**config.__dict__)
 
-        if config is None:
-            trufor_config = TruForConfig()
-        else:
-            trufor_config = TruForConfig(**config)
+        if isinstance(config, str) or isinstance(config, Path):
+            config = load_yaml(str(config))
+        elif config is None:
+            config = {}
 
-        # FIXME typing issue with device. Why is it optional in from config?
-        return cls(cfg=trufor_config, device=device)
+        trufor_config = TruForConfig(**config)
 
-    def method_to_device(self, device: str):
-        self.to(device)
-        self.device = torch.device(device)
+        return cls(
+            arch_config=trufor_config.arch,
+            weights=trufor_config.weights,
+            use_confidence=trufor_config.use_confidence,
+        )

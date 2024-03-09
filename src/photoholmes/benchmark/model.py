@@ -38,11 +38,15 @@ class Benchmark:
         self,
         save_output: bool = True,
         save_metrics: bool = True,
+        save_output: bool = True,
+        save_metrics: bool = True,
         output_path: str = "output/",
         device: str = "cpu",
         use_existing_output: bool = True,
         verbose: Literal[0, 1, 2] = 1,
     ):
+        self.save_output_flag = save_output
+        self.save_metrics_flag = save_metrics
         self.save_output_flag = save_output
         self.save_metrics_flag = save_metrics
         self.output_path = output_path
@@ -94,7 +98,12 @@ class Benchmark:
         log.info("    Metrics:")
         for metric in metrics:
             log.info(f"       - {metric}")
+        log.info("    Metrics:")
+        for metric in metrics:
+            log.info(f"       - {metric}")
         log.info(f"    Output path: {output_path}")
+        log.info(f"    Save output flag: {self.save_output_flag}")
+        log.info(f"    Save metrics flag: {self.save_metrics_flag}")
         log.info(f"    Save output flag: {self.save_output_flag}")
         log.info(f"    Save metrics flag: {self.save_metrics_flag}")
         log.info(f"    Device: {self.device}")
@@ -182,9 +191,11 @@ class Benchmark:
 
     def move_to_device(self, data):
         return {
-            key: value.to(self.device, dtype=torch.float32)
-            if isinstance(value, torch.Tensor)
-            else value
+            key: (
+                value.to(self.device, dtype=torch.float32)
+                if isinstance(value, torch.Tensor)
+                else value
+            )
             for key, value in data.items()
         }
 
@@ -226,10 +237,24 @@ class Benchmark:
             os.path.join(image_save_path, "arrays.npz")
         ):
             os.makedirs(image_save_path, exist_ok=True)
+        # check if the files arrays and data.json already exist
+        if not self.check_existing_output or not os.path.exists(
+            os.path.join(image_save_path, "arrays.npz")
+        ):
+            os.makedirs(image_save_path, exist_ok=True)
 
             array_like_dict = {}
             non_array_like_dict = {}
+            array_like_dict = {}
+            non_array_like_dict = {}
 
+            for key, value in output.items():
+                if isinstance(value, (torch.Tensor)):
+                    array_like_dict[key] = value.cpu()
+                elif isinstance(value, (list, np.ndarray)):
+                    array_like_dict[key] = value
+                else:
+                    non_array_like_dict[key] = value
             for key, value in output.items():
                 if isinstance(value, (torch.Tensor)):
                     array_like_dict[key] = value.cpu()

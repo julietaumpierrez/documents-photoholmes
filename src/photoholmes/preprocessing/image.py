@@ -1,5 +1,6 @@
-from typing import Dict, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Optional, Tuple, TypeVar, Union
 
+import cv2 as cv
 import numpy as np
 import torch
 from numpy.typing import NDArray
@@ -210,3 +211,42 @@ class GrayToRGB(PreprocessingTransform):
             elif image.shape[2] == 1:
                 image = np.repeat(image, 3, axis=2)
         return {"image": image, **kwargs}
+
+
+class GetImageSize(PreprocessingTransform):
+    """
+    Get the size of the image
+    """
+
+    def __call__(self, image: T, **kwargs):
+        if isinstance(image, Tensor):
+            size = tuple(image.shape[1:])
+        elif isinstance(image, np.ndarray):
+            size = image.shape[:2]
+        elif isinstance(image, Image):
+            size = image.size
+        else:
+            raise ValueError(f"Image type not supported: {type(image)}")
+        return {"image": image, "image_size": size, **kwargs}
+
+
+class RGBtoYCrCb(PreprocessingTransform):
+    """
+    Converts an RGB image to YCrCb.
+
+    Args:
+        image: Image to be converted to YCrCb.
+        **kwargs: Additional keyword arguments to passthrough.
+
+    Returns:
+        A dictionary with the following key-value pairs:
+            - "image": The input image as a YCrCb PyTorch tensor.
+            - **kwargs: The additional keyword arguments passed through unchanged.
+    """
+
+    def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
+        np_image = ToNumpy()(image)["image"]
+        t_np_image = cv.cvtColor(np_image, cv.COLOR_RGB2YCrCb)
+        t_image = ToTensor()(t_np_image)["image"]
+
+        return {"image": t_image, **kwargs}

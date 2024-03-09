@@ -1,7 +1,7 @@
 # %%
 import os
 
-from photoholmes.methods.DQ import method
+from photoholmes.methods.dq import method
 
 if "research" in os.path.abspath("."):
     os.chdir("../../")
