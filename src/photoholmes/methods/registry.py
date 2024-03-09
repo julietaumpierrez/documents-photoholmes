@@ -2,7 +2,7 @@ from enum import Enum, unique
 
 
 @unique
-class MethodName(Enum):
+class MethodRegistry(Enum):
     NAIVE = "naive"
     DQ = "dq"
     SPLICEBUSTER = "splicebuster"
@@ -17,6 +17,6 @@ class MethodName(Enum):
 
     @classmethod
     def get_all_methods(cls):
-        methods_names = list(MethodName)
+        methods_names = list(MethodRegistry)
         methods = [method.value for method in methods_names]
         return methods
