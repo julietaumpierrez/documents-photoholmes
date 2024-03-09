@@ -299,6 +299,14 @@ class AdaptiveCFANet(BaseTorchMethod):
                 nn.init.constant_(m.bias, 0)
 
     def forward(self, x, block_size=32):
+        """
+        Forward pass through the network.
+        args:
+            x (Tensor): Input image tensor.
+            block_size (int): Size of the image blocks. Default is 32.
+        returns:
+            Tensor: Output tensor.
+        """
         x = self.spatial(x)
         x = self.pixelwise(x)
         x = self.grids(x)
@@ -309,7 +317,7 @@ class AdaptiveCFANet(BaseTorchMethod):
     @torch.no_grad()
     def predict(self, image: Tensor, image_size: Tuple[int, int]) -> Tensor:
         """
-        Predict heatmap for the input image.
+        Runs method for the input image.
         args:
             image (Tensor): Input image tensor.
             image_size (Tuple[int, int]): Original image size.
