@@ -1,6 +1,8 @@
 # %%
 import os
 
+from photoholmes.methods.trufor.models.utils import net
+
 if "research" in os.path.abspath("."):
     os.chdir("../../")
 
@@ -12,13 +14,16 @@ from photoholmes.methods.exif_as_language import (
     EXIFAsLanguage,
     exif_as_language_preprocessing,
 )
+from photoholmes.methods.focal import Focal, focal_preprocessing
+from photoholmes.methods.noisesniffer import Noisesniffer, noisesniffer_preprocessing
 
 # %%
 from photoholmes.utils.image import read_image, read_jpeg_data
 
 # %%
-# img_path = "/Users/julietaumpierrez/Desktop/Datasets/trace/images/r0a42c0f6t/jpeg_quality_endo.png"
-img_path = "/Users/julietaumpierrez/Desktop/Datasets/Columbia Uncompressed Image Splicing Detection/4cam_splc/nikond70_kodakdcs330_sub_26.tif"
+# img_path = "/Users/julietaumpierrez/Desktop/Datasets/trace/images/r0a42c0f6t/noise_endo.png"
+# img_path = "/Users/julietaumpierrez/Desktop/Datasets/Columbia Uncompressed Image Splicing Detection/4cam_splc/nikond70_kodakdcs330_sub_26.tif"
+img_path = "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
 dct, qtables = read_jpeg_data(
     img_path,
     num_dct_channels=1,
@@ -32,13 +37,10 @@ print(qtables)
 
 image_data = {"image": image}  # , "dct_coefficients": dct, "qtables": qtables}
 # %%
-input = exif_as_language_preprocessing(**image_data)
+input = noisesniffer_preprocessing(**image_data)
 # %%
-method = EXIFAsLanguage(
-    arch_config="pretrained",
-    weights="/Users/julietaumpierrez/Desktop/weights/pruned_weights.pth",
-)
-method.to_device("mps")
+method = NoiseSniffer()
+method.to_device("cpu")
 
 # %%
 output_1 = method.predict(**input)
@@ -47,5 +49,5 @@ output_1
 # %%
 import matplotlib.pyplot as plt
 
-plt.imshow(output_1[1])
+plt.imshow(output_1)
 # %%
