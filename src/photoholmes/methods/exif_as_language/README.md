@@ -1,10 +1,17 @@
 # EXIF as Language: Learning Cross-Modal Associations Between Images and Camera Metadata
 
-This is the implementation of the [EXIF as Language](https://arxiv.org/pdf/2301.04647.pdf) paper. The original implementation could be found [here](https://github.com/hellomuffin/exif-as-language).
+This is the implemetation fo the Exif as Language method by Zheng et al. that can be found [here](https://arxiv.org/pdf/2301.04647.pdf).
+
+The code contained in this library was derived from [the original implementation](https://github.com/hellomuffin/exif-as-language), making only minor changes to fit the PhotoHolmes library structure. 
+
+This is a deep learning based method, the weights can be found [here](https://drive.google.com/drive/folders/1V9g3I2SoQtjAUz71hZeMutqoGpUiPl3u) under the name [wrapper_75_new.pth](https://drive.google.com/file/d/17MW-fZRRQQ8dSRv52X_9DmcmdQD7TmHZ/view?usp=share_link). We last checked this information March 9th 2024, please refer to the authors of the original paper if the weights can not be found.
+
+Please be aware that in order to use the provided weights with PhotoHolmes you should run the PhotoHolmes CLI with the `adapt-weights` command to prune the weights or use the file `prune_original_weights.py`
+
 
 ## Description
 
-An image file contains not only the pixel values, but also a lot of extra-metadata that accompanies the image taken: camera model, exposure time, focal length, jpeg quantization details, etc... In this method the content of the image is contrasted with the exif information to detect any inconsistencies between what is "said" about the image and what the image is.
+An image file contains not only the pixel values, but also a lot of extra-metadata that accompanies the image taken: camera model, exposure time, focal length, jpeg quantization details, etc. In this method the content of the image is contrasted with the exif information to detect any inconsistencies between what is "said" about the image and what the image is.
 
 ## Full overview
 
@@ -14,17 +21,33 @@ The result of this training scheme are two encoder, one image and text, that wor
 
 ## Usage
 
-In order to use the method as it is included in this library you need to run the clean_weights_exif.py in the original weights in order to clean the unused weights. # FIXME
+The following example assumes you have alread prunned the weights as explained before.
 
-Add later usage of method 
+```python
+    from photoholmes.methods.exif_as_language import (
+    EXIFAsLanguage,
+    exif_as_language_preprocessing,
+)
 
-## Results on benchmarking dataset
+# Read an image
+from photoholmes.utils.image import read_image
+image = read_image("path_to_image")
 
-Add results of all metrics in our own benchmarking dataset
+# Assign the image to a dictionary and preprocess the image
+image_data = {"image": image}
+input = exif_as_language_preprocessing(**image_data)
 
-## Results on common datasets
+# Declare the method and use the .to_device if you want to run it on cuda or mps instead of cpu
+method = EXIFAsLanguage(
+    arch_config="pretrained",
+    weights="path_to_weights",
+)
+device = "cpu"
+method.to_device(device)
 
-Add results on common datasets 
+# Use predict to get the final result
+output = method.predict(**input)
+```
 
 ## Citation
 

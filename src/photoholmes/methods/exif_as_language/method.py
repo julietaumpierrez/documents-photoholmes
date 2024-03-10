@@ -36,13 +36,6 @@ class EXIFAsLanguage(BaseMethod):
     In this method the content of the image is contrasted with the exif information to
     detect any inconsistencies between what is "said" about the image and what the
     image is.
-
-    For more details and instruction to download the weights, see the
-    original implementation at:
-        https://github.com/hellomuffin/exif-as-language
-
-    Run the photoholmes CLI with the `adapt-weights` command to prune the weights
-    to be used with this method.
     """
 
     def __init__(
@@ -56,13 +49,13 @@ class EXIFAsLanguage(BaseMethod):
     ):
         """
         Attributes:
-            weights (Optional[Union[str, dict]]): path to the weights for the
+            weights (Optional[Union[str, dict]]): Path to the weights for the
                 CLIP model. If None, the model will be initialized from scratch.
-            arch_config (EXIFAsLanguageArchConfig | "pretrained"): the architecture
+            arch_config (EXIFAsLanguageArchConfig | "pretrained"): The architecture
                 configuration for the CLIP model. If "pretrained" is passed, the
                 architecture from the paper will be used.
-            device (str): device to run the network. Default is "cpu".
-            seed (int): seed to be used in random operations. Default is 44.
+            device (str): Device to run the network. Default is "cpu".
+            seed (int): Seed to be used in random operations. Default is 44.
         """
         if arch_config == "pretrained":
             arch_config = pretrained_arch
@@ -166,12 +159,19 @@ class EXIFAsLanguage(BaseMethod):
 
     def benchmark(self, image: Tensor) -> BenchmarkOutput:
         """
-        Wrapper for the predict method for the benchmark
+        Benchmarks the Exif as language method
+
+        Args:
+            image (Tensor): the preprocessed input image. [C, H, W], range: [0, 1].
+
+        Returns:
+            BenchmarkOutput: Contains the heatmap, mask and
+                detection.
         """
         ms, ncuts, score, _, _ = self.predict(image)
 
         return exif_as_language_postprocessing(
-            {"heatmap": ms, "mask": ncuts, "detection": score}, self.device
+            {"heatmap": ms, "mask": ncuts, "detection": None}, self.device
         )
 
     def to_device(self, device: str):
@@ -185,10 +185,10 @@ class EXIFAsLanguage(BaseMethod):
         and preprocessed.
 
         Args:
-            img (Tensor): the preprocessed input image. [C, H, W], range: [0, 1].
+            img (Tensor): The preprocessed input image. [C, H, W], range: [0, 1].
 
         Returns:
-            PatchedImage: the image to be used in the method.
+            PatchedImage: The image to be used in the method.
         """
         # Initialize image and attributes
         _, height, width = img.shape
@@ -207,12 +207,12 @@ class EXIFAsLanguage(BaseMethod):
         Predict consistency maps for an image.
 
         Args:
-            img (PatchedImage): the image to be used in the method.
-            patch_features (Tensor): the features for each patch in the image.
-            batch_size (int): batch size to be used in the prediction. Defaults to 64.
+            img (PatchedImage): The image to be used in the method.
+            patch_features (Tensor): The features for each patch in the image.
+            batch_size (int): Batch size to be used in the prediction. Defaults to 64.
 
         Returns:
-            Tensor: the consistency maps for the image.
+            Tensor: The consistency maps for the image.
         """
         # For each patch, how many overlapping patches?
         spread = max(1, img.patch_size // img.stride)
@@ -285,9 +285,9 @@ class EXIFAsLanguage(BaseMethod):
         Predict PCA visualization for an image.
 
         Args:
-            img (PatchedImage): the image to be used in the method.
-            patch_features (NDArray): the features for each patch in the image.
-            batch_size (int): batch size to be used in the prediction.
+            img (PatchedImage): The image to be used in the method.
+            patch_features (NDArray): The features for each patch in the image.
+            batch_size (int): Batch size to be used in the prediction.
                 Defaults to 64.
 
         Returns:
@@ -340,11 +340,11 @@ class EXIFAsLanguage(BaseMethod):
         Compute similarity between two patches.
 
         Args:
-            a_feats (Tensor): features for patch a.
-            b_feats (Tensor): features for patch b.
+            a_feats (Tensor): Features for patch a.
+            b_feats (Tensor): Features for patch b.
 
         Returns:
-            Tensor: similarity between the two patches.
+            Tensor: Similarity between the two patches.
         """
         cos = cosine_similarity(a_feats, b_feats).diagonal()
         cos = 1 - cos
@@ -357,11 +357,11 @@ class EXIFAsLanguage(BaseMethod):
         patches share the same EXIF attributes.
 
         Args:
-            img (PatchedImage): the image to be used in the method.
-            batch_size (int): batch size to be fed into the network. Defaults to 32.
+            img (PatchedImage): The image to be used in the method.
+            batch_size (int): Batch size to be fed into the network. Defaults to 32.
 
         Returns:
-            Tensor: features for each patch in the image.
+            Tensor: Features for each patch in the image.
         """
         # Compute feature vector for each image patch
         patch_features = []
@@ -385,10 +385,10 @@ class EXIFAsLanguage(BaseMethod):
         Generate affinity matrix for the patches in the image.
 
         Args:
-            patch_features (Tensor): features for each patch in the image.
+            patch_features (Tensor): Features for each patch in the image.
 
         Returns:
-            Tensor: affinity matrix for the patches in the image.
+            Tensor: Affinity matrix for the patches in the image.
         """
         patch_features = torch.nn.functional.normalize(patch_features)
         result = torch.matmul(patch_features, patch_features.t())
@@ -400,11 +400,11 @@ class EXIFAsLanguage(BaseMethod):
         Get a mask for the valid patches in the image.
 
         Args:
-            mask (PatchedImage): the mask to be used in the method.
-            batch_size (int): batch size to be fed into the network. Defaults to 32.
+            mask (PatchedImage): The mask to be used in the method.
+            batch_size (int): Batch size to be fed into the network. Defaults to 32.
 
         Returns:
-            Tensor: mask for the valid patches in the image.
+            Tensor: Mask for the valid patches in the image.
         """
         valid_mask = []
         for patches in mask.patches_gen(batch_size):
@@ -427,7 +427,7 @@ class EXIFAsLanguage(BaseMethod):
         Instantiate the model from configuration dictionary or yaml.
 
         Params:
-            config: path to the yaml configuration or a dictionary with
+            config: Path to the yaml configuration or a dictionary with
                     the parameters for the model.
         """
         if isinstance(config, EXIFAsLanguageConfig):

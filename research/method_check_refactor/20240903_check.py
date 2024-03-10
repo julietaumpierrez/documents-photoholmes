@@ -8,7 +8,10 @@ if "research" in os.path.abspath("."):
     get_ipython().run_line_magic("autoreload", "2")
 # %%
 from photoholmes.methods.catnet import CatNet, catnet_preprocessing
-from photoholmes.methods.DQ import DQ, dq_preprocessing
+from photoholmes.methods.exif_as_language import (
+    EXIFAsLanguage,
+    exif_as_language_preprocessing,
+)
 
 # %%
 from photoholmes.utils.image import read_image, read_jpeg_data
@@ -27,12 +30,15 @@ print(qtables)
 # %%
 
 
-image_data = {"image": image, "dct_coefficients": dct}  # , "qtables": qtables}
+image_data = {"image": image}  # , "dct_coefficients": dct, "qtables": qtables}
 # %%
-input = dq_preprocessing(**image_data)
+input = exif_as_language_preprocessing(**image_data)
 # %%
-method = DQ()
-method.to_device("cpu")
+method = EXIFAsLanguage(
+    arch_config="pretrained",
+    weights="/Users/julietaumpierrez/Desktop/weights/pruned_weights.pth",
+)
+method.to_device("mps")
 
 # %%
 output_1 = method.predict(**input)
@@ -41,5 +47,5 @@ output_1
 # %%
 import matplotlib.pyplot as plt
 
-plt.imshow(output_1.to("cpu").numpy())
+plt.imshow(output_1[1])
 # %%
