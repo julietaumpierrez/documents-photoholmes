@@ -1,9 +1,11 @@
 # CAT-Net: Compression Artifact Tracing Network for Detection and Localization of Image Splicing
 
-This is the implemenattion of the CAT-Net model presented [[1]](https://openaccess.thecvf.com/content/WACV2021/html/Kwon_CAT-Net_Compression_Artifact_Tracing_Network_for_Detection_and_Localization_of_WACV_2021_paper.html) and [[2]](https://arxiv.org/abs/2108.12947).
-Both this paper introduce the same architechture, differing only in the trainig dataset used: v1 targeted only splicing while v2 targets splicing and copy-move.
+This is the implemenattion of the CAT-Net method by Kwon et al. that can be found [here](https://openaccess.thecvf.com/content/WACV2021/papers/Kwon_CAT-Net_Compression_Artifact_Tracing_Network_for_Detection_and_Localization_of_WACV_2021_paper.pdf) on its first version and [here](https://arxiv.org/pdf/2108.12947.pdf) on its second version. 
+Both papers introduce the same architechture, differing only in the trainig dataset used: v1 targeted only splicing while v2 targets splicing and copy-move.
 
-The code contained in this library was derived from [the original implementation](https://github.com/mjkwon2021/CAT-Net), making only minor changes to fit our project structure.
+The code contained in this library was derived from [the original implementation](https://github.com/mjkwon2021/CAT-Net), making only minor changes to fit the PhotoHolmes library structure. 
+
+This is a deep learning based method, the weights can be found [here](htthttps://drive.google.com/drive/folders/14uNqj46505MQc3swBQgbaiPVAWtNChbz) under the name [CAT_full_v1.pth](https://drive.google.com/file/d/1NXLDCn0ABG7eWEXltGZ4SyIsREhOUhRM/view?usp=share_link) and [CAT_full_v2.pth](https://drive.google.com/file/d/1tyOKVdx6UMys2OcNpUj9r6scxNIpcoLE/view?usp=share_link) We last checked this information March 9th 2024, please refer to the authors of the original paper if the weights can not be found.
 
 ## Description
 
@@ -16,22 +18,33 @@ The RGB stream processes the color information of the image, which is often alte
 
 Multiple resolution analysis refers to the processing of image data at various scales or resolutions. This is crucial in image splicing detection because spliced objects can come in different sizes and shapes. By analyzing the image at multiple resolutions, CAT-Net can adapt to various scales of splicing, making it more versatile and accurate in detecting spliced regions, irrespective of the size of the spliced objects.
 
-# TODO: finish README
 ## Usage
 
-Add later usage of method 
+```python
+  from photoholmes.methods.catnet import CatNet, catnet_preprocessing
+  # Read an image
+  from photoholmes.utils.image import read_image, read_jpeg_data
+  image = read_image("path_to_image")
+  dct, qtables = read_jpeg_data("path_to_image")
 
-## Results on benchmarking dataset
+  # Assign the image, dct and qtables to a dictionary and preprocess the image
+  image_data = {"image": image, "dct_coefficients": dct, "qtables": qtables}
+  input = adaptive_cfa_net_preprocessing(**image_data)
 
-Add results of all metrics in our own benchmarking dataset
+  # Declare the method and use the .to_device if you want to run it on cuda or mps instead of cpu
+  method = CatNet(
+    arch_config="pretrained",
+    weights="path_to_weights",
+  )
+  device = "cpu"
+  method.to_device(device)
 
-## Results on common datasets
-
-Add results on common datasets 
+  # Use predict to get the final result
+  output = method.predict(**input)
+```
 
 ## Citation
 
-* [1] CAT-Net v1 (WACV2021)
 ```tex
 @inproceedings{kwon2021cat,
   title={CAT-Net: Compression Artifact Tracing Network for Detection and Localization of Image Splicing},
@@ -42,7 +55,6 @@ Add results on common datasets
 }
 ```
 
-* [2] CAT-Net v2 (IJCV)
 ```tex
 @article{kwon2022learning,
   title={Learning JPEG Compression Artifacts for Image Manipulation Detection and Localization},

@@ -7,27 +7,32 @@ if "research" in os.path.abspath("."):
     get_ipython().run_line_magic("load_ext", "autoreload")
     get_ipython().run_line_magic("autoreload", "2")
 # %%
-from photoholmes.methods.adaptive_cfa_net import (
-    AdaptiveCFANet,
-    adaptive_cfa_net_preprocessing,
+from photoholmes.methods.catnet import CatNet, catnet_preprocessing
+
+# %%
+from photoholmes.utils.image import read_image, read_jpeg_data
+
+# %%
+# img_path = "/Users/julietaumpierrez/Desktop/Datasets/trace/images/r0a42c0f6t/jpeg_quality_endo.png"
+img_path = "/Users/julietaumpierrez/Desktop/Datasets/Columbia Uncompressed Image Splicing Detection/4cam_splc/nikond70_kodakdcs330_sub_26.tif"
+dct, qtables = read_jpeg_data(
+    img_path,
+    num_dct_channels=1,
 )
+image = read_image(img_path)
 
 # %%
-from photoholmes.utils.image import read_image
+print(qtables)
+# %%
+import torch
 
+image_data = {"image": image, "dct_coefficients": dct, "qtables": qtables}
 # %%
-image = read_image(
-    "/Users/julietaumpierrez/Desktop/Datasets/trace/images/r0a42c0f6t/cfa_grid_endo.png"
-)
-
+input = catnet_preprocessing(**image_data)
 # %%
-image_data = {"image": image}
-# %%
-input = adaptive_cfa_net_preprocessing(**image_data)
-# %%
-method = AdaptiveCFANet(
+method = CatNet(
     arch_config="pretrained",
-    weights="/Users/julietaumpierrez/Desktop/weights/pretrained.pt",
+    weights="/Users/julietaumpierrez/Desktop/weights/CAT_full_v2.pth.tar",
 )
 method.to_device("mps")
 
@@ -38,5 +43,5 @@ output_1
 # %%
 import matplotlib.pyplot as plt
 
-plt.imshow(output_1.to("cpu").numpy())
+plt.imshow(output_1[0].to("cpu").numpy())
 # %%
