@@ -22,6 +22,7 @@ Multiple resolution analysis refers to the processing of image data at various s
 
 ```python
   from photoholmes.methods.catnet import CatNet, catnet_preprocessing
+  
   # Read an image
   from photoholmes.utils.image import read_image, read_jpeg_data
   image = read_image("path_to_image")

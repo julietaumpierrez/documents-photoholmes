@@ -409,9 +409,9 @@ class CatNet(BaseTorchMethod):
         Runs method for input image.
 
         Args:
-            x: preprocessed input and dct coefficients. Use catnet_preprocessing.
-            qtable: quantization table
-            image_size: original image size
+            x: Preprocessed input and dct coefficients. Use catnet_preprocessing.
+            qtable: Quantization table
+            image_size: Original image size
         Returns:
             Tuple[Tensor, Tensor]: Tuple containing the heatmaps for authentic and
                 tampered regions.
