@@ -13,7 +13,7 @@ from .utils import load_weights
 
 class Focal(BaseTorchMethod):
     """
-    Implementation of Focal [H. Wu and Y. Chen and J. Zhou, 2023].
+    Implementation of Focal method [Wu et al., 2023].
 
     Focal is an end to end neural network.
     """
@@ -26,10 +26,10 @@ class Focal(BaseTorchMethod):
     ):
         """
         Attributes:
-            net_list (List[str]): list of networks to be used in the ensemble.
-            weights (List[str | dict]): list of weights for the networks in the
+            net_list (List[str]): List of networks to be used in the ensemble.
+            weights (List[str | dict]): List of weights for the networks in the
                 ensemble.
-            device (str): device to run the model on.
+            device (str): Device to run the model on.
         """
         super().__init__()
 
@@ -61,7 +61,9 @@ class Focal(BaseTorchMethod):
         Forward pass of the network.
 
         Args:
-            x (torch.Tensor): input image of shape (B, C, H, W)
+            x (torch.Tensor): Input image of shape (B, C, H, W)
+        Returns:
+            Tensor (torch.Tensor): Output of the network
         """
         Fo = self.network_list[0](x)
         Fo = Fo.permute(0, 2, 3, 1)
@@ -87,10 +89,10 @@ class Focal(BaseTorchMethod):
         `focal_preprocessing` provied in `photoholmes.methods.focal.preprocessing`.
 
         Args:
-            image (torch.Tensor): input image of shape (C, H, W)
+            image (torch.Tensor): Input image of shape (C, H, W)
 
         Returns:
-            Tensor: binary mask of shape (H, W)
+            Tensor: Binary mask of shape (H, W)
         """
         if len(image.shape) != 3:
             raise ValueError("Input image should be of shape (C, H, W)")
@@ -120,7 +122,12 @@ class Focal(BaseTorchMethod):
         self, image: torch.Tensor
     ) -> BenchmarkOutput:
         """
-        Wrapper of the `predict` method to be used in the benchmark pipeline.
+        Benchmarks the Focal method using the provided image.
+        args:
+            image (Tensor): Input image tensor.
+        returns:
+            BenchmarkOutput: Contains the mask and placeholders for heatmap and
+            detection.
         """
         mask = self.predict(image)
         return {"mask": mask, "heatmap": None, "detection": None}
