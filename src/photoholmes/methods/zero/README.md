@@ -1,4 +1,4 @@
-# ZERO: a Local JPEG Grid Origin Detector Based on the Number of DCT Zeros and its Applications in Image Forensics
+# ZERO: A Local JPEG Grid Origin Detector Based on the Number of DCT Zeros and its Applications in Image Forensics
 
 This is the implementation of the method by Nikoukhah et al. that can be found [here](https://www.ipol.im/pub/art/2021/390/article_lr.pdf).
 
