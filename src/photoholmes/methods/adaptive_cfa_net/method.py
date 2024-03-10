@@ -301,10 +301,10 @@ class AdaptiveCFANet(BaseTorchMethod):
     def forward(self, x, block_size=32):
         """
         Forward pass through the network.
-        args:
+        Args:
             x (Tensor): Input image tensor.
             block_size (int): Size of the image blocks. Default is 32.
-        returns:
+        Returns:
             Tensor: Output tensor.
         """
         x = self.spatial(x)
@@ -318,10 +318,10 @@ class AdaptiveCFANet(BaseTorchMethod):
     def predict(self, image: Tensor, image_size: Tuple[int, int]) -> Tensor:
         """
         Runs method for the input image.
-        args:
+        Args:
             image (Tensor): Input image tensor.
             image_size (Tuple[int, int]): Original image size.
-        returns:
+        Returns:
             Heatmap (Tensor): Predicted heatmap.
         """
         image = image.to(self.device)
@@ -351,10 +351,10 @@ class AdaptiveCFANet(BaseTorchMethod):
     def benchmark(self, image: Tensor, image_size: Tuple[int, int]) -> BenchmarkOutput:
         """
         Benchmarks the Adaptive CFA Net method using the provided image and size.
-        args:
+        Args:
             image (Tensor): Input image tensor.
             image_size (Tuple[int, int]): Original image size.
-        returns:
+        Returns:
             BenchmarkOutput: Contains the heatmap and placeholders for mask and
             detection.
         """
