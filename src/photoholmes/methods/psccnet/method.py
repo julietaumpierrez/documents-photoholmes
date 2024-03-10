@@ -36,12 +36,6 @@ class PSCCNet(BaseTorchMethod):
     The method implements an end to end neural network with multiple
     heads for both detection and localization.
 
-    For more details and instruction to download the weights, see the
-    original implementation at:
-        https://github.com/proteus1991/PSCC-Net/tree/main
-
-    To easily download the weights, you can use the script in
-    scripts/download_psccnet_weights.py in the photoholmes repository.
     """
 
     def __init__(
@@ -55,21 +49,21 @@ class PSCCNet(BaseTorchMethod):
     ):
         """
         Attributes:
-            weights_paths (Dict[str, str]): dictionary with the paths to the
+            weights_paths (Dict[str, str]): Dictionary with the paths to the
                 weights for the FENet, SegNet and ClsNet. The keys are the
                 name of it subnetwork.
                 > If you want to start the network from scratch and initialize
                 the FENet from a pretrained version, pass the path to the
                 pretrained weights in the key "pretrained".
 
-            arch_config (PSCCNetArchConfig | "pretrained"): the architecture configuration
+            arch_config (PSCCNetArchConfig | "pretrained"): The architecture configuration
                 for the PSSC Network. If "pretrained" is passed, the architecture from
                 the paper will be used.
-            device (str): device to run the network. Default is "cuda:0".
-            device_ids (Optional[List]): if multiple devices are available, pass
+            device (str): Device to run the network. Default is "cuda:0".
+            device_ids (Optional[List]): If multiple devices are available, pass
                 the ids of the devices to use.
-            crop_size: (List[int]): size of the input image for the network.
-            seed (int): seed for reproducibility of experiments.
+            crop_size: (List[int]): Size of the input image for the network.
+            seed (int): Seed for reproducibility of experiments.
         """
         random.seed(seed)
         super().__init__(**kwargs)
@@ -105,12 +99,12 @@ class PSCCNet(BaseTorchMethod):
         correct devices and loading the weights if provided.
 
         Args:
-            net (nn.Module): the module to initialize
-            weights_paths (str | None): path to the model weights. If None, the model
+            net (nn.Module): The module to initialize
+            weights_paths (str | None): Path to the model weights. If None, the model
                 uses random weights.
 
         Returns:
-            nn.Module: the initialized module
+            nn.Module: The initialized module
         """
         net = net.to(self.device)
         net = nn.DataParallel(net, device_ids=self.device_ids)
@@ -140,8 +134,8 @@ class PSCCNet(BaseTorchMethod):
             image (torch.Tensor): the preprocessed input image.
 
         Returns:
-            heatmap (Tensor): the predicted heatmap
-            detection (Tensor): the detection score.
+            heatmap (Tensor): The predicted heatmap
+            detection (Tensor): The detection score.
         """
         image = image.to(self.device)
         add_batch_dim = image.ndim == 3
@@ -176,7 +170,12 @@ class PSCCNet(BaseTorchMethod):
         self, image: torch.Tensor
     ) -> BenchmarkOutput:
         """
-        Wrapper for the predict method for the benchmark
+        Benchmarks the PSCCNet method using the provided image and size.
+        Args:
+            image (Tensor): Input image tensor.
+        Returns:
+            BenchmarkOutput: Contains the heatmap and  detection and placeholder for
+            detection.
         """
         heatmap, detection = self.predict(image)
 

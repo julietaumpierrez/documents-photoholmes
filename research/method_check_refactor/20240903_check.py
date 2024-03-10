@@ -16,14 +16,15 @@ from photoholmes.methods.exif_as_language import (
 )
 from photoholmes.methods.focal import Focal, focal_preprocessing
 from photoholmes.methods.noisesniffer import Noisesniffer, noisesniffer_preprocessing
+from photoholmes.methods.psccnet import PSCCNet, psccnet_preprocessing
 
 # %%
 from photoholmes.utils.image import read_image, read_jpeg_data
 
 # %%
 # img_path = "/Users/julietaumpierrez/Desktop/Datasets/trace/images/r0a42c0f6t/noise_endo.png"
-# img_path = "/Users/julietaumpierrez/Desktop/Datasets/Columbia Uncompressed Image Splicing Detection/4cam_splc/nikond70_kodakdcs330_sub_26.tif"
-img_path = "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
+img_path = "/Users/julietaumpierrez/Desktop/Datasets/Columbia Uncompressed Image Splicing Detection/4cam_splc/nikond70_kodakdcs330_sub_26.tif"
+# img_path = "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
 dct, qtables = read_jpeg_data(
     img_path,
     num_dct_channels=1,
@@ -37,10 +38,18 @@ print(qtables)
 
 image_data = {"image": image}  # , "dct_coefficients": dct, "qtables": qtables}
 # %%
-input = noisesniffer_preprocessing(**image_data)
+input = psccnet_preprocessing(**image_data)
 # %%
-method = NoiseSniffer()
-method.to_device("cpu")
+path = "/Users/julietaumpierrez/Desktop/weights/pscc/"
+method = PSCCNet(
+    arch_config="pretrained",
+    weights_paths={
+        "FENet": path + "HRNet.pth",
+        "SegNet": path + "NLCDetection.pth",
+        "ClsNet": path + "DetectionHead.pth",
+    },
+)
+method.to_device("mps")
 
 # %%
 output_1 = method.predict(**input)
@@ -49,5 +58,5 @@ output_1
 # %%
 import matplotlib.pyplot as plt
 
-plt.imshow(output_1)
+plt.imshow(output_1[0].to("cpu").detach().numpy())
 # %%

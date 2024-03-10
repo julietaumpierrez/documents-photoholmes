@@ -1,8 +1,12 @@
 # PSCC-Net: Progressive Spatio-Channel Correlation Network for Image Manipulation Detection and Localization
 
-This is the implemenattion of the PSCC-Net model presented [[1]](https://arxiv.org/abs/2103.10596).
+This is the implemenattion of the method by Liu et al. that can be found [here](https://arxiv.org/pdf/2103.10596.pdf).
 
-The code contained in this library was derived from [the original implementation](https://github.com/proteus1991/PSCC-Net), making only minor changes to fit our project structure.
+The code contained in this library was derived from [the original implementation](https://github.com/proteus1991/PSCC-Net), making only minor changes to fit the PhotoHolmes library structure. 
+
+This is a deep learning based method, the weights can be found [here](https://github.com/proteus1991/PSCC-Net/tree/main/checkpoint) under the name [DetectionHead_checkpoint](https://github.com/proteus1991/PSCC-Net/tree/main/checkpoint/DetectionHead_checkpoint), [HRNet_checkpoint](https://github.com/proteus1991/PSCC-Net/tree/main/checkpoint/HRNet_checkpoint) and [NLCDetection_checkpoint](https://github.com/proteus1991/PSCC-Net/tree/main/checkpoint/NLCDetection_checkpoint). We last checked this information March 9th 2024, please refer to the authors of the original paper if the weights can not be found.
+
+To easily download the weights, you can use the script in scripts/download_psccnet_weights.py.
 
 ## Description
 
@@ -16,22 +20,37 @@ called HRNetV2p-W18. The main goal of this part is compute features at different
 
 Then, the authors use in every level Spatio-Channel Correlation Module (SCCM) that tries to lay hold of spatial and channel wise correlations. Here, a coarse to fine approach is used, it involves an increasingly more precise definition of the masks as its shown in the bottom up path. The full architecture is trained on synthetic dataset that includes splicing, removal, copy move and pristine images.
 
-# TODO: finish README
 ## Usage
 
-Add later usage of method 
+```python
+from photoholmes.methods.psccnet import PSCCNet, psccnet_preprocessing
 
-## Results on benchmarking dataset
+# Read an image
+from photoholmes.utils.image import read_image
+image = read_image("path_to_image")
 
-Add results of all metrics in our own benchmarking dataset
+# Assign the image to a dictionary and preprocess the image
+image_data = {"image": image}
+input = psccnet_preprocessing(**image_data)
 
-## Results on common datasets
+# Declare the method and use the .to_device if you want to run it on cuda or mps instead of cpu
+method = PSCCNet(
+    arch_config="pretrained",
+    weights_paths={
+        "FENet": "path_to_HRNet_weights",
+        "SegNet": "path_to_NLCDetection_weights",
+        "ClsNet": "path_to_DetectionHead_weights",
+    },
+)
+device = "cpu"
+method.to_device(device)
 
-Add results on common datasets 
+# Use predict to get the final result
+output = method.predict(**input)
+```
 
 ## Citation
 
-* [1] PSCC-Net
 ```tex
 @article{liu2022pscc,
   title={PSCC-Net: Progressive spatio-channel correlation network for image manipulation detection and localization},
@@ -41,4 +60,4 @@ Add results on common datasets
   publisher={IEEE}
 }
 ```
-```
+
