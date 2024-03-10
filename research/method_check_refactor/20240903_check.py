@@ -8,6 +8,7 @@ if "research" in os.path.abspath("."):
     get_ipython().run_line_magic("autoreload", "2")
 # %%
 from photoholmes.methods.catnet import CatNet, catnet_preprocessing
+from photoholmes.methods.DQ import DQ, dq_preprocessing
 
 # %%
 from photoholmes.utils.image import read_image, read_jpeg_data
@@ -24,17 +25,14 @@ image = read_image(img_path)
 # %%
 print(qtables)
 # %%
-import torch
 
-image_data = {"image": image, "dct_coefficients": dct, "qtables": qtables}
+
+image_data = {"image": image, "dct_coefficients": dct}  # , "qtables": qtables}
 # %%
-input = catnet_preprocessing(**image_data)
+input = dq_preprocessing(**image_data)
 # %%
-method = CatNet(
-    arch_config="pretrained",
-    weights="/Users/julietaumpierrez/Desktop/weights/CAT_full_v2.pth.tar",
-)
-method.to_device("mps")
+method = DQ()
+method.to_device("cpu")
 
 # %%
 output_1 = method.predict(**input)
@@ -43,5 +41,5 @@ output_1
 # %%
 import matplotlib.pyplot as plt
 
-plt.imshow(output_1[0].to("cpu").numpy())
+plt.imshow(output_1.to("cpu").numpy())
 # %%

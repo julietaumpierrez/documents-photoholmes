@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod, BenchmarkOutput
-from photoholmes.methods.dq.utils import ZIGZAG, fft_period, histogram_period
+from photoholmes.methods.DQ.utils import ZIGZAG, fft_period, histogram_period
 from photoholmes.postprocessing.resizing import (
     resize_heatmap_with_trim_and_pad,
     simple_upscale_heatmap,
@@ -15,7 +15,7 @@ from photoholmes.postprocessing.resizing import (
 
 class DQ(BaseMethod):
     """
-    Implementation of DQ [Autores, et.al. 2009]. The method detects forgeries
+    Implementation of DQ [Lin, et.al. 2009]. The method detects forgeries
     exploiting double quantization discrepancies. It uses the DCT coefficients
     of the image to calculate the BPPM (Block Posterior Probability Map) heatmap.
     """

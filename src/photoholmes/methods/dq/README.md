@@ -1,6 +1,7 @@
-# Fast, Automatic, and Fine-Grained Tampered JPEG Image Detection via DCT Coefficient Analysis
+# DQ: Fast, Automatic, and Fine-Grained Tampered JPEG Image Detection via DCT Coefficient Analysis
 
-This repository contains the implementation of the method proposed in the paper "Fast, automatic and fine-grained tampered JPEG image detection via DCT coefficient analysis". The original paper can be found [here][http://mmlab.ie.cuhk.edu.hk/archive/2009/pr09_fast_automatic.pdf].
+This is the implementation of the method by Lin et al that can be found [here](http://mmlab.ie.cuhk.edu.hk/archive/2009/pr09_fast_automatic.pdf).
+
 ## Description
 
 With the rapid advancement in image/video editing techniques, distinguishing tampered images from real ones has become a challenge. This method focuses on JPEG images and detects tampered regions by examining the double quantization effect hidden among the discrete cosine transform (DCT) coefficients.
@@ -15,25 +16,27 @@ The method offers:
 ## Full Overview
 
 The method is based on the DQ effect in forged JPEG images and can produce fine-grained output of the forgery region at the scale of 8x8 image blocks. The algorithm directly analyzes the DCT coefficients without fully decompressing the JPEG image, saving memory and computational load. The method is faster than bi-coherence based approaches and CRF based algorithms.
-Usage
 
-To use the method, follow the steps below:
+## Usage
 
-    Load the JPEG image.
-    Extract DCT coefficients and quantization matrices for YUV channels.
-    Build histograms for each channel and each frequency.
-    Compute the probability of each block being tampered based on the histograms.
-    Generate the block posterior probability map (BPPM).
-    Threshold the BPPM to identify tampered regions.
-    <!-- Use a trained SVM to decide if the image is tampered. -->
+```python
+    from photoholmes.methods.DQ import DQ, dq_preprocessing
 
-## Results on Benchmarking Dataset
+     # Read an image
+    from photoholmes.utils.image import read_image, read_jpeg_data
+    image = read_image("path_to_image")
+    dct, qtables = read_jpeg_data("path_to_image")
 
-Add results of all metrics in benchmarking dataset here.
-## Results on Common Datasets
-# TODO agregar resultados
+    # Assign the image, dct and qtables to a dictionary and preprocess the image
+    image_data = {"image": image, "dct_coefficients": dct}
+    input = dq_preprocessing(**image_data)
 
-Add results on common datasets here.
+    # Declare the method
+    method = DQ()
+
+    # Use predict to get the final result
+    output = method.predict(**input)   
+```
 ## Citation
 
 
