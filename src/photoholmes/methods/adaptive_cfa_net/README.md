@@ -33,7 +33,7 @@ image = read_image("path_to_image")
 image_data = {"image": image}
 input = adaptive_cfa_net_preprocessing(**image_data)
 
-# Declare the method and use the .to_device if you want to run it on cuda or mps
+# Declare the method and use the .to_device if you want to run it on cuda or mps instead of cpu
 method = AdaptiveCFANet(
     arch_config="pretrained",
     weights="path_to_weights",
