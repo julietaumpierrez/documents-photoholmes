@@ -36,6 +36,13 @@ class EXIFAsLanguage(BaseMethod):
     In this method the content of the image is contrasted with the exif information to
     detect any inconsistencies between what is "said" about the image and what the
     image is.
+    For more details and instruction to download the weights, see the
+    original implementation at:
+        https://github.com/hellomuffin/exif-as-language
+
+    Run the photoholmes CLI with the `adapt-weights` command to prune the weights
+    to be used with this method.
+
     """
 
     def __init__(
@@ -48,7 +55,7 @@ class EXIFAsLanguage(BaseMethod):
         seed: int = 44,
     ):
         """
-        Attributes:
+        Args:
             weights (Optional[Union[str, dict]]): Path to the weights for the
                 CLIP model. If None, the model will be initialized from scratch.
             arch_config (EXIFAsLanguageArchConfig | "pretrained"): The architecture
@@ -159,7 +166,7 @@ class EXIFAsLanguage(BaseMethod):
 
     def benchmark(self, image: Tensor) -> BenchmarkOutput:
         """
-        Benchmarks the Exif as language method
+        Benchmarks the Exif as language method using the provided image.
 
         Args:
             image (Tensor): the preprocessed input image. [C, H, W], range: [0, 1].
@@ -168,7 +175,7 @@ class EXIFAsLanguage(BaseMethod):
             BenchmarkOutput: Contains the heatmap, mask and
                 detection.
         """
-        ms, ncuts, score, _, _ = self.predict(image)
+        ms, ncuts, _, _, _ = self.predict(image)
 
         return exif_as_language_postprocessing(
             {"heatmap": ms, "mask": ncuts, "detection": None}, self.device

@@ -82,7 +82,7 @@ class MethodFactory:
 
                 return CatNet.from_config(config), catnet_preprocessing
             case MethodRegistry.DQ:
-                from photoholmes.methods.DQ import DQ, dq_preprocessing
+                from photoholmes.methods.dq import DQ, dq_preprocessing
 
                 return DQ.from_config(config), dq_preprocessing
             case MethodRegistry.EXIF_AS_LANGUAGE:

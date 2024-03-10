@@ -31,16 +31,19 @@ from photoholmes.methods.exif_as_language import (
 
 # Read an image
 from photoholmes.utils.image import read_image
-image = read_image("path_to_image")
+path_to_image = "path_to_image"
+image = read_image(path_to_image)
 
 # Assign the image to a dictionary and preprocess the image
 image_data = {"image": image}
 input = exif_as_language_preprocessing(**image_data)
 
 # Declare the method and use the .to_device if you want to run it on cuda or mps instead of cpu
+arch_config = "pretrained"
+path_to_weights = "path_to_weights"
 method = EXIFAsLanguage(
-    arch_config="pretrained",
-    weights="path_to_weights",
+    arch_config = arxh_config,
+    weights = path_to_weights,
 )
 device = "cpu"
 method.to_device(device)

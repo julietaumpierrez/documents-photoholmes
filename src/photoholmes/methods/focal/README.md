@@ -37,15 +37,18 @@ from photoholmes.methods.focal import Focal, focal_preprocessing
 
 # Read an image
 from photoholmes.utils.image import read_image
-image = read_image("path_to_image")
+path_to_image = "path_to_image"
+image = read_image(path_to_image)
 
 # Assign the image to a dictionary and preprocess the image
 image_data = {"image": image}
 input = focal_preprocessing(**image_data)
 
 # Declare the method and use the .to_device if you want to run it on cuda instead of cpu
-method = Focal(["ViT", "HRNet"],
-    ["path_to_vit_weights","path_to_hrnet_weights"],
+net_list = ["ViT", "HRNet"]
+path_to_weights = ["path_to_vit_weights","path_to_hrnet_weights"]
+method = Focal(net_list = net_list,
+    weights = path_to_weights,
 )
 method.to_device("cpu")
 device = "cpu"

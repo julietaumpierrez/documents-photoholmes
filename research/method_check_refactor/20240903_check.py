@@ -60,3 +60,39 @@ plt.imshow(output_1[0])
 # %%
 output_1[2]
 # %%
+from photoholmes.methods.psccnet import PSCCNet, psccnet_preprocessing
+
+# Read an image
+from photoholmes.utils.image import read_image
+
+path_to_image = (
+    "/Users/julietaumpierrez/Desktop/Datasets/tifs-database/DSO-1/splicing-05.png"
+)
+image = read_image(path_to_image)
+
+# Assign the image to a dictionary and preprocess the image
+image_data = {"image": image}
+input = psccnet_preprocessing(**image_data)
+
+# Declare the method and use the .to_device if you want to run it on cuda or mps instead of cpu
+arch_config = "pretrained"
+path = "/Users/julietaumpierrez/Desktop/weights/pscc/"
+path_to_weights = {
+    "FENet": path + "HRNet.pth",
+    "SegNet": path + "NLCDetection.pth",
+    "ClsNet": path + "DetectionHead.pth",
+}
+method = PSCCNet(
+    arch_config=arch_config,
+    weights_paths=path_to_weights,
+)
+device = "cpu"
+method.to_device(device)
+
+# Use predict to get the final result
+output = method.predict(**input)
+# %%
+import matplotlib.pyplot as plt
+
+plt.imshow(output[0])
+# %%

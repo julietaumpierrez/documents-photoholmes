@@ -24,7 +24,8 @@ from photoholmes.methods.noisesniffer import Noisesniffer, noisesniffer_preproce
 
 # Read an image
 from photoholmes.utils.image import read_image
-image = read_image("path_to_image")
+path_to_image = "path_to_image"
+image = read_image(path_to_image)
 
 # Assign the image to a dictionary and preprocess the image
 image_data = {"image": image}

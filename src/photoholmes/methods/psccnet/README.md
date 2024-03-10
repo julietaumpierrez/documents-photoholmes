@@ -27,20 +27,23 @@ from photoholmes.methods.psccnet import PSCCNet, psccnet_preprocessing
 
 # Read an image
 from photoholmes.utils.image import read_image
-image = read_image("path_to_image")
+path_to_image = "path_to_image"
+image = read_image(path_to_image)
 
 # Assign the image to a dictionary and preprocess the image
 image_data = {"image": image}
 input = psccnet_preprocessing(**image_data)
 
 # Declare the method and use the .to_device if you want to run it on cuda or mps instead of cpu
-method = PSCCNet(
-    arch_config="pretrained",
-    weights_paths={
+arch_config = "pretrained"
+path_to_weights = {
         "FENet": "path_to_HRNet_weights",
         "SegNet": "path_to_NLCDetection_weights",
         "ClsNet": "path_to_DetectionHead_weights",
-    },
+    }
+method = PSCCNet(
+    arch_config = arch_config,
+    weights_paths = path_to_weights,
 )
 device = "cpu"
 method.to_device(device)

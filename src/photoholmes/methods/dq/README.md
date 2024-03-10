@@ -20,12 +20,13 @@ The method is based on the DQ effect in forged JPEG images and can produce fine-
 ## Usage
 
 ```python
-from photoholmes.methods.DQ import DQ, dq_preprocessing
+from photoholmes.methods.dq import DQ, dq_preprocessing
 
 # Read an image
 from photoholmes.utils.image import read_image, read_jpeg_data
-image = read_image("path_to_image")
-dct, qtables = read_jpeg_data("path_to_image")
+path_to_image = "path_to_image"
+image = read_image(path_to_image)
+dct, qtables = read_jpeg_data(path_to_image)
 
 # Assign the image, dct and qtables to a dictionary and preprocess the image
 image_data = {"image": image, "dct_coefficients": dct}

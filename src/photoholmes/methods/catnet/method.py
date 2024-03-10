@@ -45,11 +45,7 @@ logger = logging.getLogger(__name__)
 class CatNet(BaseTorchMethod):
     """
     Implements the CAT-Net method [Kwon, et al. 2021] for image forgery localization.
-    Attributes:
-        arch_config (Union[CatnetArchConfig, Literal['pretrained']]):
-        Configuration for the network architecture. Can be a predefined
-        architecture or 'pretrained' for default settings.
-        weights (Optional[Union[str, Path, dict]]): Path to the weights file
+
     """
 
     def __init__(
@@ -58,8 +54,14 @@ class CatNet(BaseTorchMethod):
         weights: Optional[Union[str, Path, dict]] = None,
         **kwargs,
     ):
+        """
+        Args:
+            arch_config (Union[CatnetArchConfig, Literal['pretrained']]):
+            Configuration for the network architecture. Can be a predefined
+            architecture or 'pretrained' for default settings.
+            weights (Optional[Union[str, Path, dict]]): Path to the weights file
+        """
         super().__init__(**kwargs)
-
         if arch_config == "pretrained":
             arch_config = pretrained_arch
 

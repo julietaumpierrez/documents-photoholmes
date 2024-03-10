@@ -85,7 +85,7 @@ class TruFor(BaseTorchMethod):
         **kwargs,
     ):
         """
-        Attributes:
+        Args:
             arch_config (Union[TruForArchConfig, Literal["pretrained"]]): Specifies
                 the architecture configuration.
             weights (Optional[Union[str, dict]]): Path to the weights file or a

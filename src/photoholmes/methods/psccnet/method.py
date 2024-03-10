@@ -38,6 +38,13 @@ class PSCCNet(BaseTorchMethod):
     The method implements an end to end neural network with multiple
     heads for both detection and localization.
 
+    For more details and instruction to download the weights, see the
+    original implementation at:
+        https://github.com/proteus1991/PSCC-Net/tree/main
+
+    To easily download the weights, you can use the script in
+    scripts/download_psccnet_weights.py in the photoholmes repository.
+
     """
 
     def __init__(
@@ -50,7 +57,7 @@ class PSCCNet(BaseTorchMethod):
         **kwargs,
     ):
         """
-        Attributes:
+        Args:
             weights_paths (Dict[str, str]): Dictionary with the paths to the
                 weights for the FENet, SegNet and ClsNet. The keys are the
                 name of it subnetwork.

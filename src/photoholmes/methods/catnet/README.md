@@ -25,17 +25,20 @@ from photoholmes.methods.catnet import CatNet, catnet_preprocessing
 
 # Read an image
 from photoholmes.utils.image import read_image, read_jpeg_data
-image = read_image("path_to_image")
-dct, qtables = read_jpeg_data("path_to_image")
+path_to_image = "path_to_image"
+image = read_image(path_to_image)
+dct, qtables = read_jpeg_data(path_to_image)
 
 # Assign the image, dct and qtables to a dictionary and preprocess the image
 image_data = {"image": image, "dct_coefficients": dct, "qtables": qtables}
-input = adaptive_cfa_net_preprocessing(**image_data)
+input = catnet_preprocessing(**image_data)
 
 # Declare the method and use the .to_device if you want to run it on cuda or mps instead of cpu
+arch_config = "pretrained"
+path_to_weights = "path_to_weights"
 method = CatNet(
-  arch_config="pretrained",
-  weights="path_to_weights",
+  arch_config=arch_config,
+  weights=path_to_weights,
 )
 device = "cpu"
 method.to_device(device)

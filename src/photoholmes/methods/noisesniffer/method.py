@@ -41,7 +41,7 @@ class Noisesniffer(BaseMethod):
         **kwargs,
     ):
         """
-        Attributes:
+        Args:
             w (int): Block size for noise analysis (default: 3).
             b (int): Number of blocks per bin for statistical analysis (default: 20000).
             n (float): Percentile for selecting blocks with the lowest energy in low

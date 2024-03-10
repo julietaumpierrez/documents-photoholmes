@@ -25,7 +25,7 @@ class Zero(BaseMethod):
 
     def __init__(self, no_vote: int = -1, **kwargs) -> None:
         """
-        Attributes:
+        Args:
             no_vote (int): Value to be used as no vote. Default is -1.
             kwargs: Additional arguments to be passed to the BaseMethod class.
         """

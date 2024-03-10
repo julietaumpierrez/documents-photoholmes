@@ -24,16 +24,16 @@ class Focal(BaseTorchMethod):
         self,
         net_list: List[Literal["HRNet", "ViT"]],
         weights: List[Union[str, Dict[str, Any]]],
-        device: str = "cpu",
+        **kwargs,
     ):
         """
-        Attributes:
+        Args:
             net_list (List[str]): List of networks to be used in the ensemble.
             weights (List[str | dict]): List of weights for the networks in the
                 ensemble.
             device (str): Device to run the model on.
         """
-        super().__init__()
+        super().__init__(**kwargs)
 
         self.network_list = nn.ModuleList()
 

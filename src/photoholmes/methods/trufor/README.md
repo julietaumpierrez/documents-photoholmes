@@ -33,15 +33,17 @@ from photoholmes.methods.trufor import TruFor, trufor_preprocessing
 
 # Read an image
 from photoholmes.utils.image import read_image
-image = read_image("path_to_image")
+path_to_image = "path_to_image"
+image = read_image(path_to_image)
 
 # Assign the image to a dictionary and preprocess the image
 image_data = {"image": image}
 input = trufor_preprocessing(**image_data)
 
 # Declare the method and use the .to_device if you want to run it on cuda or mps instead of cpu
+path_to_weights = "path_to_weights"
 method = TruFor(
-    weights= "path_to_weights""
+    weights= path_to_weights
 )
 device = "cpu"
 method.to_device(device)
