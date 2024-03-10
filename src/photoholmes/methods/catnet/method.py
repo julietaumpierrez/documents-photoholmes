@@ -1,4 +1,4 @@
-# Code extracted from
+# Code derived from
 # https://github.com/mjkwon2021/CAT-Net/blob/f1716b0849eb4d94687a02c25bf97229b495bf9e/lib/models/network_CAT.py#L286  # noqa: E501
 # ------------------------------------------------------------------------------
 # Copyright (c) Microsoft

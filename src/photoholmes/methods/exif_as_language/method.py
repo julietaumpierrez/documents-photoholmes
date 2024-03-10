@@ -1,4 +1,4 @@
-# Derived from https://github.com/hellomuffin/exif-as-language
+# Code derived from https://github.com/hellomuffin/exif-as-language
 import random
 from pathlib import Path
 from typing import Literal, Optional, Tuple, Union

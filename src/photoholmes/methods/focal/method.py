@@ -1,3 +1,5 @@
+# Code derived from
+# https://github.com/HighwayWu/FOCAL/tree/main
 from typing import Any, Dict, List, Literal, Union
 
 import torch

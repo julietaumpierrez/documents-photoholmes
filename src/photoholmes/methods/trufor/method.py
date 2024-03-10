@@ -1,4 +1,5 @@
-# adapted from https://github.com/grip-unina/TruFor/blob/main/test_docker/src/models/cmx/builder_np_conf.py # noqa: E501
+# Code derived from
+# https://github.com/grip-unina/TruFor/blob/main/test_docker/src/models/cmx/builder_np_conf.py # noqa: E501
 """
 Edited in September 2022
 @author: fabrizio.guillaro, davide.cozzolino

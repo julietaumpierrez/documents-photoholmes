@@ -1,3 +1,4 @@
+# Code derived from https://github.com/hellomuffin/exif-as-language
 import numpy as np
 import scipy
 import torch
