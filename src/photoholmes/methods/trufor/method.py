@@ -27,13 +27,14 @@ logger = logging.getLogger(__name__)
 # This function is not in the `preprocessing` module as is used in the middle of the
 # method's forward pass. The unormalized image is needed to compute the Noiseprint++
 def preprc_imagenet_torch(x: Tensor) -> Tensor:
-    """Normalizes an image tensor using ImageNet's mean and standard deviation.
+    """
+    Normalizes an image tensor using ImageNet's mean and standard deviation.
 
     Args:
-        x (Tensor): input image tensor.
+        x (Tensor): Input image tensor.
 
     Returns:
-        Tensor: normalized image tensor.
+        Tensor: Normalized image tensor.
     """
     mean = torch.Tensor([0.485, 0.456, 0.406]).to(x.device)
     std = torch.Tensor([0.229, 0.224, 0.225]).to(x.device)
@@ -44,15 +45,16 @@ def preprc_imagenet_torch(x: Tensor) -> Tensor:
 def create_backbone(
     typ: Literal["mit_b2"], norm_layer: Type[nn.Module]
 ) -> Tuple[nn.Module, list[int]]:
-    """Initializes a backbone network based on the specified type and normalization
+    """
+    Initializes a backbone network based on the specified type and normalization
     layer.
 
     Args:
-        typ (Literal["mit_b2"]): type of the backbone.
-        norm_layer (Type[nn.Module]): normalization layer type.
+        typ (Literal["mit_b2"]): Type of the backbone.
+        norm_layer (Type[nn.Module]): Normalization layer type.
 
     Returns:
-        Tuple[nn.Module, list[int]]: backbone network and list of channels.
+        Tuple[nn.Module, list[int]]: Backbone network and list of channels.
     """
     channels = [64, 128, 320, 512]
     if typ == "mit_b2":
@@ -83,11 +85,11 @@ class TruFor(BaseTorchMethod):
     ):
         """
         Attributes:
-            arch_config (Union[TruForArchConfig, Literal["pretrained"]]): specifies
+            arch_config (Union[TruForArchConfig, Literal["pretrained"]]): Specifies
                 the architecture configuration.
-            weights (Optional[Union[str, dict]]): path to the weights file or a
+            weights (Optional[Union[str, dict]]): Path to the weights file or a
                 dictionary containing model weights.
-            use_confidence (bool): whether to use confidence maps to multiply the
+            use_confidence (bool): Whether to use confidence maps to multiply the
                 output heatmap in the benchmark method.
         """
         super().__init__(**kwargs)
@@ -223,10 +225,10 @@ class TruFor(BaseTorchMethod):
 
         Args:
             rgb (Optional[Tensor]): RGB image tensor.
-            modal_x (Optional[Tensor]): modal information tensor.
+            modal_x (Optional[Tensor]): Modal information tensor.
 
         Returns:
-            Tuple[Tensor, Optional[Tensor], Optional[Tensor]]: output heatmap,
+            Tuple[Tensor, Optional[Tensor], Optional[Tensor]]: Output heatmap,
             confidence map, and detection map.
         """
         if rgb is not None:
@@ -275,10 +277,10 @@ class TruFor(BaseTorchMethod):
         Forward pass of the TruFor model.
 
         Args:
-            rgb (torch.Tensor): input RGB image tensor.
+            rgb (torch.Tensor): Input RGB image tensor.
 
         Returns:
-            Tuple[Tensor, Optional[Tensor], Optional[Tensor], Optional[Tensor]]: output
+            Tuple[Tensor, Optional[Tensor], Optional[Tensor], Optional[Tensor]]: Output
             heatmap, confidence map, detection score, and Noiseprint++ map.
         """
         # Noiseprint++ extraction
@@ -304,7 +306,7 @@ class TruFor(BaseTorchMethod):
             image (torch.Tensor): input image tensor.
 
         Returns:
-            Tuple[Tensor, Optional[Tensor], Optional[Tensor], Optional[Tensor]]: output
+            Tuple[Tensor, Optional[Tensor], Optional[Tensor], Optional[Tensor]]: Output
             heatmap, confidence map, detection score, and Noiseprint++ map.
         """
         if image.ndim == 3:
@@ -329,7 +331,11 @@ class TruFor(BaseTorchMethod):
 
     def benchmark(self, image: torch.Tensor) -> BenchmarkOutput:
         """
-        Wrapper for the predict method for the benchmark
+        Benchmarks the TruFor method using the provided image.
+        Args:
+            image (Tensor): Input image tensor.
+        Returns:
+            BenchmarkOutput: Contains the heatmap and detection and placeholder for mask.
         """
         heatmap, conf, det, _ = self.predict(image)
         if self.use_confidence:
