@@ -1,6 +1,6 @@
 # ZERO: a Local JPEG Grid Origin Detector Based on the Number of DCT Zeros and its Applications in Image Forensics
 
-This is the implementation of the [ZERO](https://www.ipol.im/pub/art/2021/390/article_lr.pdf) paper.
+This is the implementation of the method by Nikoukhah et al. that can be found [here](https://www.ipol.im/pub/art/2021/390/article_lr.pdf).
 
 The code contained in this library was derived from the original implementation in C, available at the [IPOL website](https://www.ipol.im/pub/art/2021/390/?utm_source=doi).
 
@@ -12,24 +12,27 @@ The method detects JPEG compression as well as its grid origin. This method can 
 
 The JPEG algorithm performs quantization of the DCT coefficients of non-overlapping 8×8 blocks of images, setting many of these coefficients to zero. The method takes advantage of these facts and identifies the presence of a JPEG grid when a significant number of DCT zeros are observed for a given grid origin. More specifically, each pixel votes for 1 of the 64 possible 8x8 grid positions, this being the one with more zero coefficients found, or voting for no grid in the case of a tie.
 
-The algorithm later includes a statistical validation step according to the a-contrario theory of Desolneux, Moisan and Morel[1], which associates a number of false alarms (NFA) to each tampering detection. The detections are obtained by a threshold of the NFA.
+The algorithm later includes a statistical validation step according to the a-contrario theory of Desolneux, Moisan and Morel, which associates a number of false alarms (NFA) to each tampering detection. The detections are obtained by a threshold of the NFA.
 
 ## Usage
 
-Add later usage of method 
+```python
+from photoholmes.methods.zero import Zero, zero_preprocessing
 
-## Results on benchmarking dataset
+# Read an image
+from photoholmes.utils.image import read_image
+image = read_image("path_to_image")
 
-Add results of all metrics in our own benchmarking dataset
+# Assign the image to a dictionary and preprocess the image
+image_data = {"image": image}
+input = zero_preprocessing(**image_data)
 
-## Results on common datasets
+# Declare the method
+method = Zero()
 
-Add results on common datasets 
-
-## References:
-
-[1] Agnès Desolneux, Lionel Moisan, and Jean-Michel Morel. From gestalt theory
-to Image Analysis: A probabilistic approach. Springer, 2011.
+# Use predict to get the final result
+output = method.predict(**input)
+```
 
 ## Citation
 
