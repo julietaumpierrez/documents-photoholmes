@@ -24,7 +24,7 @@ The result of this training scheme are two encoder, one image and text, that wor
 The following example assumes you have alread prunned the weights as explained before.
 
 ```python
-    from photoholmes.methods.exif_as_language import (
+from photoholmes.methods.exif_as_language import (
     EXIFAsLanguage,
     exif_as_language_preprocessing,
 )

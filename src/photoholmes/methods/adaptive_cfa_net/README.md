@@ -20,7 +20,7 @@ To evaluate this method, the authors created a diverse benchmark database using 
 ## Usage
 
 ```python
-    from photoholmes.methods.adaptive_cfa_net import (
+from photoholmes.methods.adaptive_cfa_net import (
     AdaptiveCFANet,
     adaptive_cfa_net_preprocessing,
 )

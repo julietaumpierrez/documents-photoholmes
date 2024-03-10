@@ -33,7 +33,7 @@ The paper highlights the importance of the relative definition of forgery and pr
 ## Usage
 
 ```python
-    from photoholmes.methods.focal import Focal, focal_preprocessing
+from photoholmes.methods.focal import Focal, focal_preprocessing
 
 # Read an image
 from photoholmes.utils.image import read_image

@@ -21,27 +21,27 @@ Multiple resolution analysis refers to the processing of image data at various s
 ## Usage
 
 ```python
-  from photoholmes.methods.catnet import CatNet, catnet_preprocessing
-  
-  # Read an image
-  from photoholmes.utils.image import read_image, read_jpeg_data
-  image = read_image("path_to_image")
-  dct, qtables = read_jpeg_data("path_to_image")
+from photoholmes.methods.catnet import CatNet, catnet_preprocessing
 
-  # Assign the image, dct and qtables to a dictionary and preprocess the image
-  image_data = {"image": image, "dct_coefficients": dct, "qtables": qtables}
-  input = adaptive_cfa_net_preprocessing(**image_data)
+# Read an image
+from photoholmes.utils.image import read_image, read_jpeg_data
+image = read_image("path_to_image")
+dct, qtables = read_jpeg_data("path_to_image")
 
-  # Declare the method and use the .to_device if you want to run it on cuda or mps instead of cpu
-  method = CatNet(
-    arch_config="pretrained",
-    weights="path_to_weights",
-  )
-  device = "cpu"
-  method.to_device(device)
+# Assign the image, dct and qtables to a dictionary and preprocess the image
+image_data = {"image": image, "dct_coefficients": dct, "qtables": qtables}
+input = adaptive_cfa_net_preprocessing(**image_data)
 
-  # Use predict to get the final result
-  output = method.predict(**input)
+# Declare the method and use the .to_device if you want to run it on cuda or mps instead of cpu
+method = CatNet(
+  arch_config="pretrained",
+  weights="path_to_weights",
+)
+device = "cpu"
+method.to_device(device)
+
+# Use predict to get the final result
+output = method.predict(**input)
 ```
 
 ## Citation
