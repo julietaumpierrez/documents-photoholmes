@@ -24,12 +24,12 @@ from photoholmes.methods.zero import Zero, zero_preprocessing
 from photoholmes.utils.image import read_image, read_jpeg_data
 
 # %%
-# img_path = "/Users/julietaumpierrez/Desktop/Datasets/trace/images/r0a42c0f6t/noise_endo.png"
+img_path = "/Users/julietaumpierrez/Desktop/Datasets/trace/images/r0a42c0f6t/jpeg_grid_endo.png"
 # img_path = "/Users/julietaumpierrez/Desktop/Datasets/Columbia Uncompressed Image Splicing Detection/4cam_splc/nikond70_kodakdcs330_sub_26.tif"
 # img_path = "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
-img_path = (
-    "/Users/julietaumpierrez/Desktop/Datasets/tifs-database/DSO-1/splicing-05.png"
-)
+# img_path = (
+#   "/Users/julietaumpierrez/Desktop/Datasets/tifs-database/DSO-1/splicing-05.png"
+# )
 dct, qtables = read_jpeg_data(
     img_path,
     num_dct_channels=1,
@@ -56,7 +56,7 @@ output_1
 # %%
 import matplotlib.pyplot as plt
 
-plt.imshow(output_1[0].to("cpu").detach().numpy())
+plt.imshow(output_1[0])
 # %%
 output_1[2]
 # %%
