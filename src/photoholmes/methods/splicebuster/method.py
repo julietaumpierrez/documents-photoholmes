@@ -12,7 +12,7 @@ from photoholmes.methods.base import BaseMethod, BenchmarkOutput
 from photoholmes.utils.generic import load_yaml
 from photoholmes.utils.pca import PCA
 
-from .config import WeightConfig
+from .config import SaturationMaskConfig
 from .postprocessing import normalize_non_nan, resize_heatmap_and_pad
 from .utils import (
     encode_matrix,
@@ -30,7 +30,8 @@ warnings.filterwarnings("error", category=LinAlgWarning)
 class Splicebuster(BaseMethod):
     """Implementation of the Splicebuster method [Cozzolino et al., 2015].
 
-    This method is based on detecting splicing from features extracted from the image's residuals.
+    This method is based on detecting splicing from features extracted from the image's
+    residuals.
 
     The original implementation(language: Python) is available at:
     https://www.grip.unina.it/download/prog/Splicebuster/"""
@@ -46,7 +47,9 @@ class Splicebuster(BaseMethod):
         pca: Literal["original", "uncentered", "correct"] = "original",
         mixture: Literal["uniform", "gaussian"] = "uniform",
         seed: Union[int, None] = 0,
-        weights: Union[WeightConfig, Literal["original"], None] = "original",
+        saturation_mask_config: Union[
+            SaturationMaskConfig, Literal["original"], None
+        ] = "original",
         **kwargs,
     ):
         """
@@ -81,11 +84,11 @@ class Splicebuster(BaseMethod):
         self.pca_dim = pca_dim
         self.pca = pca
 
-        self.weight_params: Optional[WeightConfig]
-        if weights == "original":
-            self.weight_params = WeightConfig()
+        self.weight_params: Optional[SaturationMaskConfig]
+        if saturation_mask_config == "original":
+            self.weight_params = SaturationMaskConfig()
         else:
-            self.weight_params = weights
+            self.weight_params = saturation_mask_config
 
         self.mahalanobis_estimation = self._init_mahal_estimation(mixture)
         self.seed = seed
@@ -343,7 +346,7 @@ class Splicebuster(BaseMethod):
             flat_features = pca.transform(flat_features)
         return flat_features, valid_features
 
-    def predict(self, image: NDArray) -> NDArray:
+    def predict(self, image: NDArray) -> NDArray:  # type: ignore[override]
         """
         Run splicebuster on an image.
 
@@ -406,6 +409,6 @@ class Splicebuster(BaseMethod):
             config = {}
 
         if "weights" in config:
-            config["weights"] = WeightConfig(**config["weights"])
+            config["weights"] = SaturationMaskConfig(**config["weights"])
 
         return cls(**config)
