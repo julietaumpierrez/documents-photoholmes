@@ -24,6 +24,7 @@ class Focal(BaseTorchMethod):
         self,
         net_list: List[Literal["HRNet", "ViT"]],
         weights: List[Union[str, Dict[str, Any]]],
+        device: str = "cpu",
         **kwargs,
     ):
         """
