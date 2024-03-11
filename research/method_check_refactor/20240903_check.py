@@ -8,6 +8,11 @@ if "research" in os.path.abspath("."):
 
     get_ipython().run_line_magic("load_ext", "autoreload")
     get_ipython().run_line_magic("autoreload", "2")
+from photoholmes.methods.adaptive_cfa_net import (
+    AdaptiveCFANet,
+    adaptive_cfa_net_preprocessing,
+)
+
 # %%
 from photoholmes.methods.catnet import CatNet, catnet_preprocessing
 from photoholmes.methods.exif_as_language import (
@@ -24,7 +29,9 @@ from photoholmes.methods.zero import Zero, zero_preprocessing
 from photoholmes.utils.image import read_image, read_jpeg_data
 
 # %%
-img_path = "/Users/julietaumpierrez/Desktop/Datasets/trace/images/r0a42c0f6t/jpeg_grid_endo.png"
+img_path = (
+    "/Users/julietaumpierrez/Desktop/Datasets/trace/images/r0a42c0f6t/jpeg_grid_exo.png"
+)
 # img_path = "/Users/julietaumpierrez/Desktop/Datasets/Columbia Uncompressed Image Splicing Detection/4cam_splc/nikond70_kodakdcs330_sub_26.tif"
 # img_path = "/Users/julietaumpierrez/Desktop/NoiseSniffer/test.png"
 # img_path = (
@@ -41,12 +48,21 @@ print(qtables)
 # %%
 
 
-image_data = {"image": image, "dct_coefficients": dct, "qtables": qtables}
+image_data = {"image": image}  # , "dct_coefficients": dct, "qtables": qtables}
 # %%
-input = catnet_preprocessing(**image_data)
+input = psccnet_preprocessing(**image_data)
 # %%
-path = "/Users/julietaumpierrez/Desktop/weights/"
-method = CatNet(arch_config="pretrained", weights=path + "CAT_full_v2.pth.tar")
+path = "/Users/julietaumpierrez/Desktop/weights/pscc/"
+arch_config = "pretrained"
+path_to_weights = {
+    "FENet": path + "HRNet.pth",
+    "SegNet": path + "NLCDetection.pth",
+    "ClsNet": path + "DetectionHead.pth",
+}
+method = PSCCNet(
+    arch_config=arch_config,
+    weights_paths=path_to_weights,
+)
 method.to_device("mps")
 
 # %%
@@ -56,7 +72,7 @@ output_1
 # %%
 import matplotlib.pyplot as plt
 
-plt.imshow(output_1[0])
+plt.imshow(output_1[0].to("cpu").numpy())
 # %%
 output_1[2]
 # %%
