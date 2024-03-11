@@ -1,6 +1,6 @@
 # Code derived from
 # https://github.com/HighwayWu/FOCAL/tree/main
-from typing import Any, Dict, List, Literal, Union
+from typing import Any, Dict, Union
 
 import torch
 import torch.nn as nn
@@ -22,23 +22,23 @@ class Focal(BaseTorchMethod):
 
     def __init__(
         self,
-        net_list: List[Literal["HRNet", "ViT"]],
-        weights: List[Union[str, Dict[str, Any]]],
+        weights: Dict[str, Union[str, Dict[str, Any]]],
         device: str = "cpu",
         **kwargs,
     ):
         """
         Args:
-            net_list (List[str]): List of networks to be used in the ensemble.
-            weights (List[str | dict]): List of weights for the networks in the
-                ensemble.
+            weights (Dict[str, Union[str, Dict[str, Any]]]): Weights for the
+                networks. The dictionary should contain the name of the network
+                as key and the path to the weights as value. The networks
+                supported are "HRNet" and "ViT".
             device (str): Device to run the model on.
         """
         super().__init__(**kwargs)
 
         self.network_list = nn.ModuleList()
 
-        for net_name, w in zip(net_list, weights):
+        for net_name, w in weights.items():
             if net_name == "HRNet":
                 from .models.hrnet import HRNet
 
@@ -54,6 +54,8 @@ class Focal(BaseTorchMethod):
                 load_weights(net, w)
 
                 self.network_list.append(net)
+            else:
+                raise ValueError(f"Unknown network {net_name}")
 
             self.clustering = KMeans(verbose=False)
         self.to_device(device)
