@@ -12,13 +12,14 @@ from photoholmes.utils.clustering.gaussian_uniform import GaussianUniformEM
 def third_order_residual(x: NDArray, axis: int = 0) -> NDArray:
     """
     Calculates the third order residual as specified in the paper.
-    Params:
-    - x: input image. Dims (H, W)
-    - axis: axis along which to calculate the residual. 0 for horizontal,
+
+    Args:
+    - x (NDArray): Input image. Dims (H, W)
+    - axis (int): Axis along which to calculate the residual. 0 for horizontal,
             1 for vertical
 
     Returns:
-    - residual: third order residual. Dims (H - 4, W - 4)
+    - NDArray: Third order residual. Dims (H - 4, W - 4)
     """
     x = x.astype(np.float32)
     if axis == 0:
@@ -51,6 +52,16 @@ def encode_matrix(
 ) -> NDArray[np.int16]:
     """
     Encodes X into the corresponding co-ocurrence features.
+
+    Args:
+    - X (NDArray): Input image. Dims (H, W)
+    - T (int): Threshold for the quantization.
+    - c (int): Size of the co-ocurrence matrix.
+    - axis (int): Axis along which to calculate the co-ocurrence. 0 for horizontal,
+            1 for vertical
+
+    Returns:
+    - NDArray: Encoded co-ocurrence matrix. Dims (H - c, W - c)
     """
     coded_shape = (X.shape[0] - c, X.shape[1] - c)
 
@@ -91,6 +102,14 @@ def mahalanobis_distance(X: NDArray, mu: NDArray, cov: NDArray) -> NDArray:
     """
     Computation of the mahalanobis distance for features X over gaussian distribution,
       of mean mu and covariance cov.
+
+    Args:
+    - X (NDArray): Input features. Dims (n_samples, n_features)
+    - mu (NDArray): Mean of the gaussian distribution. Dims (n_features,)
+    - cov (NDArray): Covariance matrix of the gaussian distribution. Dims (n_features, n_features)
+
+    Returns:
+    - NDArray: Mahalanobis distance. Dims (n_samples,)
     """
     inv_cov = np.linalg.inv(cov)
     X_centered = X - mu
@@ -98,14 +117,15 @@ def mahalanobis_distance(X: NDArray, mu: NDArray, cov: NDArray) -> NDArray:
     return mahal_dist
 
 
-def get_disk_kernel(radius: int) -> np.ndarray:
+def get_disk_kernel(radius: int) -> NDArray:
     """
     Returns a disk kernel of the given radius.
 
-    Params:
-        radius: radius of the disk.
+    Args:
+        radius (int): Radius of the disk.
+
     Returns:
-        kernel: disk kernel of the given radius.
+        kernel: Disk kernel of the given radius.
     """
     xx, yy = np.meshgrid(np.arange(-radius, radius + 1), np.arange(-radius, radius + 1))
     kernel = (xx**2 + yy**2) <= radius**2
@@ -113,7 +133,7 @@ def get_disk_kernel(radius: int) -> np.ndarray:
 
 
 def get_saturated_region_mask(
-    img: np.ndarray,
+    img: NDArray,
     low_th: float = 6 / 256,
     high_th: float = 252 / 256,
     erotion_kernel_size: int = 9,
@@ -122,16 +142,13 @@ def get_saturated_region_mask(
     Creates a binary mask of the saturated regions in the image.
 
     Params:
-        - img: image to get the mask from.
-        - low_th: lower threshold for the saturated pixels.
-        - high_th: upper threshold for the saturated pixels.
-        - opening_kernel_radius: radius of the disk kernel used for the opening
+        - img (NDArray): image to get the mask from.
+        - low_th (float): lower threshold for the saturated pixels.
+        - high_th (float): upper threshold for the saturated pixels.
+        - erotion_kernel_size (int): size of the square kernel for the erotion
             operation.
-        - dilation_kernel_size: size of the square kernel used for the dilation
-            operation on the final mask.
     Returns:
-        - mask: binary mask of the saturated regions in the image. If applied to the
-              image, the saturated regions will be set to 0.
+        - NDArray: binary mask of the saturated regions.
     """
     if img.ndim == 2:
         img = img[:, :, None]
@@ -158,10 +175,11 @@ def feat_reduce_matrix(pca_dim: int, X: NDArray, whitten: bool = True) -> NDArra
     """
     Calculates the matrix transformation to reduce the features using PCA.
 
-    Params:
-        - pca_dim (int): number of principal components to keep.
-        - X (NDArray): input features. Dims (n_samples, n_features)
-        - whitten (bool): whether to whitten the features or not.
+    Args:
+        - pca_dim (int): Number of principal components to keep.
+        - X (NDArray): Input features. Dims (n_samples, n_features)
+        - whitten (bool): Whether to whitten the features or not.
+
     Returns:
         - NDArray: eigenvector matrix to project the features into the reduced space.
     """
@@ -185,15 +203,16 @@ def gaussian_mixture_mahalanobis(
     valid: NDArray,
 ) -> NDArray:
     """
-    Gaussian Mixture model fit over valid features and prediction of the mahalanobis distance.
-    Non-valid features are labeled as 0.
-    Inputs:
-        - seed: seed for the random number generator.
-        - valid_features: non-saturated (flat) features.
-        - flat_features: all (flat) features.
-        - valid: mask of the valid pixels.
+    Gaussian Mixture model fit over valid features and prediction of the mahalanobis
+    distance. Non-valid features are labeled as 0.
+
+    Args:
+        - seed (int | None): Seed for the random number generator.
+        - valid_features (NDArray): Non-saturated (flat) features.
+        - flat_features (NDArray): All (flat) features.
+        - valid (NDArray): Mask of the valid pixels.
     Output:
-        - labels: mahalanobis distance labels.
+        - NDarray: mahalanobis distance labels.
     """
     gg_mixt = GaussianMixture(seed=seed)
     mus, covs = gg_mixt.fit(valid_features)
@@ -215,15 +234,16 @@ def gaussian_uniform_mahalanobis(
     valid: NDArray,
 ) -> NDArray:
     """
-    Gaussian-Uniform model fit over valid features and prediction of the mahalanobis distance.
-    Non-valid features are labeled as 0.
-    Inputs:
-        - seed: seed for the random number generator.
-        - valid_features: non-saturated (flat) features.
-        - flat_features: all (flat) features.
-        - valid: mask of the valid pixels.
+    Gaussian-Uniform Mixture model fit over valid features and prediction of the
+    mahalanobis distance. Non-valid features are labeled as 0.
+
+    Args:
+        - seed (int | None): Seed for the random number generator.
+        - valid_features (NDArray): Non-saturated (flat) features.
+        - flat_features (NDArray): All (flat) features.
+        - valid (NDArray): Mask of the valid pixels.
     Output:
-        - labels: mahalanobis distance labels.
+        - NDarray: mahalanobis distance labels.
     """
     gu_mixt = GaussianUniformEM(seed=seed)
     mus, covs, _ = gu_mixt.fit(valid_features)
