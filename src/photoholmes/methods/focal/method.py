@@ -5,12 +5,18 @@ from typing import Any, Dict, TypedDict, Union
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from torch_kmeans import KMeans
 from torchvision.transforms.functional import resize
 
 from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
 
 from .utils import load_weights
+
+try:
+    from torch_kmeans import KMeans
+except ImportError:
+    raise ImportError(
+        "To use the Focal method, you need to install the `torch_kmeans` package."
+    )
 
 
 class FocalWeights(TypedDict):
