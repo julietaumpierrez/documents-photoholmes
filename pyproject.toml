@@ -3,16 +3,38 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name="photoholmes"
+name = "photoholmes"
 version = "0.0.1"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "opencv-python",
+    "scikit-learn",
+    "pydantic",
+    "tqdm",
+    "jpegio",
+    "scipy",
+    "pyyaml",
+    "mpmath",
+    "typer",
+    "pillow",
+
+    "torch",
+    "torchmetrics",
+    "torchvision",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black", "isort", "pre-commit", "flake8", "mypy", "ipykernel"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["photoholmes*"]
 
 [project.scripts]
-photoholmes="photoholmes.cli.main:cli"
+photoholmes = "photoholmes.cli.main:cli"
 
 [tool.black]
 target-version = ['py310']
