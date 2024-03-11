@@ -7,6 +7,7 @@ import torch
 from numpy.typing import NDArray
 from torch import Tensor
 from torch.nn import Module
+from typing_extensions import NotRequired
 
 from photoholmes.utils.generic import load_yaml
 
@@ -19,9 +20,23 @@ T = TypeVar("T", NDArray, Tensor)
 
 
 class BenchmarkOutput(TypedDict):
+    """
+    Structure of the output expected from the benchmark method.
+
+    Expected keys:
+        - heatmap: a provability map predicted by the method.
+        - mask: a binary mask predicted by the method.
+        - detection: score between 0 and 1 where 1 indicates a forged image.
+
+    Extra keys:
+        - extra_outputs: any extra outputs that the method might have
+            and could be useful to save.
+    """
+
     heatmap: Optional[Tensor]
     mask: Optional[Tensor]
     detection: Optional[Tensor]
+    extra_outputs: NotRequired[Dict[str, Any]]
 
 
 class BaseMethod(ABC):
