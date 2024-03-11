@@ -224,5 +224,5 @@ def gaussian_uniform_mahalanobis(
     gu_mixt = GaussianUniformEM(seed=seed)
     mus, covs, _ = gu_mixt.fit(valid_features)
     _, labels = gu_mixt.predict(flat_features)
-    labels[~valid.flatten()] = 0
+    labels[~valid.flatten()] = np.nan
     return labels

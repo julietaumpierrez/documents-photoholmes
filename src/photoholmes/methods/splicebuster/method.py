@@ -9,11 +9,11 @@ from scipy.linalg import LinAlgWarning
 from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod
-from photoholmes.postprocessing.resizing import upscale_mask
 from photoholmes.utils.generic import load_yaml
 from photoholmes.utils.pca import PCA
 
 from .config import WeightConfig
+from .postprocessing import normalize_non_nan, resize_heatmap_and_pad
 from .utils import (
     encode_matrix,
     feat_reduce_matrix,
@@ -314,8 +314,8 @@ class Splicebuster(BaseMethod):
         except LinAlgWarning:
             labels = np.zeros(flat_features.shape[0])
         heatmap = labels.reshape(features.shape[:2])
-        heatmap = heatmap / max(np.max(labels), 1)
-        heatmap = upscale_mask(coords, heatmap, (X, Y), method="linear", fill_value=0)
+        heatmap = normalize_non_nan(heatmap)
+        heatmap = resize_heatmap_and_pad(heatmap, coords, (X, Y))
 
         return {"heatmap": torch.tensor(heatmap, dtype=torch.float32)}
 
