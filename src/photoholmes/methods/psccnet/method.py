@@ -86,9 +86,6 @@ class PSCCNet(BaseTorchMethod):
             arch = arch_config
 
         FENet = HighResolutionNet(arch, **kwargs)
-        if weights_paths.get("pretrained", None) is not None:
-            FENet.init_weights(weights_paths["pretrained"], device=device)
-
         SegNet = NLCDetection(arch, arch.crop_size)
         ClsNet = DetectionHead(arch, arch.crop_size)
 
@@ -99,8 +96,13 @@ class PSCCNet(BaseTorchMethod):
         self.FENet = FENet
         self.SegNet = SegNet
         self.ClsNet = ClsNet
-
         self.sm = nn.Softmax(dim=1)
+
+        self.FENet.eval()
+        self.SegNet.eval()
+        self.ClsNet.eval()
+
+        self.to_device(device)
 
     def init_network(self, net: nn.Module, weights_path: Optional[str]) -> nn.Module:
         """
@@ -150,11 +152,9 @@ class PSCCNet(BaseTorchMethod):
         add_batch_dim = image.ndim == 3
         if add_batch_dim:
             image = image.unsqueeze(0)
-        self.FENet.eval()
         feat = self.FENet(image)
 
         # localization head
-        self.SegNet.eval()
         heatmap = self.SegNet(feat)[0]
         heatmap = F.interpolate(
             heatmap,
@@ -169,7 +169,6 @@ class PSCCNet(BaseTorchMethod):
             heatmap = heatmap.squeeze(1)
 
         # classification head
-        self.ClsNet.eval()
         pred_logit = self.ClsNet(feat)
         pred_logit = self.sm(pred_logit)[:, 1]
 
