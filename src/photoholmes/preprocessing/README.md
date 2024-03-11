@@ -1,5 +1,7 @@
 # Pre-Processing
 
+## Overview
+
 Most methods don't take the full image as an input, but rather transformation of it
 (grayscale, dct volumes, etc...).  We identified some of this transformation and
 packaged them in reusable modules, and implemented PreProcessing pipelines to group
