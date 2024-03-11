@@ -49,6 +49,9 @@ def quantize(x: NDArray, T: int = 1, q: Union[int, float] = 2) -> NDArray[np.int
 def encode_matrix(
     X: NDArray[np.int8], T: int = 1, c: int = 4, axis: int = 0
 ) -> NDArray[np.int16]:
+    """
+    Encodes X into the corresponding co-ocurrence features.
+    """
     coded_shape = (X.shape[0] - c, X.shape[1] - c)
 
     encoded_matrix = np.zeros((2, *coded_shape))
@@ -84,14 +87,15 @@ def encode_matrix(
     return reduced.reshape(coded_shape)
 
 
-def mahalanobis_distance(X: NDArray, mu: NDArray, cov: NDArray):
+def mahalanobis_distance(X: NDArray, mu: NDArray, cov: NDArray) -> NDArray:
+    """
+    Computation of the mahalanobis distance for features X over gaussian distribution,
+      of mean mu and covariance cov.
+    """
     inv_cov = np.linalg.inv(cov)
-
-    X_ = np.empty(X.shape[0], dtype=np.float16)
     X_centered = X - mu
-    for i in range(X_.shape[0]):
-        X_[i] = np.sqrt(X_centered[i] @ inv_cov @ X_centered[i].T)
-    return X_
+    mahal_dist = np.sqrt(X_centered.T @ inv_cov @ X_centered)
+    return mahal_dist
 
 
 def get_disk_kernel(radius: int) -> np.ndarray:
