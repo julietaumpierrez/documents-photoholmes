@@ -1,6 +1,6 @@
 # Code derived from
 # https://github.com/HighwayWu/FOCAL/tree/main
-from typing import Any, Dict, Union
+from typing import Any, Dict, TypedDict, Union
 
 import torch
 import torch.nn as nn
@@ -13,6 +13,11 @@ from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
 from .utils import load_weights
 
 
+class FocalWeights(TypedDict):
+    ViT: Union[str, Dict[str, Any]]
+    HRNet: Union[str, Dict[str, Any]]
+
+
 class Focal(BaseTorchMethod):
     """
     Implementation of Focal method [Wu et al., 2023].
@@ -22,16 +27,16 @@ class Focal(BaseTorchMethod):
 
     def __init__(
         self,
-        weights: Dict[str, Union[str, Dict[str, Any]]],
+        weights: FocalWeights,
         device: str = "cpu",
         **kwargs,
     ):
         """
         Args:
-            weights (Dict[str, Union[str, Dict[str, Any]]]): Weights for the
-                networks. The dictionary should contain the name of the network
-                as key and the path to the weights as value. The networks
-                supported are "HRNet" and "ViT".
+            weights (FocalWeights): Weights for the Focal model. The weights
+                should be a dictionary with keys "ViT" and "HRNet". The values
+                should be the path to the weights file or a dictionary with
+                the weights.
             device (str): Device to run the model on.
         """
         super().__init__(**kwargs)
@@ -43,7 +48,7 @@ class Focal(BaseTorchMethod):
                 from .models.hrnet import HRNet
 
                 net = HRNet()
-                load_weights(net, w)
+                load_weights(net, w)  # type: ignore[arg-type]
 
                 self.network_list.append(net)
 
@@ -51,7 +56,7 @@ class Focal(BaseTorchMethod):
                 from .models.vit import ImageEncoderViT
 
                 net = ImageEncoderViT()
-                load_weights(net, w)
+                load_weights(net, w)  # type: ignore[arg-type]
 
                 self.network_list.append(net)
             else:
@@ -106,7 +111,7 @@ class Focal(BaseTorchMethod):
         # This operation destroys traces that typically indicate the presence of a
         # forgery. This indicates the method is most likely overfitted to
         # the dataset or to semantic forgery.
-        image = resize(image, [1024, 1024])
+        image = resize(image, [1024, 1024]).to(self.device)
 
         with torch.no_grad():
             Fo = self.forward(image[None, :])

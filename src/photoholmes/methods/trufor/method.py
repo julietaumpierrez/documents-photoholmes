@@ -82,7 +82,7 @@ class TruFor(BaseTorchMethod):
         arch_config: Union[TruForArchConfig, Literal["pretrained"]] = "pretrained",
         weights: Optional[Union[str, dict]] = None,
         use_confidence: bool = True,
-        **kwargs,
+        device: str = "cpu",
     ):
         """
         Args:
@@ -93,7 +93,7 @@ class TruFor(BaseTorchMethod):
             use_confidence (bool): Whether to use confidence maps to multiply the
                 output heatmap in the benchmark method.
         """
-        super().__init__(**kwargs)
+        super().__init__()
 
         if arch_config == "pretrained":
             arch_config = pretrained_arch
@@ -202,6 +202,8 @@ class TruFor(BaseTorchMethod):
         else:
             logger.warn("No weight file provided. Initiralizing random weights.")
             self.init_weights()
+
+        self.to_device(device)
         self.eval()
 
     def init_weights(self):
@@ -312,6 +314,7 @@ class TruFor(BaseTorchMethod):
         """
         if image.ndim == 3:
             image = image.unsqueeze(0)
+        image = image.to(self.device)
 
         with torch.no_grad():
             out, conf, det, npp = self.forward(image)
@@ -330,7 +333,7 @@ class TruFor(BaseTorchMethod):
         heatmap = F.softmax(out, dim=0)[1]
         return heatmap, conf, det, npp
 
-    def benchmark(self, image: torch.Tensor) -> BenchmarkOutput:
+    def benchmark(self, image: Tensor) -> BenchmarkOutput:
         """
         Benchmarks the TruFor method using the provided image.
         Args:
@@ -359,4 +362,5 @@ class TruFor(BaseTorchMethod):
             arch_config=trufor_config.arch,
             weights=trufor_config.weights,
             use_confidence=trufor_config.use_confidence,
+            device=trufor_config.device,
         )

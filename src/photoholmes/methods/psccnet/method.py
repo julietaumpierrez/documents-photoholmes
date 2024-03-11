@@ -13,7 +13,7 @@ Aug 22, 2020
 import logging
 import random
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -23,7 +23,7 @@ from torch import Tensor
 from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
 from photoholmes.utils.generic import load_yaml
 
-from .config import PSCCNetArchConfig, PSCCNetConfig, pretrained_arch
+from .config import PSCCNetArchConfig, PSCCNetConfig, TruForWeights, pretrained_arch
 from .network.detection_head import DetectionHead
 from .network.NLCDetection import NLCDetection
 from .network.seg_hrnet import HighResolutionNet
@@ -49,8 +49,8 @@ class PSCCNet(BaseTorchMethod):
 
     def __init__(
         self,
+        weights: TruForWeights,
         arch_config: Union[PSCCNetArchConfig, Literal["pretrained"]] = "pretrained",
-        weights_paths: Dict[str, str] = {},
         device: str = "cpu",
         device_ids: Optional[List] = None,
         seed: int = 42,
@@ -58,7 +58,7 @@ class PSCCNet(BaseTorchMethod):
     ):
         """
         Args:
-            weights_paths (Dict[str, str]): Dictionary with the paths to the
+            weights (Dict[str, str]): Dictionary with the paths to the
                 weights for the FENet, SegNet and ClsNet. The keys are the
                 name of it subnetwork.
                 > If you want to start the network from scratch and initialize
@@ -89,9 +89,9 @@ class PSCCNet(BaseTorchMethod):
         SegNet = NLCDetection(arch, arch.crop_size)
         ClsNet = DetectionHead(arch, arch.crop_size)
 
-        FENet = self.init_network(FENet, weights_paths.get("FENet", None))
-        SegNet = self.init_network(SegNet, weights_paths.get("SegNet", None))
-        ClsNet = self.init_network(ClsNet, weights_paths.get("ClsNet", None))
+        FENet = self.init_network(FENet, weights.get("FENet", None))
+        SegNet = self.init_network(SegNet, weights.get("SegNet", None))
+        ClsNet = self.init_network(ClsNet, weights.get("ClsNet", None))
 
         self.FENet = FENet
         self.SegNet = SegNet
@@ -104,14 +104,16 @@ class PSCCNet(BaseTorchMethod):
 
         self.to_device(device)
 
-    def init_network(self, net: nn.Module, weights_path: Optional[str]) -> nn.Module:
+    def init_network(
+        self, net: nn.Module, weights_path: Optional[Union[str, Path]]
+    ) -> nn.Module:
         """
         Initialize a subnetwork, loading it as a DataParallel module, setting it to the
         correct devices and loading the weights if provided.
 
         Args:
             net (nn.Module): The module to initialize
-            weights_paths (str | None): Path to the model weights. If None, the model
+            weights (str | None): Path to the model weights. If None, the model
                 uses random weights.
 
         Returns:
