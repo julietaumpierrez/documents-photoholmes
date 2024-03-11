@@ -1,20 +1,14 @@
-# metrics/__init__.py
-
-from torchmetrics import AUROC, ROC, F1Score
-from torchmetrics import JaccardIndex as IoU
-from torchmetrics import MatthewsCorrCoef, Precision
-from torchmetrics import Recall as TPR
-
 from .F1_weighted_v1 import F1_weighted_v1
 from .F1_weighted_v2 import F1_weighted_v2
+from .factory import MetricFactory
 from .FPR import FPR
 from .IoU_weighted_v1 import IoU_weighted_v1
 from .IoU_weighted_v2 import IoU_weighted_v2
 from .mAuroc import mAuroc
 from .MCC_weighted_v1 import MCC_weighted_v1
 from .MCC_weighted_v2 import MCC_weighted_v2
-from .metric_factory import MetricFactory
-from .registry import MetricName
+from .registry import MetricRegistry
+from .torchmetrics_wrappers import AUROC, MCC, ROC, TPR, F1Score, IoU, Precision
 
 __all__ = [
     "MetricFactory",
@@ -22,7 +16,7 @@ __all__ = [
     "ROC",
     "F1Score",
     "IoU",
-    "MatthewsCorrCoef",
+    "MCC",
     "Precision",
     "TPR",
     "F1_weighted_v1",
@@ -33,5 +27,5 @@ __all__ = [
     "mAuroc",
     "MCC_weighted_v1",
     "MCC_weighted_v2",
-    "MetricName",
+    "MetricRegistry",
 ]
