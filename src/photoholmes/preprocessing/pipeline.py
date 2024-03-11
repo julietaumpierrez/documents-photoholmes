@@ -1,28 +1,37 @@
-from typing import Any, Dict, List
+import logging
+from typing import Any, Dict, List, Literal
 
-from photoholmes.preprocessing.base import PreprocessingTransform
+from photoholmes.preprocessing.base import BasePreprocessing
+
+logger = logging.getLogger(__name__)
 
 
 class PreProcessingPipeline:
     """
     A pipeline of preprocessing transforms.
-
-    Args:
-        transforms: A list of preprocessing transforms to apply sequentially to the
-          input.
-
-    Returns:
-        A dictionary with the output of the last transform in the pipeline.
     """
 
-    def __init__(self, transforms: List[PreprocessingTransform]) -> None:
+    inputs: List[Literal["image", "dct_coefficients", "qtables"]]
+    outputs_keys: List[str]
+
+    def __init__(
+        self,
+        transforms: List[BasePreprocessing],
+        inputs: List[Literal["image", "dct_coefficients", "qtables"]],
+        outputs_keys: List[str],
+    ) -> None:
         """
         Initializes a new preprocessing pipeline.
 
         Args:
             transforms: A list of preprocessing transforms to apply to the input.
+            inputs (List[str]): the inputs that the pipeline will receive.
+            outputs_keys (List[str]): the keys of the outputs that the pipeline will
+                return.
         """
         self.transforms = transforms
+        self.inputs = inputs
+        self.outputs_keys = outputs_keys
 
     def __call__(self, **kwargs) -> Dict[str, Any]:
         """
@@ -34,13 +43,24 @@ class PreProcessingPipeline:
         Returns:
             A dictionary with the output of the last transform in the pipeline.
         """
+        self._check_inputs(kwargs)
+
         for t in self.transforms:
             kwargs = t(**kwargs)
 
-        return kwargs
+        return {k: v for k, v in kwargs.items() if k in self.outputs_keys}
 
-    def add(self, transform: PreprocessingTransform):
+    def _check_inputs(self, inputs: Dict[str, Any]) -> None:
+        for input_ in self.inputs:
+            if input_ not in inputs:
+                raise ValueError(f"Missing input {input_} in inputs")
+
+        for input_ in inputs.keys():
+            if input_ not in self.inputs:
+                logger.warn(f"Input {input_} is not used by the pipeline")
+
+    def append(self, transform: BasePreprocessing):
         self.transforms.append(transform)
 
-    def insert(self, transform: PreprocessingTransform, index: int):
+    def insert(self, index: int, transform: BasePreprocessing):
         self.transforms.insert(index, transform)

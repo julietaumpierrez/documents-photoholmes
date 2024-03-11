@@ -7,12 +7,12 @@ from numpy.typing import NDArray
 from PIL.Image import Image
 from torch import Tensor
 
-from photoholmes.preprocessing.base import PreprocessingTransform
+from photoholmes.preprocessing.base import BasePreprocessing
 
 T = TypeVar("T", Tensor, NDArray)
 
 
-class ZeroOneRange(PreprocessingTransform):
+class ZeroOneRange(BasePreprocessing):
     """
     Changes the image range from [0, 255] to [0, 1].
 
@@ -25,7 +25,7 @@ class ZeroOneRange(PreprocessingTransform):
             - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
-    def __call__(self, image: T, **kwargs) -> Dict[str, T]:
+    def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
         if image.dtype == np.uint8 or image.dtype == torch.uint8:
             image = image / 255
         elif image.max() > 1:
@@ -33,7 +33,7 @@ class ZeroOneRange(PreprocessingTransform):
         return {"image": image, **kwargs}
 
 
-class Normalize(PreprocessingTransform):
+class Normalize(BasePreprocessing):
     """
     Normalize an image.
 
@@ -60,7 +60,7 @@ class Normalize(PreprocessingTransform):
         else:
             self.std = std
 
-    def __call__(self, image: T, **kwargs):
+    def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
         if isinstance(image, Tensor):
             mean = torch.as_tensor(self.mean, dtype=torch.float32)
             std = torch.as_tensor(self.std, dtype=torch.float32)
@@ -83,7 +83,7 @@ class Normalize(PreprocessingTransform):
         return {"image": t_image, **kwargs}
 
 
-class ToTensor(PreprocessingTransform):
+class ToTensor(BasePreprocessing):
     """
     Converts a numpy array to a PyTorch tensor.
 
@@ -97,20 +97,31 @@ class ToTensor(PreprocessingTransform):
             - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
-    def __call__(self, image: NDArray, **kwargs) -> Dict[str, Tensor]:
-        t_image = torch.from_numpy(image)
-        if t_image.ndim == 3:
-            t_image = t_image.permute(2, 0, 1)
+    def __call__(self, image: NDArray, **kwargs) -> Dict[str, Any]:
+        if isinstance(image, Image):
+            t_image = torch.from_numpy(image)
+            if t_image.ndim == 3:
+                t_image = t_image.permute(2, 0, 1)
+        elif isinstance(image, np.ndarray):
+            t_image = torch.from_numpy(image)
+            if t_image.ndim == 3:
+                t_image = t_image.permute(2, 0, 1)
+        elif isinstance(image, Tensor):
+            t_image = image
+        else:
+            raise ValueError(f"image type {type(image)} isn't handled by ToTensor")
 
         for k in kwargs:
-            if isinstance(kwargs[k], list):
+            if isinstance(kwargs[k], Tensor):
+                continue
+            elif isinstance(kwargs[k], list):
                 kwargs[k] = np.array(kwargs[k])
             kwargs[k] = torch.from_numpy(kwargs[k])
 
         return {"image": t_image, **kwargs}
 
 
-class ToNumpy(PreprocessingTransform):
+class ToNumpy(BasePreprocessing):
     """
     Converts inputs to numpy arrays. If input is already a numpy array,
     it leaves it as is.
@@ -127,7 +138,7 @@ class ToNumpy(PreprocessingTransform):
 
     def __call__(
         self, image: Optional[Union[T, Image]] = None, **kwargs
-    ) -> Dict[str, NDArray]:
+    ) -> Dict[str, Any]:
         t_image = None
         if isinstance(image, Tensor):
             t_image = image.permute(1, 2, 0).cpu().numpy()
@@ -150,7 +161,7 @@ class ToNumpy(PreprocessingTransform):
             return {"image": t_image, **kwargs}
 
 
-class RGBtoGray(PreprocessingTransform):
+class RGBtoGray(BasePreprocessing):
     """
     Converts an RGB image to grayscale.
 
@@ -164,7 +175,7 @@ class RGBtoGray(PreprocessingTransform):
             - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
-    def __call__(self, image: T, **kwargs) -> Dict[str, T]:
+    def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
         if isinstance(image, Tensor):
             image = 0.299 * image[0] + 0.587 * image[1] + 0.114 * image[2]
             image = image.unsqueeze(0)
@@ -176,7 +187,7 @@ class RGBtoGray(PreprocessingTransform):
         return {"image": image, **kwargs}
 
 
-class RoundToUInt(PreprocessingTransform):
+class RoundToUInt(BasePreprocessing):
     """
     Rounds the input float tensor and converts it to an unsigned integer.
     Args:
@@ -189,12 +200,12 @@ class RoundToUInt(PreprocessingTransform):
             - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
-    def __call__(self, image: Tensor, **kwargs) -> Dict[str, Tensor]:
+    def __call__(self, image: Tensor, **kwargs) -> Dict[str, Any]:
         rounded_image = torch.round(image).byte()
         return {"image": rounded_image, **kwargs}
 
 
-class GrayToRGB(PreprocessingTransform):
+class GrayToRGB(BasePreprocessing):
     """
     Converts an grayscale image to RGB
     """
@@ -213,12 +224,12 @@ class GrayToRGB(PreprocessingTransform):
         return {"image": image, **kwargs}
 
 
-class GetImageSize(PreprocessingTransform):
+class GetImageSize(BasePreprocessing):
     """
     Get the size of the image
     """
 
-    def __call__(self, image: T, **kwargs):
+    def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
         if isinstance(image, Tensor):
             size = tuple(image.shape[1:])
         elif isinstance(image, np.ndarray):
@@ -230,7 +241,7 @@ class GetImageSize(PreprocessingTransform):
         return {"image": image, "image_size": size, **kwargs}
 
 
-class RGBtoYCrCb(PreprocessingTransform):
+class RGBtoYCrCb(BasePreprocessing):
     """
     Converts an RGB image to YCrCb.
 

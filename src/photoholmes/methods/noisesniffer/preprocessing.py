@@ -1,7 +1,8 @@
 from photoholmes.preprocessing.image import ToNumpy
-from photoholmes.preprocessing.input import InputSelection
 from photoholmes.preprocessing.pipeline import PreProcessingPipeline
 
-noisesniffer_preprocessing = PreProcessingPipeline(
-    transforms=[ToNumpy(), InputSelection(["image"])]
+noisesniffer_preprocess = PreProcessingPipeline(
+    inputs=["image"],
+    outputs_keys=["image"],
+    transforms=[ToNumpy()],
 )

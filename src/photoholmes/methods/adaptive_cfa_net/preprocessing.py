@@ -2,13 +2,12 @@ from typing import Any, Dict
 
 from torch import Tensor
 
-from photoholmes.preprocessing.base import PreprocessingTransform
+from photoholmes.preprocessing.base import BasePreprocessing
 from photoholmes.preprocessing.image import GetImageSize, ZeroOneRange
-from photoholmes.preprocessing.input import InputSelection
 from photoholmes.preprocessing.pipeline import PreProcessingPipeline
 
 
-class AdaptiveCFANetPreprocessing(PreprocessingTransform):
+class AdaptiveCFANetPreprocessing(BasePreprocessing):
     """
     Preprocessing transformation class for AdaptiveCFANet, intended to prepare
     images for processing by ensuring their dimensions are even.
@@ -50,10 +49,11 @@ class AdaptiveCFANetPreprocessing(PreprocessingTransform):
 
 
 adaptive_cfa_net_preprocessing = PreProcessingPipeline(
-    [
+    inputs=["image"],
+    outputs_keys=["image", "image_size"],
+    transforms=[
         GetImageSize(),
         ZeroOneRange(),
         AdaptiveCFANetPreprocessing(),
-        InputSelection(["image", "image_size"]),
-    ]
+    ],
 )
