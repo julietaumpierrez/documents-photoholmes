@@ -41,13 +41,13 @@ print(qtables)
 # %%
 
 
-image_data = {"image": image}  # , "dct_coefficients": dct, "qtables": qtables}
+image_data = {"image": image, "dct_coefficients": dct, "qtables": qtables}
 # %%
-input = zero_preprocessing(**image_data)
+input = catnet_preprocessing(**image_data)
 # %%
 path = "/Users/julietaumpierrez/Desktop/weights/"
-method = Zero()
-method.to_device("cpu")
+method = CatNet(arch_config="pretrained", weights=path + "CAT_full_v2.pth.tar")
+method.to_device("mps")
 
 # %%
 output_1 = method.predict(**input)
@@ -95,4 +95,23 @@ output = method.predict(**input)
 import matplotlib.pyplot as plt
 
 plt.imshow(output[0])
+# %%
+from photoholmes.methods.factory import MethodFactory
+
+method, preprocess = MethodFactory.load(
+    "trufor",
+    "/Users/julietaumpierrez/Desktop/PhotoHolmesRepo/photoholmes/src/photoholmes/methods/trufor/config.yaml",
+)
+from photoholmes.utils.image import read_image
+
+img = read_image(
+    "/Users/julietaumpierrez/Desktop/Datasets/tifs-database/DSO-1/splicing-05.png"
+)
+inputs = preprocess(image=img)
+out = method.predict(**inputs)
+
+# %%
+import matplotlib.pyplot as plt
+
+plt.imshow(out[0])
 # %%

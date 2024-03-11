@@ -42,7 +42,7 @@ input = exif_as_language_preprocessing(**image_data)
 arch_config = "pretrained"
 path_to_weights = "path_to_weights"
 method = EXIFAsLanguage(
-    arch_config = arxh_config,
+    arch_config = arch_config,
     weights = path_to_weights,
 )
 device = "cpu"
