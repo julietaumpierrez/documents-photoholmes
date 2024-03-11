@@ -10,15 +10,15 @@ def cosine_similarity(x1: Tensor, x2: Tensor) -> Tensor:
     """
     Cosine similarity between all pairs of vectors in x1 and x2.
 
-    Parameters
-    ----------
-    x1: Tensor of shape (N, D)
-    x2: Tensor of shape (M, D)
+    Args:
+        x1 (Tensor): Tensor of shape (N, D).
+        x2 (Tensor): Tensor of shape (M, D).
 
-    Returns
-    -------
-    Tensor of shape (N, M) with cosine similarity between all pairs of vectors
+    Returns:
+        Tensor: Tensor of shape (N, M) with cosine similarity between all pairs of
+            vectors.
     """
+
     x1 = x1 / (x1.norm(dim=-1, keepdim=True) + 1e-32)
     x2 = x2 / (x2.norm(dim=-1, keepdim=True) + 1e-32)
 
@@ -30,10 +30,11 @@ def normalized_cut(res: NDArray) -> NDArray:
     """
     Spectral clustering via Normalized Cuts
 
-    Params:
-        res: Affinity matrix between patches
+    Args:
+        res (NDArray): Affinity matrix between patches.
+
     Returns:
-        normalized cut
+        NDArray: normalized cut.
     """
     res = 1 - res
     sc = cluster.SpectralClustering(n_clusters=2, n_jobs=-1, affinity="precomputed")
@@ -44,17 +45,16 @@ def normalized_cut(res: NDArray) -> NDArray:
 
 def mean_shift(points_: NDArray, heat_map: NDArray, window: int, iter: int) -> NDArray:
     """
-    Applys Mean Shift algorithm in order to obtain a uniform heatmap
+    Applys Mean Shift algorithm in order to obtain a uniform heatmap.
 
-    Params:
-        points_: Affinity matrix between patches
-        heat_map: Heatmap obtained from the affinity matrix
-        window: window size
-        iter: number of iterations
+    Args:
+        points_ (NDArray): Affinity matrix between patches.
+        heat_map (NDArray): Heatmap obtained from the affinity matrix.
+        window (int): window size.
+        iter (int): number of iterations.
+
     Returns:
-        Uniform heatmap after mean shift on rows
-        with modification from original code to take into account
-        the cases with eps_5= 0
+        NDArray: Uniform heatmap after mean shift on rows.
     """
     points = np.copy(points_)
     kdt = scipy.spatial.cKDTree(points)

@@ -6,24 +6,28 @@ from torchmetrics import Metric
 class MCC_weighted_v1(Metric):
     """
     The MCC weighted (Mathews Correlation Coefficient weighted) metric calculates the
-    F1 score taking into account the value of the heatmap as a probability and uses
+    MCC score taking into account the value of the heatmap as a probability and uses
     weighted true positives, weighted false positives, weighted true negatives and
     weighted false negatives to calculate the MCC score.
+    This class computes de mean weighted MCC. It calculates the weighted MCC score for
+    each image and then averages to output a single result.
 
     Attributes:
-        MCC score weighted (torch.Tensor): A tensor that accumulates the count of MCC
-                                                score weighted across batches.
+        MCC score weighted (Tensor): A tensor that accumulates the count of MCC
+            score weighted across all the images.
+        total_images (Tensor): A tensor that accumulates the count of images.
 
     Methods:
         __init__(**kwargs): Initializes the MCC score weighted metric object.
-        update(preds: Tensor, target: Tensor): Updates the states with a new batch of
-                                               predictions and targets.
-        compute() -> Tensor: Computes the MCC score weighted over all batches.
+        update(preds: Tensor, target: Tensor): Updates the states with a new pair of
+                                               prediction and target.
+        compute() -> Tensor: Computes the MCC score weighted from the state of the
+            metric.
 
     Example:
-        >>> MCC_weighted_metric = MCC_weighted()
-        >>> for preds_batch, targets_batch in data_loader:
-        >>>     MCC_weighted_metric.update(preds_batch, targets_batch)
+        >>> MCC_weighted_metric = MCC_weighted_v1()
+        >>> for preds, targets in data_loader:
+        >>>     MCC_weighted_metric.update(preds, targets)
         >>> mcc_weighted = MCC_weighted_metric.compute()
     """
 
@@ -40,8 +44,8 @@ class MCC_weighted_v1(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the MCC score weighted counts with a new batch of
-        predictions and targets. It assumes both predictions as heatmap or binary
+        Updates the MCC score weighted counts with a new pair of
+        prediction and target. It assumes both predictions as heatmap or binary
         and binary targets.
 
         Args:
@@ -73,13 +77,15 @@ class MCC_weighted_v1(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the MCC weighted over all the batches averaging all the
+        Computes the MCC weighted averaging all the
         MCC wighted of each image.
 
         Returns:
-            Tensor: The computed MCC weighted over the full dataset.
-                    If the total number of images is zero,
-                    it returns 0.0 to avoid division by zero.
+            Tensor: The computed MCC weighted from the state of the metric.
+
+        Note:
+            If the total number of images is zero, it returns 0.0 to avoid division by
+            zero.
         """
         mcc_weighted = self.MCC_weighted.float()
         total_images = self.total_images.float()

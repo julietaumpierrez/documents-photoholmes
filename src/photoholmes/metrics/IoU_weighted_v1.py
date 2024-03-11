@@ -9,21 +9,24 @@ class IoU_weighted_v1(Metric):
     into account the value of the heatmap as a probability and uses weighted true
     positives, weighted false positives, weighted true negatives and weighted false
     negatives to calculate the IoU.
+    This class computes de mean weighted IoU from the state of the metric. It calculates
+    the weighted IoU score for each image and then averages to output a single result.
 
     Attributes:
-        IoU weighted (torch.Tensor): A tensor that accumulates the count of IoU weighted
-                                        across batches.
+        IoU weighted (Tensor): A tensor that accumulates the IoU weighted across
+            all the images.
+        total_images (Tensor): A tensor that accumulates the count of images.
 
     Methods:
         __init__(**kwargs): Initializes the IoU weighted metric object.
-        update(preds: Tensor, target: Tensor): Updates the states with a new batch of
-                                               predictions and targets.
-        compute() -> Tensor: Computes the IoU weighted over all batches.
+        update(preds: Tensor, target: Tensor): Updates the states with a new set of
+                                               prediction and target.
+        compute() -> Tensor: Computes the IoU weighted from the state of the metric.
 
     Example:
-        >>> IoU_weighted_metric = IoU_weighted()
-        >>> for preds_batch, targets_batch in data_loader:
-        >>>     IoU_weighted_metric.update(preds_batch, targets_batch)
+        >>> IoU_weighted_metric = IoU_weighted_v1()
+        >>> for pred, targets in data_loader:
+        >>>     IoU_weighted_metric.update(preds, targets)
         >>> iou_weighted = IoU_weighted_metric.compute()
     """
 
@@ -40,8 +43,8 @@ class IoU_weighted_v1(Metric):
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """
-        Updates the IoU weighted counts with a new batch of
-        predictions and targets. It assumes both predictions as heatmap or binary
+        Updates the IoU weighted counts with a new pair of
+        prediction and target. It assumes both predictions as heatmap or binary
         and binary targets.
 
         Args:
@@ -67,13 +70,14 @@ class IoU_weighted_v1(Metric):
 
     def compute(self) -> Tensor:
         """
-        Computes the IoU weighted over all the batches averaging all the
-        IoU wighted of each image.
+        Computes the IoU weighted score.
 
         Returns:
-            Tensor: The computed IoU weighted over the full dataset.
-                    If the total number of images is zero,
-                    it returns 0.0 to avoid division by zero.
+            Tensor: The computed IoU weighted score.
+
+        Note:
+            If the total number of images is zero, it returns 0.0 to avoid division by
+            zero.
         """
         IoU_weighted = self.IoU_weighted.float()
         total_images = self.total_images.float()

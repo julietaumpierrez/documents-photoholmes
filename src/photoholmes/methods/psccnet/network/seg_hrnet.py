@@ -14,7 +14,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-from photoholmes.methods.psccnet.config import PSCCArchConfig, StageConfig
+from photoholmes.methods.psccnet.config import PSCCNetArchConfig, StageConfig
 
 BN_MOMENTUM = 0.01
 logger = logging.getLogger(__name__)
@@ -323,7 +323,7 @@ blocks_dict: Dict[str, Union[Type[BasicBlock], Type[Bottleneck]]] = {
 
 
 class HighResolutionNet(nn.Module):
-    def __init__(self, config: PSCCArchConfig, **kwargs):
+    def __init__(self, config: PSCCNetArchConfig, **kwargs):
         super(HighResolutionNet, self).__init__()
 
         # stem net

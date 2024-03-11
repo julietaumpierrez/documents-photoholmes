@@ -1,5 +1,8 @@
 import logging
+<<<<<<< HEAD
 from pathlib import Path
+=======
+>>>>>>> 39333c6 (Benchmark/trufor)
 from typing import Any, Dict, List, Literal
 
 import typer
@@ -15,6 +18,52 @@ from photoholmes.utils.generic import load_yaml
 # TODO: add documentation for the CLI
 app = typer.Typer()
 logger = logging.getLogger(__name__)
+
+
+def run_benchmark(
+    method_name: MethodName,
+    method_config: str | dict,
+    dataset_name: DatasetName,
+    dataset_path: str,
+    metrics: List[str],
+    tampered_only: bool = False,
+    save_output: bool = False,
+    output_path: str = "output/",
+    device: str = "cpu",
+):
+    from photoholmes.benchmark.model import Benchmark
+    from photoholmes.datasets.dataset_factory import DatasetFactory
+    from photoholmes.methods.method_factory import MethodFactory
+    from photoholmes.metrics.metric_factory import MetricFactory
+
+    # Load method and preprocessing
+    method, preprocessing = MethodFactory.load(
+        method_name=method_name, config=method_config, device=device
+    )
+
+    # Load dataset
+    dataset = DatasetFactory.load(
+        dataset_name=dataset_name,
+        dataset_dir=dataset_path,
+        tampered_only=tampered_only,
+        transform=preprocessing,
+    )
+
+    metrics_objects = MetricFactory.load(metrics)
+
+    # Create Benchmark
+    benchmark = Benchmark(
+        save_output=save_output,
+        output_path=output_path,
+        device=device,
+    )
+
+    # Run Benchmark
+    benchmark.run(
+        method=method,
+        dataset=dataset,
+        metrics=metrics_objects,
+    )
 
 
 def run_benchmark(

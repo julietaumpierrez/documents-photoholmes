@@ -1,6 +1,6 @@
 # Derived from code provided by Marina Gardella, please refer to
 # https://ipolcore.ipol.im/demo/clientApp/demo.html?id=77777000341 for an online demo
-
+import logging
 from typing import List, Tuple
 
 import cv2
@@ -10,12 +10,23 @@ from numpy.typing import NDArray
 from scipy.fftpack import dct
 from scipy.stats import binom
 
+logger = logging.getLogger(__name__)
+
 
 def conv(img: NDArray, kernel: NDArray) -> NDArray:
     """
-    Input: img, kernel
-    Output: 2D convolution between img and kernel.
+    Performs a 2D convolution between an image and a kernel. The output is cropped
+    to remove the padding induced by the kernel, ensuring the output size matches
+    the input image size.
+
+    Args:
+        img (NDArray): input image as a 2D array.
+        kernel (NDArray): convolution kernel as a 2D array.
+
+    Returns:
+        NDArray: convolved image cropped to match the input image dimensions.
     """
+
     C = cv2.filter2D(img, -1, kernel)
     H = np.floor(np.array(kernel.shape) / 2).astype(int)
     C = (
@@ -28,13 +39,20 @@ def conv(img: NDArray, kernel: NDArray) -> NDArray:
 
 def valid_blocks_0(img: NDArray, w: int) -> NDArray:
     """
-    Computes a mask of valid blocks (i.e. not containing saturated pixels).
+    Computes a mask of valid blocks (not containing saturated pixels).
+
     mask[i,j] = 1 means that [i,j] is a valid block origin,
     mask[i,j] = 0 menas than the block with origin at [i,j] contains at
     least one saturated pixel, and therefore it is masked as non-valid.
-    Input: img, w (block side)
-    Output: mask
+
     See Alg. 1 in the paper
+
+    Args:
+        img (NDArray): input image.
+        w (int): side length of the square blocks.
+
+    Returns:
+        mask (NDArray): binary mask where 1 are valid blocks.
     """
     img_not_saturated = np.ones((img.shape[0], img.shape[1]))
     for ch in range(img.shape[2]):
@@ -50,10 +68,15 @@ def valid_blocks_0(img: NDArray, w: int) -> NDArray:
 
 def compute_valid_blocks_indices(img: NDArray, w: int) -> NDArray:
     """
-    Computes the indices of the valid blocks (i.e. not containing saturated
-                                              pixels).
-    Input: img, w (block side)
-    Output: list of indices
+    Computes the indices of the valid blocks (not containing saturated
+    pixels).
+
+    Args:
+        img (NDArray): image to compute indices on.
+        w (int): square block size.
+
+    Return:
+        NDArray: indices of the valid blocks
     """
     valid_blocks_mask = valid_blocks_0(img, w)
     blocks_list = valid_blocks_mask.reshape(-1)
@@ -64,11 +87,17 @@ def compute_valid_blocks_indices(img: NDArray, w: int) -> NDArray:
 def all_image_means(img: NDArray, w: int) -> NDArray:
     """
     Computes the means for all the wxw blocks in the image.
+    See Alg. 2 in the paper
+
     img_means[i,j,ch] is the mean of the wxw block with origin [i,j] for
     channel ch.
-    Input: img, w (block side)
-    Output: three-dimensional array cointaining the means
-    See Alg. 2 in the paper
+
+    Args:
+        img (NDArray): image to compute the means on.
+        w (int): side length of the square blocks.
+
+    Returns:
+        NDArray: 3D array containing the mean values of each block for each channel.
     """
     kernel = (1 / w**2) * np.ones((w, w))
     img_means = conv(img, kernel)
@@ -82,11 +111,17 @@ def sort_blocks_means(
     ch: int, img_means: NDArray, valid_blocks_indices: NDArray
 ) -> NDArray:
     """
-    Sorts valid_blocks_indices according to their mean intensity in
-    channel ch.
-    Input: channel ch, img_means, indices
-    Output: list of indices sorted according to the means in ch
+    Sorts valid blocks indices based on their mean intensity in a specific channel.
     See Alg 3. in the paper
+
+    Args:
+        ch (int): index of the channel.
+        img_means (NDArray): 3D array containing mean values for each block and channel.
+        valid_blocks_indices (NDArray): indices of valid blocks.
+
+    Returns:
+        NDArray: sorted indices of valid blocks based on mean intensity in the specified
+        channel.
     """
     means_aux = img_means[:, :, ch].reshape(-1)
     means = means_aux[valid_blocks_indices]
@@ -96,11 +131,14 @@ def sort_blocks_means(
 
 def get_T(w: int) -> int:
     """
-    Returns the threshold to define low-med frequencies according the block
-    size w.
-    Input: w (block side)
-    Output: T threshold to define low and medium frequencies
+    Returns the threshold for defining low-medium frequencies based on block size.
     See Alg. 6 in the paper
+
+    Args:
+        w (int): side length of the square blocks.
+
+    Returns:
+        int: threshold to separate low and medium frequencies.
     """
     if w == 3:
         return 3
@@ -111,31 +149,40 @@ def get_T(w: int) -> int:
     elif w == 8:
         return 9
     else:
-        print(f"unknown block side {w}")
+        logger.warning(f"Unknown block side {w}")
     return 0
 
 
 def get_T_mask(w: int) -> NDArray:
     """
-    Computes a mask that corresponds to the low-med frequencies according to
-    the block side w.
-    Input: w (block side)
-    Output: mask of size wxw corresponding to low-med frequencies
+    Computes a mask for low-medium frequency components based on block size.
     See Alg. 6 in the paper
+
+    Args:
+        w (int): side length of the square blocks.
+
+    Returns:
+        NDArray: binary mask indicating low-medium frequency components.
     """
     mask = np.zeros((w, w))
+    th = get_T(w)
+
     for i in range(w):
         for j in range(w):
-            if (0 != i + j) and (i + j < get_T(w)):
+            if (0 != i + j) and (i + j < th):
                 mask[i, j] = 1
     return mask
 
 
-def DCT_all_blocks(img_blocks: NDArray, w: int) -> NDArray:
+def DCT_all_blocks(img_blocks: NDArray) -> NDArray:
     """
     Computes the DCT II of all the wxw overlapping blocks in the image.
-    Input: img blocks, w (block side)
-    Output: DCT II of all image blocks
+
+    Args:
+        img_blocks (NDArray): input image blocks.
+
+    Returns:
+        NDArray: DCT II of all image blocks.
     """
     return dct(dct(img_blocks, axis=1, norm="ortho"), axis=2, norm="ortho")
 
@@ -144,8 +191,13 @@ def low_freq_DCT(DCTS: NDArray, T_mask: NDArray) -> NDArray:
     """
     Masks the high-frequency coefficients (given by T_mask) of the DCT II
     coefficients in DCTS.
-    Input: DCTS of all blocks, T mask
-    Output: Masked DCT
+
+    Args:
+        DCTS (NDArray): DCT II coefficients of all blocks.
+        T_mask (NDArray): binary mask indicating low-medium frequency components.
+
+    Returns:
+        NDArray: masked DCT II coefficients.
     """
     tile_T_mask = np.tile(T_mask, (DCTS.shape[0], 1, 1))
     return np.multiply(DCTS.astype(np.float32), tile_T_mask.astype(np.float32))
@@ -155,11 +207,16 @@ def compute_low_freq_var(img_blocks: NDArray, w: int) -> NDArray:
     """
     Computes the variance of the low-med frequencies of the DCT coefficients
     (given by T_mask), on the wxw blocks given in img_blocks.
-    Input: img blocks, w (block side)
-    Output: list of low-med frequencies variance for all image blocks
     See Alg. 7 in the paper
+
+    Args:
+        img_blocks (NDArray): input image blocks.
+        w (int): side length of the square blocks.
+
+    Returns:
+        NDArray: array of low-med frequencies variance for all image blocks.
     """
-    DCTS = DCT_all_blocks(img_blocks, w)
+    DCTS = DCT_all_blocks(img_blocks)
     T_mask = get_T_mask(w)
     LF = low_freq_DCT(DCTS, T_mask)
     LF_2 = LF**2
@@ -171,9 +228,14 @@ def update_samples_per_bin(b: int, num_blocks: int) -> int:
     """
     Updates the number of samples per bin so that each bin has roughly the
     same amount of blocks.
-    Input: samples per bin b, number of samples
-    Output: updated number of samples per bin
     See Alg. 4 in the paper
+
+    Args:
+        b (int): number of samples per bin.
+        num_blocks (int): total number of blocks.
+
+    Returns:
+        int: updated number of samples per bin.
     """
     num_bins = int(round(num_blocks / b))
     if num_bins == 0:
@@ -188,10 +250,16 @@ def bin_block_list(
     """
     Computes the list of blocks corresponding to bin Bin, having b elements
     The last Bin might have more elements.
-    Input: number of bins, a bin, blocks sorted by means, number of
-    samples per bin
-    Output: list of blocks in the given bin
     See Alg. 5 in the paper
+
+    Args:
+        num_bins (int): number of bins.
+        Bin (int): index of the bin.
+        blocks_sorted_means (NDArray): blocks sorted by mean intensity.
+        b (int): number of samples per bin.
+
+    Returns:
+        NDArray: array of blocks in the given bin.
     """
     num_blocks = len(blocks_sorted_means)
 
@@ -208,11 +276,17 @@ def select_blocks_VL(
     """
     Selects the n percentile of blocks in blocks_in_bin having the lowest
     low_freq_var.
-    Input: a percentile n, the number of samples per bin b, the variance of
-    the blocks in low-med frequencies, the blocks in the bin
-    Output: the int(b x n) blocks having the lowest variance in low-med
-    frequencies
     See Alg. 8 in the paper
+
+    Args:
+        b (int): number of samples per bin.
+        n (float): percentile.
+        low_freq_var (NDArray): array of low-med frequencies variance for all
+            image blocks.
+        blocks_in_bin (NDArray): array of blocks in the given bin.
+
+    Returns:
+        NDArray: array of blocks in the given bin, sorted according to their variance.
     """
     VL_bin = low_freq_var[blocks_in_bin]
     N = int(b * n)
@@ -223,11 +297,16 @@ def select_blocks_VL(
 def std_blocks(img_blocks: NDArray, select_low_freq_var: NDArray) -> NDArray:
     """
     Sorts the blocks in select_low_freq_var according to their std.
-    Input: img blocks, list of blocks having the lowest variance in low-med
-    frequencies
-    Output: list of blocks having the lowest variance in low-med
-    frequencies sorted according to their std
     See Alg. 10 in the paper
+
+    Args:
+        img_blocks (NDArray): input image blocks.
+        select_low_freq_var (NDArray): array of blocks having the lowest variance in
+            low-med frequencies.
+
+    Returns:
+        NDArray: array of blocks with the lowest variance in low-med frequencies
+            sorted according to their std.
     """
     stds_blocks = np.std(img_blocks[select_low_freq_var], axis=(1, 2))
     stds_sorted_blocks = np.array(select_low_freq_var)[np.argsort(stds_blocks)]
@@ -239,11 +318,16 @@ def bin_is_valid(b: int, n: float, m: float, stds_sorted_blocks: NDArray) -> boo
     Check if the bin is valid: that is, if the number of flat blocks
     (blocks having standard deviation equal to zero) are more than the
     m percentile.
-    Input: number of samples per bin b, two percentiles n and m, the list
-    of blocks having the lowest variance in low-med frequencies sorted
-    according to their std
-    Output: boolean variable, True if block is valid, False if not
     See Alg. 9 in the paper
+
+    Args:
+        b (int): number of samples per bin.
+        n (float): percentile for selecting blocks based on the lowest energy in
+            low frequencies.
+        m (float): percentile for selecting blocks based on the lowest standard
+            deviation.
+        stds_sorted_blocks (NDArray): array of blocks with the lowest variance in
+            low-med frequencies sorted according to their std.
     """
     M = int(b * n * m)
     if len(np.where(stds_sorted_blocks == 0)[0]) < M:
@@ -252,12 +336,20 @@ def bin_is_valid(b: int, n: float, m: float, stds_sorted_blocks: NDArray) -> boo
         return False
 
 
-def compute_neighbour_blocks(index: List, img: NDArray, W: int) -> List:
+def compute_neighbour_blocks(
+    index: List, img: NDArray, W: int
+) -> List[Tuple[int, int]]:
     """
     Given a cell (index), compute the neighbour cells according to the
     4- connectivity criteria.
-    Input: an index, img, cell side W
-    Output: list of neighbour cells
+
+    Args:
+        index (List): index of the cell.
+        img (NDArray): input image.
+        W (int): cell side length.
+
+    Returns:
+        List[Tuple[int, int]]: list of neighbour cells.
     """
     neighbours = []
     if index[0] >= 1 and index[0] < int(
@@ -283,9 +375,15 @@ def compute_neighbour_blocks(index: List, img: NDArray, W: int) -> List:
 
 def bin_prob(k: int, n: int, p: float) -> float:
     """
-    P(X = k) where X~ Bin(n, p).
-    Input: k, n, p parameters of Binomial Tail
-    Output: P(X = k)
+    Computes the binomial probability P(X = k) where X~ Bin(n, p).
+
+    Args:
+        k (int): number of successes.
+        n (int): number of trials.
+        p (float): probability of success.
+
+    Returns:
+        float: binomial probability.
     """
     arr = mpmath.binomial(n, k)
     pk = mpmath.power(p, k)
@@ -297,12 +395,20 @@ def bin_prob(k: int, n: int, p: float) -> float:
 
 def binom_tail(K: int, N: int, w: int, m: float) -> float:
     """
-    P(x >= np.floor(K/w**2)) where X~ Bin(np.ceil(N/w**2), m). If the precision
-    of scipy is not high enough, the computation is done using mpmath library
+    Computes P(x >= np.floor(K/w**2)) where X~ Bin(np.ceil(N/w**2), m).
+
+    Args:
+        K (int): number of successes.
+        N (int): number of trials.
+        w (int): side length of the square blocks.
+        m (float): probability of success.
+
+    Returns:
+        float: binomial Tail.
+
+    Note:
+        If the precision of scipy is not high enough, the computation is done using mpmath library
     (see bin_prob function)
-    Input: K, N, w, m parameters of Binomial Tail according to the NFA formula of the
-    paper
-    Output: Binomial Tail
     """
     if 1 - binom.cdf((np.floor(K / w**2)) - 1, np.ceil(N / w**2), m) != 0:
         return 1 - binom.cdf((np.floor(K / w**2)) - 1, np.ceil(N / w**2), m)
@@ -319,8 +425,18 @@ def binom_tail(K: int, N: int, w: int, m: float) -> float:
 def NFA(img: NDArray, R: int, K: int, N: int, w: int, m: float, W: int) -> float:
     """
     Computes the NFA of a region R.
-    Input: Image subject to analysis and parameters for the calculation of the NFA
-    Output: NFA
+
+    Args:
+        img (NDArray): image subject to analysis.
+        R (int): region size.
+        K (int): number of successes.
+        N (int): number of trials.
+        w (int): side length of the square blocks.
+        m (float): probability of success.
+        W (int): cell size for NFA computation.
+
+    Returns:
+        float: NFA.
     """
     Nx, Ny = img.shape[:2]
     PR = (0.316915 / R) * (4.062570**R)
@@ -335,8 +451,17 @@ def seed_crit_satisfied(
     Checks if the cell at (i,j) satisfies the seed criteria, meaning that
     the proportion of blocks in L with respect to the blocks in V is bigger
     than m and that the cell has not already been detected.
-    Input: i and j indices, all_blocks, red_blocks, m, mask
-    Output: boolean variable, True if cell satisfies the seed criteria.
+
+    Args:
+        i (int): row index.
+        j (int): column index.
+        all_blocks (NDArray): array of all blocks.
+        red_blocks (NDArray): array of red blocks.
+        m (float): probability of success.
+        mask (NDArray): binary mask indicating valid blocks.
+
+    Returns:
+        bool: True if the cell satisfies the seed criteria, False if not.
     """
     if all_blocks[i, j] > 0:
         crit_seed = red_blocks[i, j] / all_blocks[i, j] - m
@@ -361,9 +486,19 @@ def growing_crit_satisfied(
     """
     Checks if a neighbour cell satisfies the growing critera to be added
     to R, namely, if it improves the NFA value of the region.
-    Input: all_blocks, red_blocks, neighbour, K_R, N_R, w, m, R_fin
-    # FIXME: what is xR_fin?
-    Output: boolean variable, True if cell satisfies the growing criteria.
+
+    Args:
+        all_blocks (NDArray): array of all blocks.
+        red_blocks (NDArray): array of red blocks.
+        neighbour (NDArray): neighbour cell.
+        K_R (int): number of successes.
+        N_R (int): number of trials.
+        w (int): side length of the square blocks.
+        m (float): probability of success.
+        R_fin (int): final region size.
+
+    Returns:
+        bool: True if the neighbour cell satisfies the growing criteria, False if not.
     """
     N_B = all_blocks[neighbour[0], neighbour[1]]
     K_B = red_blocks[neighbour[0], neighbour[1]]
@@ -375,12 +510,22 @@ def growing_crit_satisfied(
         return False
 
 
-def compute_save_NFA(
+def compute_NFA(
     img: NDArray, w: int, W: int, m: float, all_blocks: NDArray, red_blocks: NDArray
 ) -> NDArray:
     """
-    computes the NFA on WxW macroblocks and saves the the result as a txt file.
-    See Alg. 12 in the paper
+    Computes the NFA on WxW macroblocks.
+
+    Args:
+        img (NdArray): image to run on.
+        w (int): block size.
+        W (int): cell size for NFA computation.
+        m (float): percentile of blocks with the lowest standard deviation.
+        all_blocks (NDArray): array of all blocks.
+        red_blocks (NDArray): array of red blocks.
+
+    Returns:
+        NdArray: mask of the detected cells.
     """
     thresh = 1
     Nx, Ny = img.shape[:2]
@@ -428,7 +573,21 @@ def compute_output(
     img: NDArray, w: int, W: int, m: float, V: List, S: List
 ) -> Tuple[NDArray, NDArray]:
     """
-    computes the outputs: output distributions, mask and NFA file
+    Computes the output of the Noisesniffer algorithm, including the binary mask
+    indicating suspected tampering areas and the image with suspected areas painted
+    for visualization.
+
+    Args:
+        img (NDArray): image subject to analysis.
+        w (int): side length of the square blocks.
+        W (int): cell size for NFA computation.
+        m (float): probability of success.
+        V (List): list of all blocks.
+        S (List): list of red blocks.
+
+    Returns:
+        binary_mask (NDArray): a binary mask indicating suspected areas of tampering.
+        painted_image (NDArray): the image with the lowest std patches painted red.
     """
     Nx, Ny = img.shape[:2]
     all_blocks = np.zeros((Nx // W + 1, Ny // W + 1))
@@ -445,5 +604,5 @@ def compute_output(
         pos_y = int(pos) % aux
         red_blocks[pos_x // W, pos_y // W] += 1
         img_paint[pos_x : pos_x + w, pos_y : pos_y + w, :] = (255, 0, 0)
-    mask = compute_save_NFA(img, w, W, m, all_blocks, red_blocks)
+    mask = compute_NFA(img, w, W, m, all_blocks, red_blocks)
     return mask, img_paint

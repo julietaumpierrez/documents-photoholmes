@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Union
 
 import torch
 import torch.nn as nn
@@ -6,18 +6,31 @@ from torch.nn import functional as F
 from torch_kmeans import KMeans
 from torchvision.transforms.functional import resize
 
-from photoholmes.methods.base import BaseTorchMethod
+from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
 
 from .utils import load_weights
 
 
 class Focal(BaseTorchMethod):
+    """
+    Implementation of Focal [H. Wu and Y. Chen and J. Zhou, 2023].
+
+    Focal is an end to end neural network.
+    """
+
     def __init__(
         self,
         net_list: List[Literal["HRNet", "ViT"]],
         weights: List[Union[str, Dict[str, Any]]],
-        device: Optional[str] = "cpu",
+        device: str = "cpu",
     ):
+        """
+        Attributes:
+            net_list (List[str]): list of networks to be used in the ensemble.
+            weights (List[str | dict]): list of weights for the networks in the
+                ensemble.
+            device (str): device to run the model on.
+        """
         super().__init__()
 
         self.network_list = nn.ModuleList()
@@ -40,14 +53,20 @@ class Focal(BaseTorchMethod):
                 self.network_list.append(net)
 
             self.clustering = KMeans(verbose=False)
-        self.device = torch.device(device)
-        self.method_to_device(device)
+        self.to_device(device)
+        self.eval()
 
     def forward(self, x: torch.Tensor):
+        """
+        Forward pass of the network.
+
+        Args:
+            x (torch.Tensor): input image of shape (B, C, H, W)
+        """
         Fo = self.network_list[0](x)
         Fo = Fo.permute(0, 2, 3, 1)
 
-        B, H, W, C = Fo.shape
+        _, H, W, _ = Fo.shape
         Fo = F.normalize(Fo, dim=3)
         Fo_list = [Fo]
 
@@ -62,13 +81,24 @@ class Focal(BaseTorchMethod):
 
         return Fo
 
-    def predict(self, image: torch.Tensor):
+    def predict(self, image: torch.Tensor):  # type: ignore[override]
+        """
+        Run a prediction over a preprocessed image. You can use the pipeline
+        `focal_preprocessing` provied in `photoholmes.methods.focal.preprocessing`.
+
+        Args:
+            image (torch.Tensor): input image of shape (C, H, W)
+
+        Returns:
+            Tensor: binary mask of shape (H, W)
+        """
         if len(image.shape) != 3:
             raise ValueError("Input image should be of shape (C, H, W)")
         _, im_H, im_W = image.shape
 
-        # FIXME don't want to add this as a preprocessing step
-        # since it shouldnt be there in the first place.
+        # This operation destroys traces that typically indicate the presence of a
+        # forgery. This indicates the method is most likely overfitted to
+        # the dataset or to semantic forgery.
         image = resize(image, [1024, 1024])
 
         with torch.no_grad():
@@ -84,8 +114,13 @@ class Focal(BaseTorchMethod):
         Lo = Lo.view(H, W)
         mask = resize(Lo.unsqueeze(0), [im_H, im_W]).squeeze(0).float()
 
-        return {"mask": mask}
+        return mask
 
-    def method_to_device(self, device: str):
-        self.to(device)
-        self.device = torch.device(device)
+    def benchmark(  # type: ignore[override]
+        self, image: torch.Tensor
+    ) -> BenchmarkOutput:
+        """
+        Wrapper of the `predict` method to be used in the benchmark pipeline.
+        """
+        mask = self.predict(image)
+        return {"mask": mask, "heatmap": None, "detection": None}

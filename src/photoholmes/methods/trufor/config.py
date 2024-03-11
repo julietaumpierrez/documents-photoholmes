@@ -1,23 +1,39 @@
-from dataclasses import dataclass
 from typing import Literal, Optional, Sequence, Union
 
-
-@dataclass
-class TruForConfig:
-    backbone: Literal["mit_b2"] = "mit_b2"
-    decoder: str = "MLPDecoder"
-    num_classes: int = 2
-    decoder_embed_dim: int = 512
-    preprocess: str = "imagenet"
-    bn_eps: float = 0.001
-    bn_momentum: float = 0.01
-    detection: Optional[str] = "confpool"
-    confidence: bool = True
-    mods: Sequence[Literal["NP++", "RGB"]] = ("NP++", "RGB")
-
-    confidence_backbone: Optional[Literal["mit_b2"]] = None
-
-    weights: Optional[Union[str, dict]] = None
+from pydantic import BaseModel
 
 
-PRETRAINED_CONFIG = TruForConfig()
+class TruForArchConfig(BaseModel):
+    backbone: Literal["mit_b2"]
+    decoder: str
+    num_classes: int
+    decoder_embed_dim: int
+    preprocess: str
+    bn_eps: float
+    bn_momentum: float
+    detection: Optional[str]
+    confidence: bool
+    mods: Sequence[Literal["NP++", "RGB"]]
+
+    confidence_backbone: Optional[Literal["mit_b2"]]
+
+
+pretrained_arch = TruForArchConfig(
+    backbone="mit_b2",
+    decoder="MLPDecoder",
+    num_classes=2,
+    decoder_embed_dim=512,
+    preprocess="imagenet",
+    bn_eps=0.001,
+    bn_momentum=0.01,
+    detection="confpool",
+    confidence=True,
+    mods=["NP++", "RGB"],
+    confidence_backbone=None,
+)
+
+
+class TruForConfig(BaseModel):
+    arch: Union[TruForArchConfig, Literal["pretrained"]] = "pretrained"
+    weights: Optional[Union[str, dict]]
+    use_confidence: bool = True

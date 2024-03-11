@@ -5,6 +5,7 @@ import torch
 from torch import Tensor
 
 from photoholmes.preprocessing.base import PreprocessingTransform
+from photoholmes.preprocessing.image import GetImageSize
 from photoholmes.preprocessing.pipeline import PreProcessingPipeline
 
 
@@ -32,7 +33,6 @@ class CatnetPreprocessing(PreprocessingTransform):
         image: Tensor,
         dct_coefficients: Tensor,
         qtables: Tensor,
-        original_image_size: Tuple[int, int],
         **kwargs,
     ) -> Dict[str, Union[Tensor, Tuple[int, int]]]:
         h, w = image.shape[-2:]
@@ -67,7 +67,9 @@ class CatnetPreprocessing(PreprocessingTransform):
 
         x = torch.concatenate((image, t_dct_vols))
 
-        return {"x": x, "qtable": qtables, "original_image_size": original_image_size}
+        return {"x": x, "qtable": qtables, **kwargs}
 
 
-catnet_preprocessing = PreProcessingPipeline(transforms=[CatnetPreprocessing()])
+catnet_preprocessing = PreProcessingPipeline(
+    transforms=[GetImageSize(), CatnetPreprocessing()]
+)
