@@ -25,9 +25,9 @@ class Zero(BaseMethod):
 
     def __init__(self, no_vote: int = -1, **kwargs) -> None:
         """
-        Attributes:
-            no_vote (int): value to be used as no vote. Default is -1.
-            kwargs: additional arguments to be passed to the BaseMethod class.
+        Args:
+            no_vote (int): Value to be used as no vote. Default is -1.
+            kwargs: Additional arguments to be passed to the BaseMethod class.
         """
         self.no_vote = no_vote
         super().__init__(**kwargs)
@@ -38,10 +38,10 @@ class Zero(BaseMethod):
         methods is run over the luminance channel.
 
         Args:
-            image (np.ndarray): input image.
+            image (np.ndarray): Input image.
 
         Returns:
-            Tuple[NDArray, NDArray, int]: forgery mask, votes and main grid.
+            Tuple[NDArray, NDArray, int]: Forgery mask, votes and main grid.
         """
         luminance = image[..., 0]
         votes = self.compute_grid_votes_per_pixel(luminance)
@@ -68,10 +68,10 @@ class Zero(BaseMethod):
         Compute the grid votes per pixel.
 
         Args:
-            luminance (np.ndarray): input luminance channel.
+            luminance (np.ndarray): Input luminance channel.
 
         Returns:
-            np.ndarray: grid votes per pixel.
+            np.ndarray: Grid votes per pixel.
         """
         Y, X = luminance.shape
         zeros = np.zeros_like(luminance, dtype=np.int32)
@@ -105,11 +105,11 @@ class Zero(BaseMethod):
         Detects the main estimated grid.
 
         Args:
-            votes (np.ndarray): grid votes per pixel. Each pixel votes 1 of the 64
+            votes (np.ndarray): Grid votes per pixel. Each pixel votes 1 of the 64
                 possible grids.
 
         Returns:
-            int: main detected grid.
+            int: Main detected grid.
         """
         Y, X = votes.shape
         grid_votes = np.zeros(64)

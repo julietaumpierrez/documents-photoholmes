@@ -41,14 +41,14 @@ class Noisesniffer(BaseMethod):
         **kwargs,
     ):
         """
-        Attributes:
-            w (int): block size for noise analysis (default: 3).
-            b (int): number of blocks per bin for statistical analysis (default: 20000).
-            n (float): percentile for selecting blocks with the lowest energy in low
+        Args:
+            w (int): Block size for noise analysis (default: 3).
+            b (int): Number of blocks per bin for statistical analysis (default: 20000).
+            n (float): Percentile for selecting blocks with the lowest energy in low
                     frequencies (default: 0.1).
-            m (float): percentile for selecting blocks with the lowest standard
+            m (float): Percentile for selecting blocks with the lowest standard
                     deviation (default: 0.5).
-            W (int): cell size for NFA (Number of False Alarms) computation for region
+            W (int): Cell size for NFA (Number of False Alarms) computation for region
                     growing (default: 100).
         """
         super().__init__(**kwargs)
@@ -73,18 +73,18 @@ class Noisesniffer(BaseMethod):
         Run Noisesniffer in one channel of input image.
 
         Args:
-            ch (int): index of the channel to be processed.
-            n (float): percentile of blocks with the lowest energy in low frequencies.
-            m (float): percentile of blocks with the lowest standard deviation.
-            image (NDArray): input image array.
-            w (int): block size.
-            img_means (NDArray): means of all blocks in the image.
-            valid_blocks_indices (NDArray): indices of blocks considered valid.
-            b (int): number of blocks per bin.
+            ch (int): Index of the channel to be processed.
+            n (float): Percentile of blocks with the lowest energy in low frequencies.
+            m (float): Percentile of blocks with the lowest standard deviation.
+            image (NDArray): Input image array.
+            w (int): Block size.
+            img_means (NDArray): Means of all blocks in the image.
+            valid_blocks_indices (NDArray): Indices of blocks considered valid.
+            b (int): Number of blocks per bin.
 
         Returns:
-            valid_blocks_indeices (List): list of valid blocks in the current channel.
-            subset (List): list of selected blocks.
+            valid_blocks_indeices (List): List of valid blocks in the current channel.
+            subset (List): List of selected blocks.
         """
         V = []
         S = []
@@ -123,12 +123,12 @@ class Noisesniffer(BaseMethod):
         Run Noisesniffer on an image.
 
         Args:
-            - image (NDArray): input image.
+            - image (NDArray): Input image.
 
         Returns:
-            - mask (NDArray): mask of detected forgeries.
-            - detection (float): detection score.
-            - img_painted (NDArray): image with lowest standard deviation blocks painted
+            - mask (NDArray): Mask of detected forgeries.
+            - detection (float): Detection score.
+            - img_painted (NDArray): Image with lowest standard deviation blocks painted
                 red.
         """
         image = image.astype(float)
@@ -157,7 +157,11 @@ class Noisesniffer(BaseMethod):
 
     def benchmark(self, image: NDArray) -> BenchmarkOutput:  # type: ignore[override]
         """
-        Wrapper for the predict method for the benchmark
+        Benchmarks the Noisesniffer method using the provided image.
+        Args:
+            image (Tensor): Input image tensor.
+        Returns:
+            BenchmarkOutput: Contains the mask and detection and placeholder for heatmap.
         """
         mask, _ = self.predict(image)
 

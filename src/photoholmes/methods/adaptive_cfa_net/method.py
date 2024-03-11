@@ -1,4 +1,5 @@
-# code extracted from https://github.com/qbammey/adaptive_cfa_forensics/blob/master/src/structure.py
+# Code derived from
+# https://github.com/qbammey/adaptive_cfa_forensics/blob/master/src/structure.py
 # ------------------------------------------------------------------------------
 # Written by Quentin Bammey (quentin.bammey@ens-paris-saclay.fr)
 # ------------------------------------------------------------------------------
@@ -216,7 +217,14 @@ class AdaptiveCFANet(BaseTorchMethod):
             self.init_weights()
 
     def load_model(self, arch_config: AdaptiveCFANetArchConfig):
-        # Initialize DirFullDil for the SkipDoubleDirFullDil using config
+        """
+        Initialize the network architecture using the provided configuration.
+
+        Args:
+            arch_config (AdaptiveCFANetArchConfig): Configuration for the network
+                architecture.
+        """
+        # Initialize DirFullDil using config
         conv1_config = arch_config.skip_double_dir_full_dil_config.convolutions_1
         conv2_config = arch_config.skip_double_dir_full_dil_config.convolutions_2
         self.spatial = SkipDoubleDirFullDil(
@@ -279,6 +287,9 @@ class AdaptiveCFANet(BaseTorchMethod):
         self.grids = SeparateAndPermutate()
 
     def init_weights(self):
+        """
+        Initialize the network weights.
+        """
         logger.info("=> init weights from normal distribution")
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -288,6 +299,14 @@ class AdaptiveCFANet(BaseTorchMethod):
                 nn.init.constant_(m.bias, 0)
 
     def forward(self, x, block_size=32):
+        """
+        Forward pass through the network.
+        Args:
+            x (Tensor): Input image tensor.
+            block_size (int): Size of the image blocks. Default is 32.
+        Returns:
+            Tensor: Output tensor.
+        """
         x = self.spatial(x)
         x = self.pixelwise(x)
         x = self.grids(x)
@@ -297,7 +316,14 @@ class AdaptiveCFANet(BaseTorchMethod):
 
     @torch.no_grad()
     def predict(self, image: Tensor, image_size: Tuple[int, int]) -> Tensor:
-
+        """
+        Runs method for the input image.
+        Args:
+            image (Tensor): Input image tensor.
+            image_size (Tuple[int, int]): Original image size.
+        Returns:
+            Heatmap (Tensor): Predicted heatmap.
+        """
         image = image.to(self.device)
         if image.ndim == 3:
             image = image.unsqueeze(0)
@@ -323,6 +349,15 @@ class AdaptiveCFANet(BaseTorchMethod):
         return upscaled_heatmap
 
     def benchmark(self, image: Tensor, image_size: Tuple[int, int]) -> BenchmarkOutput:
+        """
+        Benchmarks the Adaptive CFA Net method using the provided image and size.
+        Args:
+            image (Tensor): Input image tensor.
+            image_size (Tuple[int, int]): Original image size.
+        Returns:
+            BenchmarkOutput: Contains the heatmap and placeholders for mask and
+            detection.
+        """
         heatmap = self.predict(image, image_size)
         return {"heatmap": heatmap, "mask": None, "detection": None}
 

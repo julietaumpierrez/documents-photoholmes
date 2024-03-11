@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Literal, Union
+# Code derived from
+# https://github.com/HighwayWu/FOCAL/tree/main
+from typing import Any, Dict, TypedDict, Union
 
 import torch
 import torch.nn as nn
@@ -11,36 +13,42 @@ from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
 from .utils import load_weights
 
 
+class FocalWeights(TypedDict):
+    ViT: Union[str, Dict[str, Any]]
+    HRNet: Union[str, Dict[str, Any]]
+
+
 class Focal(BaseTorchMethod):
     """
-    Implementation of Focal [H. Wu and Y. Chen and J. Zhou, 2023].
+    Implementation of Focal method [Wu et al., 2023].
 
     Focal is an end to end neural network.
     """
 
     def __init__(
         self,
-        net_list: List[Literal["HRNet", "ViT"]],
-        weights: List[Union[str, Dict[str, Any]]],
+        weights: FocalWeights,
         device: str = "cpu",
+        **kwargs,
     ):
         """
-        Attributes:
-            net_list (List[str]): list of networks to be used in the ensemble.
-            weights (List[str | dict]): list of weights for the networks in the
-                ensemble.
-            device (str): device to run the model on.
+        Args:
+            weights (FocalWeights): Weights for the Focal model. The weights
+                should be a dictionary with keys "ViT" and "HRNet". The values
+                should be the path to the weights file or a dictionary with
+                the weights.
+            device (str): Device to run the model on.
         """
-        super().__init__()
+        super().__init__(**kwargs)
 
         self.network_list = nn.ModuleList()
 
-        for net_name, w in zip(net_list, weights):
+        for net_name, w in weights.items():
             if net_name == "HRNet":
                 from .models.hrnet import HRNet
 
                 net = HRNet()
-                load_weights(net, w)
+                load_weights(net, w)  # type: ignore[arg-type]
 
                 self.network_list.append(net)
 
@@ -48,9 +56,11 @@ class Focal(BaseTorchMethod):
                 from .models.vit import ImageEncoderViT
 
                 net = ImageEncoderViT()
-                load_weights(net, w)
+                load_weights(net, w)  # type: ignore[arg-type]
 
                 self.network_list.append(net)
+            else:
+                raise ValueError(f"Unknown network {net_name}")
 
             self.clustering = KMeans(verbose=False)
         self.to_device(device)
@@ -61,7 +71,9 @@ class Focal(BaseTorchMethod):
         Forward pass of the network.
 
         Args:
-            x (torch.Tensor): input image of shape (B, C, H, W)
+            x (torch.Tensor): Input image of shape (B, C, H, W)
+        Returns:
+            Tensor (torch.Tensor): Output of the network
         """
         Fo = self.network_list[0](x)
         Fo = Fo.permute(0, 2, 3, 1)
@@ -87,10 +99,10 @@ class Focal(BaseTorchMethod):
         `focal_preprocessing` provied in `photoholmes.methods.focal.preprocessing`.
 
         Args:
-            image (torch.Tensor): input image of shape (C, H, W)
+            image (torch.Tensor): Input image of shape (C, H, W)
 
         Returns:
-            Tensor: binary mask of shape (H, W)
+            Tensor: Binary mask of shape (H, W)
         """
         if len(image.shape) != 3:
             raise ValueError("Input image should be of shape (C, H, W)")
@@ -99,7 +111,7 @@ class Focal(BaseTorchMethod):
         # This operation destroys traces that typically indicate the presence of a
         # forgery. This indicates the method is most likely overfitted to
         # the dataset or to semantic forgery.
-        image = resize(image, [1024, 1024])
+        image = resize(image, [1024, 1024]).to(self.device)
 
         with torch.no_grad():
             Fo = self.forward(image[None, :])
@@ -120,7 +132,12 @@ class Focal(BaseTorchMethod):
         self, image: torch.Tensor
     ) -> BenchmarkOutput:
         """
-        Wrapper of the `predict` method to be used in the benchmark pipeline.
+        Benchmarks the Focal method using the provided image.
+        args:
+            image (Tensor): Input image tensor.
+        returns:
+            BenchmarkOutput: Contains the mask and placeholders for heatmap and
+            detection.
         """
         mask = self.predict(image)
         return {"mask": mask, "heatmap": None, "detection": None}
