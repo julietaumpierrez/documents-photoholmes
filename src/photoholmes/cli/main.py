@@ -1,10 +1,11 @@
 import logging
+from pathlib import Path
 from typing import Optional
 
 import typer
 from typing_extensions import Annotated
 
-from photoholmes.methods.registry import MethodName
+from photoholmes.methods import MethodRegistry
 
 logging.basicConfig()
 
@@ -14,7 +15,7 @@ app = typer.Typer()
 @app.command(name="run", help="Run a method on an image")
 def run_method_cli(
     method: Annotated[
-        MethodName,
+        MethodRegistry,
         typer.Argument(help="Method to run the image through.", case_sensitive=False),
     ],
     image_path: str,
@@ -37,16 +38,36 @@ def run_method_cli(
 
 
 @app.command(name="adapt-weights", help="Adapt weights for a photoholmes method")
-def run_adapt_weights(method: MethodName, weights_path: str, out_path: str):
-    match method:
-        case MethodName.EXIF_AS_LANGUAGE:
-            from photoholmes.methods.exif_as_language.prune_original_weights import (
-                prune_original_weights,
-            )
+def run_adapt_weights(method: MethodRegistry, weights_path: str, out_path: str):
+    if method == MethodRegistry.EXIF_AS_LANGUAGE:
+        from photoholmes.methods.exif_as_language.prune_original_weights import (
+            prune_original_weights,
+        )
 
-            prune_original_weights(weights_path, out_path)
-        case _:
-            logging.info("No adaptation needed for this method.")
+        prune_original_weights(weights_path, out_path)
+    elif method == MethodRegistry:
+        pass
+    else:
+        logging.info("No adaptation needed for this method.")
+
+
+@app.command(name="download-weights", help="Automatic weight download for a method")
+def run_download_weights(
+    method: MethodRegistry,
+    weight_folder_path: Annotated[
+        Path, typer.Argument(help="Path to weight folder.")
+    ] = Path("weights"),
+):
+    if method == MethodRegistry.PSCCNET:
+        from .download_weights import download_focal_weights
+
+        download_focal_weights(weight_folder_path / "psccnet")
+    elif method == MethodRegistry.EXIF_AS_LANGUAGE:
+        from .download_weights import download_exif_weights
+
+        download_exif_weights(weight_folder_path / "exif_as_language")
+    else:
+        logging.info("No weights download for this method.")
 
 
 @app.command(name="health", help="test the cli is working.")
