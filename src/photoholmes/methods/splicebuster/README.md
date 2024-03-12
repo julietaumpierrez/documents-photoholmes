@@ -1,8 +1,8 @@
 # Splicebuster: a new blind image splicing detector
 
-This is the implementation of the [Splicbuster](https://ieeexplore.ieee.org/abstract/document/7368565) paper. The original implementation could be found [here](https://www.grip.unina.it/download/prog/Splicebuster/).
+This is the implementation of the method by Cozzolino et al. that can be found [here](https://ieeexplore.ieee.org/abstract/document/7368565) paper. 
 
-The code contained in this library was derived from [the original implementation](https://www.grip.unina.it/download/prog/Splicebuster/) and from a code provided by Marina Gardella, Quentin Bammey and Tina Nikoukhah. #FIXME
+The code contained in this library was derived from [the original implementation](https://www.grip.unina.it/download/prog/Splicebuster/) and from a code provided by Marina Gardella, Quentin Bammey and Tina Nikoukhah, making only minor changes to fit the PhotoHolmes library structure. 
 
 ## Description
 
@@ -18,20 +18,29 @@ Finally, the heatmap is produced by studying the relation between the Mahalanobi
 
 ## Usage
 
-Add later usage of method 
+```python
+from photoholmes.methods.splicebuster import Splicebuster, splicebuster_preprocessing
 
-## Results on benchmarking dataset
+# Read an image
+from photoholmes.utils.image import read_image
+path_to_image = "path_to_image"
+image = read_image(path_to_image)
 
-Add results of all metrics in our own benchmarking dataset
+# Assign the image to a dictionary and preprocess the image
+image_data = {"image": image}
+input = splicebuster_preprocessing(**image_data)
 
-## Results on common datasets
+# Declare the method
+method = Splicebuster()
 
-Add results on common datasets 
+# Use predict to get the final result
+output = method.predict(**input)
+```
 
 ## Citation
 
 ```tex
-@INPROCEEDINGS{7368565,
+@INPROCEEDINGS{Splicebuster,
   author={Cozzolino, Davide and Poggi, Giovanni and Verdoliva, Luisa},
   booktitle={2015 IEEE International Workshop on Information Forensics and Security (WIFS)}, 
   title={Splicebuster: A new blind image splicing detector}, 
