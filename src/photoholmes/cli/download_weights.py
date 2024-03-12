@@ -51,3 +51,14 @@ def download_exif_weights(weights_folder: Path):
     )
     print()
     logger.info(f"Downloaded Exif as Language weights to {weights_folder}")
+
+
+def download_adaptive_cfa_net_weights(weights_folder: Path):
+    os.makedirs(weights_folder, exist_ok=True)
+    wget.download(
+        "https://raw.githubusercontent.com/qbammey/adaptive_cfa_forensics/master/src/models/pretrained.pt",  # noqa
+        out=str(weights_folder / "weights.pth"),
+        bar=partial(callback, message="Downloading weights"),
+    )
+    print()
+    logger.info(f"Downloaded Adaptive CFA Net weights to {weights_folder}")

@@ -37,7 +37,7 @@ def run_method_cli(
     )
 
 
-@app.command(name="adapt-weights", help="Adapt weights for a photoholmes method")
+@app.command(name="adapt_weights", help="Adapt weights for a photoholmes method")
 def run_adapt_weights(method: MethodRegistry, weights_path: str, out_path: str):
     if method == MethodRegistry.EXIF_AS_LANGUAGE:
         from photoholmes.methods.exif_as_language.prune_original_weights import (
@@ -51,7 +51,7 @@ def run_adapt_weights(method: MethodRegistry, weights_path: str, out_path: str):
         logging.info("No adaptation needed for this method.")
 
 
-@app.command(name="download-weights", help="Automatic weight download for a method")
+@app.command(name="download_weights", help="Automatic weight download for a method")
 def run_download_weights(
     method: MethodRegistry,
     weight_folder_path: Annotated[
@@ -66,6 +66,10 @@ def run_download_weights(
         from .download_weights import download_exif_weights
 
         download_exif_weights(weight_folder_path / "exif_as_language")
+    elif method == MethodRegistry.ADAPTIVE_CFA_NET:
+        from .download_weights import download_adaptive_cfa_net_weights
+
+        download_adaptive_cfa_net_weights(weight_folder_path / "adaptive_cfa_net")
     else:
         logging.info("No weights download for this method.")
 
