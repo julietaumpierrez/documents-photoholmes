@@ -39,7 +39,7 @@ class MetricFactory:
     """
 
     @staticmethod
-    def load(metric_names: List[Union[str, MetricRegistry]]) -> MetricCollection:
+    def load(metric_names: Union[List[str], List[MetricRegistry]]) -> MetricCollection:
         """
         Instantiates and returns a list of metric objects corresponding to the specified
         metric names.
