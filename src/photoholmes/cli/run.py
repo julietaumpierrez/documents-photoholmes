@@ -6,10 +6,11 @@ from typing import Annotated, Optional
 import torch
 import typer
 from matplotlib import pyplot as plt
+from PIL import Image
 
 from photoholmes.methods import MethodFactory, MethodRegistry
 from photoholmes.methods.base import BaseTorchMethod
-from photoholmes.utils.image import read_image, read_jpeg_data
+from photoholmes.utils.image import overlay_mask, read_image, read_jpeg_data
 
 logger = logging.getLogger("cli.run_method")
 
@@ -73,6 +74,10 @@ def run_focal(
     hrnet_weights: Annotated[
         Optional[Path], typer.Option(help="Path to the HRNet weights.")
     ] = None,
+    overlay: Annotated[
+        bool, typer.Option(help="Overlay the mask on the image.")
+    ] = False,
+    show_plot: Annotated[bool, typer.Option(help="Show the plot in a window.")] = True,
 ):
     from photoholmes.methods.focal import Focal, focal_preprocessing
     from photoholmes.utils.image import read_image
@@ -107,7 +112,6 @@ def run_focal(
 
     mask = focal.predict(**model_input)
 
-    plt.imshow(mask.numpy())
     if output_folder is not None:
         os.makedirs(output_folder)
 
@@ -115,7 +119,17 @@ def run_focal(
         logger.info(
             f"Mask saved to {output_folder / f'{image_path.stem}_focal_mask.png'}"
         )
-    elif output_folder is None:
-        plt.show()
 
+    if show_plot:
+        mask_pil = Image.fromarray(mask.numpy())
+        plt.subplot(1, 3 if overlay else 2, 1)
+        plt.imshow(image.permute(1, 2, 0).numpy())
+        plt.subplot(1, 3 if overlay else 2, 2)
+        plt.imshow(mask_pil)
+        if overlay:
+            plt.subplot(1, 3, 3)
+            overlayed = overlay_mask(image.permute(1, 2, 0).numpy(), mask.numpy())
+            plt.imshow(overlayed)
+
+        plt.show()
     return

@@ -87,11 +87,22 @@ def plot_multiple(
     plt.show()
 
 
-def read_mask(mask_path):
-    """Returns mask as a boolean image, from a mask path"""
-    mask = cv.imread(mask_path)
-    mask = cv.cvtColor(mask, cv.COLOR_BGR2GRAY)
-    return mask > mask.max() / 2
+def overlay_mask(img: NDArray, heatmap: NDArray) -> NDArray:
+    # Normalize the heatmap to 0-255 and convert to 8-bit unsigned integer
+    heatmap_normalized = cv.normalize(
+        heatmap, None, alpha=0, beta=255, norm_type=cv.NORM_MINMAX
+    )
+    heatmap_uint8 = np.uint8(heatmap_normalized)
+
+    # Apply the color map
+    heatmap_img = cv.applyColorMap(heatmap_uint8, cv.COLORMAP_JET)
+
+    # Superimpose the heatmap on the image
+    super_imposed_img = cv.addWeighted(heatmap_img, 0.5, img, 0.5, 0)
+
+    # Convert superimposed image from BGR to RGB for plotting
+    super_imposed_img_rgb = cv.cvtColor(super_imposed_img, cv.COLOR_BGR2RGB)
+    return super_imposed_img_rgb
 
 
 def read_jpeg_data(
