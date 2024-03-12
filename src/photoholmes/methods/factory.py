@@ -88,10 +88,13 @@ class MethodFactory:
             case MethodRegistry.EXIF_AS_LANGUAGE:
                 from photoholmes.methods.exif_as_language import (
                     EXIFAsLanguage,
-                    exif_preprocessing,
+                    exif_as_language_preprocessing,
                 )
 
-                return EXIFAsLanguage.from_config(config), exif_preprocessing
+                return (
+                    EXIFAsLanguage.from_config(config),
+                    exif_as_language_preprocessing,
+                )
             case MethodRegistry.FOCAL:
                 from photoholmes.methods.focal import Focal, focal_preprocessing
 
@@ -103,10 +106,10 @@ class MethodFactory:
             case MethodRegistry.NOISESNIFFER:
                 from photoholmes.methods.noisesniffer import (
                     Noisesniffer,
-                    noisesniffer_preprocess,
+                    noisesniffer_preprocessing,
                 )
 
-                return Noisesniffer.from_config(config), noisesniffer_preprocess
+                return Noisesniffer.from_config(config), noisesniffer_preprocessing
             case MethodRegistry.PSCCNET:
                 from photoholmes.methods.psccnet import PSCCNet, psccnet_preprocessing
 

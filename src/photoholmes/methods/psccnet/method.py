@@ -1,3 +1,5 @@
+# Code derived from
+# https://github.com/proteus1991/PSCC-Net
 # ------------------------------------------------------------------------------
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
@@ -11,7 +13,7 @@ Aug 22, 2020
 import logging
 import random
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -21,7 +23,7 @@ from torch import Tensor
 from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
 from photoholmes.utils.generic import load_yaml
 
-from .config import PSCCNetArchConfig, PSCCNetConfig, pretrained_arch
+from .config import PSCCNetArchConfig, PSCCNetConfig, TruForWeights, pretrained_arch
 from .network.detection_head import DetectionHead
 from .network.NLCDetection import NLCDetection
 from .network.seg_hrnet import HighResolutionNet
@@ -42,34 +44,35 @@ class PSCCNet(BaseTorchMethod):
 
     To easily download the weights, you can use the script in
     scripts/download_psccnet_weights.py in the photoholmes repository.
+
     """
 
     def __init__(
         self,
+        weights: TruForWeights,
         arch_config: Union[PSCCNetArchConfig, Literal["pretrained"]] = "pretrained",
-        weights_paths: Dict[str, str] = {},
         device: str = "cpu",
         device_ids: Optional[List] = None,
         seed: int = 42,
         **kwargs,
     ):
         """
-        Attributes:
-            weights_paths (Dict[str, str]): dictionary with the paths to the
+        Args:
+            weights (Dict[str, str]): Dictionary with the paths to the
                 weights for the FENet, SegNet and ClsNet. The keys are the
                 name of it subnetwork.
                 > If you want to start the network from scratch and initialize
                 the FENet from a pretrained version, pass the path to the
                 pretrained weights in the key "pretrained".
 
-            arch_config (PSCCNetArchConfig | "pretrained"): the architecture configuration
+            arch_config (PSCCNetArchConfig | "pretrained"): The architecture configuration
                 for the PSSC Network. If "pretrained" is passed, the architecture from
                 the paper will be used.
-            device (str): device to run the network. Default is "cuda:0".
-            device_ids (Optional[List]): if multiple devices are available, pass
+            device (str): Device to run the network. Default is "cuda:0".
+            device_ids (Optional[List]): If multiple devices are available, pass
                 the ids of the devices to use.
-            crop_size: (List[int]): size of the input image for the network.
-            seed (int): seed for reproducibility of experiments.
+            crop_size: (List[int]): Size of the input image for the network.
+            seed (int): Seed for reproducibility of experiments.
         """
         random.seed(seed)
         super().__init__(**kwargs)
@@ -83,34 +86,38 @@ class PSCCNet(BaseTorchMethod):
             arch = arch_config
 
         FENet = HighResolutionNet(arch, **kwargs)
-        if weights_paths.get("pretrained", None) is not None:
-            FENet.init_weights(weights_paths["pretrained"], device=device)
-
         SegNet = NLCDetection(arch, arch.crop_size)
         ClsNet = DetectionHead(arch, arch.crop_size)
 
-        FENet = self.init_network(FENet, weights_paths.get("FENet", None))
-        SegNet = self.init_network(SegNet, weights_paths.get("SegNet", None))
-        ClsNet = self.init_network(ClsNet, weights_paths.get("ClsNet", None))
+        FENet = self.init_network(FENet, weights.get("FENet", None))
+        SegNet = self.init_network(SegNet, weights.get("SegNet", None))
+        ClsNet = self.init_network(ClsNet, weights.get("ClsNet", None))
 
         self.FENet = FENet
         self.SegNet = SegNet
         self.ClsNet = ClsNet
-
         self.sm = nn.Softmax(dim=1)
 
-    def init_network(self, net: nn.Module, weights_path: Optional[str]) -> nn.Module:
+        self.FENet.eval()
+        self.SegNet.eval()
+        self.ClsNet.eval()
+
+        self.to_device(device)
+
+    def init_network(
+        self, net: nn.Module, weights_path: Optional[Union[str, Path]]
+    ) -> nn.Module:
         """
         Initialize a subnetwork, loading it as a DataParallel module, setting it to the
         correct devices and loading the weights if provided.
 
         Args:
-            net (nn.Module): the module to initialize
-            weights_paths (str | None): path to the model weights. If None, the model
+            net (nn.Module): The module to initialize
+            weights (str | None): Path to the model weights. If None, the model
                 uses random weights.
 
         Returns:
-            nn.Module: the initialized module
+            nn.Module: The initialized module
         """
         net = net.to(self.device)
         net = nn.DataParallel(net, device_ids=self.device_ids)
@@ -140,18 +147,16 @@ class PSCCNet(BaseTorchMethod):
             image (torch.Tensor): the preprocessed input image.
 
         Returns:
-            heatmap (Tensor): the predicted heatmap
-            detection (Tensor): the detection score.
+            heatmap (Tensor): The predicted heatmap
+            detection (Tensor): The detection score.
         """
         image = image.to(self.device)
         add_batch_dim = image.ndim == 3
         if add_batch_dim:
             image = image.unsqueeze(0)
-        self.FENet.eval()
         feat = self.FENet(image)
 
         # localization head
-        self.SegNet.eval()
         heatmap = self.SegNet(feat)[0]
         heatmap = F.interpolate(
             heatmap,
@@ -166,7 +171,6 @@ class PSCCNet(BaseTorchMethod):
             heatmap = heatmap.squeeze(1)
 
         # classification head
-        self.ClsNet.eval()
         pred_logit = self.ClsNet(feat)
         pred_logit = self.sm(pred_logit)[:, 1]
 
@@ -176,7 +180,12 @@ class PSCCNet(BaseTorchMethod):
         self, image: torch.Tensor
     ) -> BenchmarkOutput:
         """
-        Wrapper for the predict method for the benchmark
+        Benchmarks the PSCCNet method using the provided image and size.
+        Args:
+            image (Tensor): Input image tensor.
+        Returns:
+            BenchmarkOutput: Contains the heatmap and  detection and placeholder for
+            detection.
         """
         heatmap, detection = self.predict(image)
 

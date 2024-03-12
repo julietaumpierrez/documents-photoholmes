@@ -37,3 +37,4 @@ class TruForConfig(BaseModel):
     arch: Union[TruForArchConfig, Literal["pretrained"]] = "pretrained"
     weights: Optional[Union[str, dict]]
     use_confidence: bool = True
+    device: str = "cpu"

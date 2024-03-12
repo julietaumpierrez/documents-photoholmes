@@ -1,6 +1,16 @@
 # flake8: noqa
-from .base import PreprocessingTransform
-from .image import GetImageSize, Normalize, RGBtoGray, ToTensor
+from .base import BasePreprocessing
+from .image import (
+    GetImageSize,
+    GrayToRGB,
+    Normalize,
+    RGBtoGray,
+    RGBtoYCrCb,
+    RoundToUInt,
+    ToNumpy,
+    ToTensor,
+    ZeroOneRange,
+)
 from .pipeline import PreProcessingPipeline
 
 __all__ = [
@@ -8,6 +18,11 @@ __all__ = [
     "ToTensor",
     "Normalize",
     "RGBtoGray",
+    "RGBtoYCrCb",
+    "GrayToRGB",
+    "RoundToUInt",
+    "ZeroOneRange",
+    "ToNumpy",
     "GetImageSize",
-    "PreprocessingTransform",
+    "BasePreprocessing",
 ]

@@ -1,3 +1,5 @@
+import imghdr
+import logging
 from tempfile import NamedTemporaryFile
 from typing import List, Optional, Tuple
 
@@ -7,8 +9,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from numpy.typing import NDArray
+from torch import Tensor
 
-IMG_FOLDER_PATH = "test_images/images/"
+logger = logging.getLogger(__name__)
 
 
 def read_image(path) -> torch.Tensor:
@@ -95,7 +98,8 @@ def read_jpeg_data(
     image_path: str,
     num_dct_channels: Optional[int] = None,
     all_quant_tables: bool = False,
-) -> Tuple[NDArray, List[NDArray]]:
+    suppress_not_jpeg_warning: bool = False,
+) -> Tuple[Tensor, Tensor]:
     """Reads image from path and returns DCT coefficient matrix for each channel and the
     quantization matrixes. If image is in jpeg format, it decodes the DCT stream and
     returns it. Otherwise, the image is saved into a temporary jpeg file and then the
@@ -109,18 +113,22 @@ def read_jpeg_data(
         dct: DCT coefficient matrix for each channel
         qtables: Quantization matrix for each channel
     """
-    extension = (image_path[-4:]).lower()
-    if extension == ".jpg" or extension == ".jpeg":
+    if imghdr.what(image_path) == "jpeg":
         jpeg = jpegio.read(image_path)
     else:
+        if not suppress_not_jpeg_warning:
+            logger.warning(
+                "Image is not in JPEG format. An approximation will be loaded by "
+                "compressing the image in quality 100."
+            )
         temp = NamedTemporaryFile(suffix=".jpg")
         img = read_image(image_path)
         save_image(temp.name, img, [cv.IMWRITE_JPEG_QUALITY, 100])
         jpeg = jpegio.read(temp.name)
 
-    return _DCT_from_jpeg(jpeg, num_channels=num_dct_channels), _qtables_from_jpeg(
-        jpeg, all=all_quant_tables
-    )
+    return torch.tensor(
+        _DCT_from_jpeg(jpeg, num_channels=num_dct_channels)
+    ), torch.tensor(_qtables_from_jpeg(jpeg, all=all_quant_tables))
 
 
 def _qtables_from_jpeg(

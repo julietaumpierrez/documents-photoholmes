@@ -12,9 +12,7 @@ git clone git@gitlab.fing.edu.uy:photoholmes/photoholmes.git photoholmes
 Create a virtual enviroment, either with conda or with pip. Activate
 the enviroment and install the library and required packages with:
 ```
-pip install -r requirements.txt
-pip intsall -r requirements-dev.txt
-pip install -e .
+pip install -e .[dev]
 ```
 
 ### Pre-commit hooks install

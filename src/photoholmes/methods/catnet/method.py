@@ -1,4 +1,5 @@
-# code extracted from https://github.com/mjkwon2021/CAT-Net/blob/f1716b0849eb4d94687a02c25bf97229b495bf9e/lib/models/network_CAT.py#L286  # noqa: E501
+# Code derived from
+# https://github.com/mjkwon2021/CAT-Net/blob/f1716b0849eb4d94687a02c25bf97229b495bf9e/lib/models/network_CAT.py#L286  # noqa: E501
 # ------------------------------------------------------------------------------
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
@@ -42,14 +43,25 @@ logger = logging.getLogger(__name__)
 
 
 class CatNet(BaseTorchMethod):
+    """
+    Implements the CAT-Net method [Kwon, et al. 2021] for image forgery localization.
+
+    """
+
     def __init__(
         self,
         arch_config: Union[CatnetArchConfig, Literal["pretrained"]] = "pretrained",
         weights: Optional[Union[str, Path, dict]] = None,
         **kwargs,
     ):
+        """
+        Args:
+            arch_config (Union[CatnetArchConfig, Literal['pretrained']]):
+            Configuration for the network architecture. Can be a predefined
+            architecture or 'pretrained' for default settings.
+            weights (Optional[Union[str, Path, dict]]): Path to the weights file
+        """
         super().__init__(**kwargs)
-
         if arch_config == "pretrained":
             arch_config = pretrained_arch
 
@@ -65,6 +77,11 @@ class CatNet(BaseTorchMethod):
         self.eval()
 
     def load_model(self, arch_config: CatnetArchConfig):
+        """
+        Initialize the network architecture using the provided configuration.
+        Args:
+            arch_config (CatnetArchConfig): Configuration for the network architecture.
+        """
         # RGB branch
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64, momentum=self.bn_momentum)
@@ -225,6 +242,15 @@ class CatNet(BaseTorchMethod):
         )
 
     def forward(self, x, qtable):
+        """
+        Forward pass through the network.
+        Args:
+            x (Tensor): Input tensor. The first 3 channels are the RGB image, and the
+                remaining channels are the DCT coefficients.
+            qtable (Tensor): Quantization table for the DCT coefficients.
+        Returns:
+            Tensor: Output of the network.
+        """
         RGB, DCTcoef = x[:, :3, :, :], x[:, 3:, :, :]
 
         # RGB Stream
@@ -325,6 +351,13 @@ class CatNet(BaseTorchMethod):
         pretrained_rgb="",
         pretrained_dct="",
     ):
+        """
+        Initialize the weights of the network.
+        Args:
+            pretrained_rgb (str): Path to the pretrained weights for the RGB stream.
+            pretrained_dct (str): Path to the pretrained weights for the DCT stream.
+        """
+
         logger.info("=> init weights from normal distribution")
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -375,11 +408,15 @@ class CatNet(BaseTorchMethod):
         self, x: Tensor, qtable: Tensor, image_size: Tuple[int, int]
     ) -> Tuple[Tensor, Tensor]:
         """
-        Run CatNet.
+        Runs method for input image.
 
         Args:
-            x: preprocessed input and dct coefficients. Use catnet_preprocessing.
-            qtable: quantization table
+            x: Preprocessed input and dct coefficients. Use catnet_preprocessing.
+            qtable: Quantization table
+            image_size: Original image size
+        Returns:
+            Tuple[Tensor, Tensor]: Tuple containing the heatmaps for authentic and
+                tampered regions.
         """
         x, qtable = x.to(self.device), qtable.to(self.device)
         add_batch_dim = x.ndim == 3
@@ -409,6 +446,16 @@ class CatNet(BaseTorchMethod):
     def benchmark(
         self, x: Tensor, qtable: Tensor, image_size: Tuple[int, int]
     ) -> BenchmarkOutput:
+        """
+        Benchmarks the CatNet method using the provided image, qtables and size.
+        Args:
+            x (Tensor): Input image.
+            qtable (Tensor): Quantization table for the DCT coefficients.
+            image_size (Tuple[int, int]): Original image size.
+        Returns:
+            BenchmarkOutput: Contains the heatmap and placeholders for mask and
+            detection.
+        """
         heatmap, _ = self.predict(x, qtable, image_size)
         return {"heatmap": heatmap, "mask": None, "detection": None}
 
