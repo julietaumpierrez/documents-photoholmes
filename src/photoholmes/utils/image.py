@@ -14,7 +14,7 @@ from torch import Tensor
 logger = logging.getLogger(__name__)
 
 
-def read_image(path) -> torch.Tensor:
+def read_image(path: str) -> torch.Tensor:
     return torch.from_numpy(
         cv.cvtColor(cv.imread(path), cv.COLOR_BGR2RGB).transpose(2, 0, 1)
     )

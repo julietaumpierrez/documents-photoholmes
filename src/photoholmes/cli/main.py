@@ -1,41 +1,18 @@
 import logging
 from pathlib import Path
-from typing import Optional
 
 import typer
 from typing_extensions import Annotated
 
 from photoholmes.methods import MethodRegistry
 
+from .run import run_app
+
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 app = typer.Typer()
-
-
-@app.command(name="run", help="Run a method on an image")
-def run_method_cli(
-    method: Annotated[
-        MethodRegistry,
-        typer.Argument(help="Method to run the image through.", case_sensitive=False),
-    ],
-    image_path: str,
-    out_path: Optional[str] = None,
-    config: Annotated[
-        Optional[str],
-        typer.Option(
-            help="Path to '.yaml' config file. If None, default configs will be used.",
-        ),
-    ] = None,
-    device: Optional[str] = None,
-    num_dct_channels: Optional[int] = 1,
-    all_qtables: bool = False,
-):
-    from .run_method import run_method
-
-    run_method(
-        method, image_path, out_path, config, device, num_dct_channels, all_qtables
-    )
+app.add_typer(run_app, name="run")
 
 
 @app.command(name="adapt_weights", help="Adapt weights for a photoholmes method")
