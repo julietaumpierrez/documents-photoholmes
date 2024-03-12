@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod, BenchmarkOutput
-from photoholmes.methods.DQ.utils import ZIGZAG, fft_period, histogram_period
+from photoholmes.methods.dq.utils import ZIGZAG, fft_period, histogram_period
 from photoholmes.postprocessing.resizing import (
     resize_heatmap_with_trim_and_pad,
     simple_upscale_heatmap,
@@ -57,7 +57,7 @@ class DQ(BaseMethod):
         BPPM_norm = torch.from_numpy(BPPM / len(dct_coefficients))
         BPPM_upsampled = simple_upscale_heatmap(BPPM_norm, 8)
         heatmap = resize_heatmap_with_trim_and_pad(BPPM_upsampled, image_size)
-        return heatmap
+        return heatmap.numpy()
 
     def benchmark(
         self, dct_coefficients: NDArray, image_size: Tuple[int, int]
