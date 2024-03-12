@@ -22,12 +22,12 @@ class GaussianUniformEM:
         """
         Gaussian Uniform Expectation Maximization algorithm.
         Params:
-            p_outlier_init: initial probability of being falsified
-            outlier_nlogl:  log-likelihood of being falsified
-            tol: tolerance used in a single run of the expectation step
-            max_iter: maximum number of iterations in a single run of the expectation step
-            n_init: number of iterations of EM to run
-            seed: random seed for parameter initialization
+            p_outlier_init (float): Initial probability of being falsified
+            outlier_nlogl (int):  Log-likelihood of being falsified
+            tol (float): Tolerance used in a single run of the expectation step
+            max_iter (int): Maximum number of iterations in a single run of the expectation step
+            n_init (int): Number of iterations of EM to run
+            seed (Optional[int]): Random seed for parameter initialization
         """
         self.p_outlier_init = p_outlier_init
         self.outlier_nlogl = outlier_nlogl

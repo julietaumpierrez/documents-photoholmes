@@ -142,13 +142,13 @@ def get_saturated_region_mask(
     Creates a binary mask of the saturated regions in the image.
 
     Params:
-        img (NDArray): image to get the mask from.
-        low_th (float): lower threshold for the saturated pixels.
-        high_th (float): upper threshold for the saturated pixels.
-        erotion_kernel_size (int): size of the square kernel for the erotion
+        img (NDArray): Image to get the mask from.
+        low_th (float): Lower threshold for the saturated pixels.
+        high_th (float): Upper threshold for the saturated pixels.
+        erotion_kernel_size (int): Size of the square kernel for the erotion
             operation.
     Returns:
-        NDArray: binary mask of the saturated regions.
+        NDArray: Binary mask of the saturated regions.
     """
     if img.ndim == 2:
         img = img[:, :, None]
@@ -181,7 +181,7 @@ def feat_reduce_matrix(pca_dim: int, X: NDArray, whitten: bool = True) -> NDArra
         whitten (bool): Whether to whitten the features or not.
 
     Returns:
-        NDArray: eigenvector matrix to project the features into the reduced space.
+        NDArray: Eigenvector matrix to project the features into the reduced space.
     """
     inds = np.arange(pca_dim)
     cov = np.cov(X, rowvar=False, bias=True)
@@ -212,7 +212,7 @@ def gaussian_mixture_mahalanobis(
         flat_features (NDArray): All (flat) features.
         valid (NDArray): Mask of the valid pixels.
     Output:
-        NDarray: mahalanobis distance labels.
+        NDarray: Mahalanobis distance labels.
     """
     gg_mixt = GaussianMixture(seed=seed)
     mus, covs = gg_mixt.fit(valid_features)
@@ -243,7 +243,7 @@ def gaussian_uniform_mahalanobis(
         flat_features (NDArray): All (flat) features.
         valid (NDArray): Mask of the valid pixels.
     Output:
-        NDarray: mahalanobis distance labels.
+        NDarray: Mahalanobis distance labels.
     """
     gu_mixt = GaussianUniformEM(seed=seed)
     mus, covs, _ = gu_mixt.fit(valid_features)

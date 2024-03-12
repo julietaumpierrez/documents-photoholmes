@@ -258,7 +258,7 @@ class Splicebuster(BaseMethod):
         Computes features, weights and coordinates for an image.
 
         Args:
-            image (np.ndarray): Image to process.
+            image (NDArray): Image to process.
 
         Returns:
             Tuple[NDArray, NDArray, Tuple[NDArray, NDArray]]:
@@ -324,8 +324,8 @@ class Splicebuster(BaseMethod):
         to calculate it varies according to attribute 'pca'.
 
         Args:
-            flat_features (np.ndarray): Flattened features.
-            valid_features (np.ndarray): Valid features.
+            flat_features (NDArray): Flattened features.
+            valid_features (NDArray): Valid features.
 
         Returns:
             Tuple[NDArray, NDArray]: Tuple with the reduced flat and valid features.
@@ -351,9 +351,9 @@ class Splicebuster(BaseMethod):
         Run splicebuster on an image.
 
         Args:
-            image (NDArray): grascale image with dynamic range 0 and 1.
+            image (NDArray): Grayscale image with dynamic range 0 and 1.
         Returns:
-            heatmap: splicebuster output
+            heatmap: Splicebuster output
         """
         if image.ndim == 3:
             image = image[:, :, 0]
@@ -383,7 +383,7 @@ class Splicebuster(BaseMethod):
 
     def benchmark(self, image: NDArray) -> BenchmarkOutput:  # type: ignore[override]
         """Benchmarks the Splicebuster method using the provided image and size.
-        Args: image (Tensor): Input image tensor.
+        Args: image (NDArray): Input image tensor.
         BenchmarkOutput: Contains the heatmap and placeholders for mask and detection.
         """
         heatmap = self.predict(image=image)
