@@ -27,6 +27,7 @@ from photoholmes.methods.exif_as_language import (
 from photoholmes.methods.focal import Focal, focal_preprocessing
 from photoholmes.methods.noisesniffer import Noisesniffer, noisesniffer_preprocessing
 from photoholmes.methods.psccnet import PSCCNet, psccnet_preprocessing
+from photoholmes.methods.splicebuster import Splicebuster, splicebuster_preprocessing
 from photoholmes.methods.trufor import TruFor, trufor_preprocessing
 from photoholmes.methods.zero import Zero, zero_preprocessing
 from photoholmes.utils.image import read_image, read_jpeg_data
@@ -112,7 +113,7 @@ output = method.predict(**input)
 plt.imshow(output)
 overlay_rgb = overlay(image_path + "paul_cvpr.jpeg", output)
 plt.imshow(overlay_rgb)
-plt.imsave(image_path + "paul_cvpr_catnet.png", overlay_rgb)
+plt.imsave(image_path + "paul_cvpr_dq.png", overlay_rgb)
 # %%
 # Exif
 image = read_image(image_path + "paul_cvpr.jpeg")
@@ -132,7 +133,11 @@ output = method.predict(**input)
 plt.imshow(output[0])
 overlay_rgb = overlay(image_path + "paul_cvpr.jpeg", output[0])
 plt.imshow(overlay_rgb)
-plt.imsave(image_path + "paul_cvpr_exif.png", overlay_rgb)
+plt.imsave(image_path + "paul_cvpr_exif_ms.png", overlay_rgb)
+plt.imshow(output[1])
+overlay_rgb = overlay(image_path + "paul_cvpr.jpeg", output[1])
+plt.imshow(overlay_rgb)
+plt.imsave(image_path + "paul_cvpr_exif_ncuts.png", overlay_rgb)
 # %%
 # Focal
 image = read_image(image_path + "paul_cvpr.jpeg")
@@ -168,10 +173,60 @@ input = psccnet_preprocessing(**image_data)
 arch_config = "pretrained"
 path_to_weights = {
     "FENet": weights_path + "pscc/HRNet.pth",
-    "SegNet": weights_path + "path_to_NLCDetection_weights",
-    "ClsNet": weights_path + "path_to_DetectionHead_weights",
+    "SegNet": weights_path + "pscc/NLCDetection.pth",
+    "ClsNet": weights_path + "pscc/DetectionHead.pth",
 }
 method = PSCCNet(
     arch_config=arch_config,
     weights=path_to_weights,
 )
+output = method.predict(**input)
+plt.imshow(output[0].to("cpu").numpy())
+overlay_rgb = overlay(image_path + "paul_cvpr.jpeg", output[0].to("cpu").numpy())
+plt.imshow(overlay_rgb)
+plt.imsave(image_path + "paul_cvpr_psccnet.png", overlay_rgb)
+# %%
+# Splicebuster
+image = read_image(image_path + "paul_cvpr.jpeg")
+image_data = {"image": image}
+input = splicebuster_preprocessing(**image_data)
+method = Splicebuster()
+output = method.predict(**input)
+plt.imshow(output)
+overlay_rgb = overlay(image_path + "paul_cvpr.jpeg", output)
+plt.imshow(overlay_rgb)
+plt.imsave(image_path + "paul_cvpr_splicebuster.png", overlay_rgb)
+# %%
+# Trufor
+image = read_image(image_path + "paul_cvpr.jpeg")
+image_data = {"image": image}
+input = trufor_preprocessing(**image_data)
+arch_config = "pretrained"
+path_to_weights = weights_path + "trufor.pth.tar"
+method = TruFor(
+    arch_config=arch_config,
+    weights=path_to_weights,
+)
+output = method.predict(**input)
+plt.imshow(output[0].to("cpu").numpy())
+overlay_rgb = overlay(
+    image_path + "paul_cvpr.jpeg", (output[0] * output[1]).to("cpu").numpy()
+)
+plt.imshow(overlay_rgb)
+plt.imsave(image_path + "paul_cvpr_trufor.png", overlay_rgb)
+# %%
+# Zero
+image = read_image(image_path + "paul_cvpr.jpeg")
+dct, qtables = read_jpeg_data(
+    image_path + "paul_cvpr.jpeg",
+    num_dct_channels=1,
+)
+image_data = {"image": image, "dct_coefficients": dct, "qtables": qtables}
+input = zero_preprocessing(**image_data)
+method = Zero()
+output = method.predict(**input)
+plt.imshow(output[0])
+overlay_rgb = overlay(image_path + "paul_cvpr.jpeg", output[0])
+plt.imshow(overlay_rgb)
+plt.imsave(image_path + "paul_cvpr_zero.png", overlay_rgb)
+# %%
