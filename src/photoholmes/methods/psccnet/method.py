@@ -23,7 +23,7 @@ from torch import Tensor
 from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
 from photoholmes.utils.generic import load_yaml
 
-from .config import PSCCNetArchConfig, PSCCNetConfig, TruForWeights, pretrained_arch
+from .config import PSCCNetArchConfig, PSCCNetConfig, PSCCNetWeights, pretrained_arch
 from .network.detection_head import DetectionHead
 from .network.NLCDetection import NLCDetection
 from .network.seg_hrnet import HighResolutionNet
@@ -49,7 +49,7 @@ class PSCCNet(BaseTorchMethod):
 
     def __init__(
         self,
-        weights: TruForWeights,
+        weights: PSCCNetWeights,
         arch_config: Union[PSCCNetArchConfig, Literal["pretrained"]] = "pretrained",
         device: str = "cpu",
         device_ids: Optional[List] = None,
@@ -58,12 +58,10 @@ class PSCCNet(BaseTorchMethod):
     ):
         """
         Args:
-            weights (Dict[str, str]): Dictionary with the paths to the
-                weights for the FENet, SegNet and ClsNet. The keys are the
-                name of it subnetwork.
-                > If you want to start the network from scratch and initialize
-                the FENet from a pretrained version, pass the path to the
-                pretrained weights in the key "pretrained".
+            weights (PSCCNetWeights): The weights for the PSCCNet. The weights
+                are expected to be a dictionary with the following keys:
+                "FENet", "SegNet" and "ClsNet". The values are the paths to
+                the weights.
 
             arch_config (PSCCNetArchConfig | "pretrained"): The architecture configuration
                 for the PSSC Network. If "pretrained" is passed, the architecture from
