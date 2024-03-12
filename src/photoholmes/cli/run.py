@@ -6,7 +6,6 @@ from typing import Annotated, Optional
 import torch
 import typer
 from matplotlib import pyplot as plt
-from PIL import Image
 
 from photoholmes.methods import MethodFactory, MethodRegistry
 from photoholmes.methods.base import BaseTorchMethod
@@ -96,12 +95,12 @@ def run_focal(
                 "`photoholmes run download_weights focal` to download them."
             )
             return
-    if vit_weights is None:
+    if hrnet_weights is None:
         logger.info(
-            "No ViT weights provided, using default path `weights/focal/HRNET_weights.pth`."  # noqa: E501
+            "No HRNet weights provided, using default path `weights/focal/HRNET_weights.pth`."  # noqa: E501
         )
-        vit_weights = Path("weights/focal/HRNET_weights.pth")
-        if not vit_weights.exists():
+        hrnet_weights = Path("weights/focal/HRNET_weights.pth")
+        if not hrnet_weights.exists():
             logger.error(
                 "HRNet weights not found. Please provide the correct path, or run "
                 "`photoholmes run download_weights focal` to download them."
@@ -121,13 +120,19 @@ def run_focal(
         )
 
     if show_plot:
-        mask_pil = Image.fromarray(mask.numpy())
+        plt.suptitle("Output of Focal method")
         plt.subplot(1, 3 if overlay else 2, 1)
+        plt.title("Original Image")
         plt.imshow(image.permute(1, 2, 0).numpy())
+        plt.axis("off")
         plt.subplot(1, 3 if overlay else 2, 2)
-        plt.imshow(mask_pil)
+        plt.axis("off")
+        plt.title("Mask")
+        plt.imshow(mask)
         if overlay:
             plt.subplot(1, 3, 3)
+            plt.axis("off")
+            plt.title("Overlay")
             overlayed = overlay_mask(image.permute(1, 2, 0).numpy(), mask.numpy())
             plt.imshow(overlayed)
 
