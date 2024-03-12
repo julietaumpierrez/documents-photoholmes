@@ -1,11 +1,12 @@
 # Code derived from
 # https://github.com/HighwayWu/FOCAL/tree/main
-from typing import Any, Dict, TypedDict, Union
+from typing import Any, Dict, Union
 
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from torchvision.transforms.functional import resize
+from typing_extensions import TypedDict
 
 from photoholmes.methods.base import BaseTorchMethod, BenchmarkOutput
 

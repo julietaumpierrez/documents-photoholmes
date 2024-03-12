@@ -1,8 +1,5 @@
 import logging
-<<<<<<< HEAD
 from pathlib import Path
-=======
->>>>>>> 39333c6 (Benchmark/trufor)
 from typing import Any, Dict, List, Literal
 
 import typer
@@ -10,8 +7,8 @@ from pydantic import BaseModel
 from tqdm import tqdm
 
 from photoholmes.datasets.registry import DatasetName
-from photoholmes.methods.registry import MethodName
-from photoholmes.metrics.registry import MetricName
+from photoholmes.methods.registry import MethodRegistry
+from photoholmes.metrics.registry import MetricRegistry
 from photoholmes.utils.generic import load_yaml
 
 # TODO: add a command to list the available methods, datasets and metrics
@@ -21,25 +18,26 @@ logger = logging.getLogger(__name__)
 
 
 def run_benchmark(
-    method_name: MethodName,
+    method_name: MethodRegistry,
     method_config: str | dict,
     dataset_name: DatasetName,
     dataset_path: str,
     metrics: List[str],
     tampered_only: bool = False,
-    save_output: bool = False,
-    output_path: str = "output/",
+    save_method_outputs: bool = False,
+    output_folder: str = "output/",
     device: str = "cpu",
 ):
-    from photoholmes.benchmark.model import Benchmark
+    from photoholmes.benchmark import Benchmark
     from photoholmes.datasets.dataset_factory import DatasetFactory
-    from photoholmes.methods.method_factory import MethodFactory
-    from photoholmes.metrics.metric_factory import MetricFactory
+    from photoholmes.methods.factory import MethodFactory
+    from photoholmes.metrics.factory import MetricFactory
 
     # Load method and preprocessing
     method, preprocessing = MethodFactory.load(
-        method_name=method_name, config=method_config, device=device
+        method_name=method_name, config=method_config
     )
+    method.to_device(device)
 
     # Load dataset
     dataset = DatasetFactory.load(
@@ -53,54 +51,8 @@ def run_benchmark(
 
     # Create Benchmark
     benchmark = Benchmark(
-        save_output=save_output,
-        output_path=output_path,
-        device=device,
-    )
-
-    # Run Benchmark
-    benchmark.run(
-        method=method,
-        dataset=dataset,
-        metrics=metrics_objects,
-    )
-
-
-def run_benchmark(
-    method_name: MethodName,
-    method_config: str | dict,
-    dataset_name: DatasetName,
-    dataset_path: str,
-    metrics: List[str],
-    tampered_only: bool = False,
-    save_output: bool = False,
-    output_path: str = "output/",
-    device: str = "cpu",
-):
-    from photoholmes.benchmark.model import Benchmark
-    from photoholmes.datasets.dataset_factory import DatasetFactory
-    from photoholmes.methods.method_factory import MethodFactory
-    from photoholmes.metrics.metric_factory import MetricFactory
-
-    # Load method and preprocessing
-    method, preprocessing = MethodFactory.load(
-        method_name=method_name, config=method_config, device=device
-    )
-
-    # Load dataset
-    dataset = DatasetFactory.load(
-        dataset_name=dataset_name,
-        dataset_dir=dataset_path,
-        tampered_only=tampered_only,
-        transform=preprocessing,
-    )
-
-    metrics_objects = MetricFactory.load(metrics)
-
-    # Create Benchmark
-    benchmark = Benchmark(
-        save_output=save_output,
-        output_path=output_path,
+        save_method_outputs=save_method_outputs,
+        output_folder=output_folder,
         device=device,
     )
 
@@ -114,7 +66,7 @@ def run_benchmark(
 
 @app.command()
 def main(
-    method_name: MethodName = typer.Option(..., help="Name of the method to use."),
+    method_name: MethodRegistry = typer.Option(..., help="Name of the method to use."),
     method_config: str = typer.Option(
         None, help="Path to the configuration file for the method."
     ),
@@ -124,8 +76,8 @@ def main(
         ..., "--metrics", help="Space-separated list of metrics to use."
     ),
     tampered_only: bool = typer.Option(False, help="Process tampered images only."),
-    save_output: bool = typer.Option(False, help="Save the output."),
-    output_path: str = typer.Option("output/", help="Path to save the outputs."),
+    save_method_outputs: bool = typer.Option(False, help="Save the output."),
+    output_folder: str = typer.Option("output/", help="Path to save the outputs."),
     device: str = typer.Option("cpu", help="Device to use."),
 ):
     """
@@ -141,8 +93,8 @@ def main(
         dataset_path=dataset_path,
         metrics=metrics_list,
         tampered_only=tampered_only,
-        save_output=save_output,
-        output_path=output_path,
+        save_method_outputs=save_method_outputs,
+        output_folder=output_folder,
         device=device,
     )
 
@@ -154,13 +106,13 @@ class DatasetSpec(BaseModel):
 
 
 class BenchmarkConfig(BaseModel):
-    method_name: MethodName
+    method_name: MethodRegistry
     method_config: Dict[str, Any]
     datasets: List[DatasetSpec]
-    metrics: List[MetricName]
-    save_output: bool = True
+    metrics: List[MetricRegistry]
+    save_method_outputs: bool = True
     save_metrics: bool = True
-    output_path: str = "output/"
+    output_folder: str = "output/"
     device: Literal["cpu", "cuda", "mps"] = "cpu"
     use_existing_output: bool = True
     verbose: Literal[0, 1, 2] = 1
@@ -172,17 +124,17 @@ def run_from_config(
 ):
     bench_config = BenchmarkConfig(**load_yaml(config_path))
 
-    from photoholmes.benchmark.model import Benchmark
+    from photoholmes.benchmark import Benchmark
     from photoholmes.datasets.dataset_factory import DatasetFactory
-    from photoholmes.methods.method_factory import MethodFactory
-    from photoholmes.metrics.metric_factory import MetricFactory
+    from photoholmes.methods.factory import MethodFactory
+    from photoholmes.metrics.factory import MetricFactory
 
     # Load method and preprocessing
     method, preprocessing = MethodFactory.load(
         method_name=bench_config.method_name,
         config=bench_config.method_config,
-        device=bench_config.device,
     )
+    method.to_device(bench_config.device)
 
     # Load datasets
     datasets = []
@@ -202,9 +154,9 @@ def run_from_config(
 
     # Create Benchmark
     benchmark = Benchmark(
-        save_output=bench_config.save_output,
+        save_method_outputs=bench_config.save_method_outputs,
         save_metrics=bench_config.save_metrics,
-        output_path=bench_config.output_path,
+        output_folder=bench_config.output_folder,
         device=bench_config.device,
         use_existing_output=bench_config.use_existing_output,
         verbose=bench_config.verbose,
@@ -221,7 +173,7 @@ def run_from_config(
 
 @app.command("process_outputs")
 def process_output(
-    method: MethodName = typer.Argument(),
+    method: MethodRegistry = typer.Argument(),
     outputs_dir: Path = typer.Argument(),
     upload_dir: Path = typer.Argument(),
 ):

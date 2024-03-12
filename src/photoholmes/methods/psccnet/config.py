@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing import List, Literal, Tuple, TypedDict, Union
+from typing import List, Literal, Tuple, Union
 
 from pydantic import BaseModel
+from typing_extensions import TypedDict
 
 
 class StageConfig(BaseModel):
@@ -62,12 +63,12 @@ pretrained_arch = PSCCNetArchConfig(
 )
 
 
-class TruForWeights(TypedDict):
+class PSCCNetWeights(TypedDict):
     FENet: Union[str, Path]
     SegNet: Union[str, Path]
     ClsNet: Union[str, Path]
 
 
 class PSCCNetConfig(BaseModel):
-    weights: TruForWeights
+    weights: PSCCNetWeights
     arch_config: Union[PSCCNetArchConfig, Literal["pretrained"]] = "pretrained"

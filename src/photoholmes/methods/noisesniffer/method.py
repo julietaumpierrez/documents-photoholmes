@@ -127,7 +127,6 @@ class Noisesniffer(BaseMethod):
 
         Returns:
             - mask (NDArray): Mask of detected forgeries.
-            - detection (float): Detection score.
             - img_painted (NDArray): Image with lowest standard deviation blocks painted
                 red.
         """
