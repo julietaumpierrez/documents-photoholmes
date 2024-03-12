@@ -1,4 +1,4 @@
-# derived from https://www.grip.unina.it/download/prog/Splicebuster/
+# code derived from https://www.grip.unina.it/download/prog/Splicebuster/
 import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, Literal, Optional, Tuple, Union
@@ -33,7 +33,7 @@ class Splicebuster(BaseMethod):
     This method is based on detecting splicing from features extracted from the image's
     residuals.
 
-    The original implementation(language: Python) is available at:
+    The original implementation is available at:
     https://www.grip.unina.it/download/prog/Splicebuster/"""
 
     def __init__(
@@ -56,24 +56,24 @@ class Splicebuster(BaseMethod):
         Initializes Splicebuster method class.
 
         Args:
-        - block_size (int): Size of the blocks used for feature extraction.
-        - stride (int): Stride used for feature extraction.
-        - q (int): Quantization level.
-        - T (int): Truncation level.
-        - pca_dim (int): Number of dimensions to keep after PCA. If 0, PCA is not used.
-        - pca (str): PCA method to use. Options: 'original', 'uncentered', 'correct'.
-            - 'original': PCA is applied to the features as in the original
+            block_size (int): Size of the blocks used for feature extraction.
+            stride (int): Stride used for feature extraction.
+            q (int): Quantization level.
+            T (int): Truncation level.
+            pca_dim (int): Number of dimensions to keep after PCA. If 0, PCA is not used.
+            pca (str): PCA method to use. Options: 'original', 'uncentered', 'correct'.
+                'original': PCA is applied to the features as in the original
                 implementation.
-            - 'uncentered': PCA is applied using sklearn but to the uncentered features.
-            - 'correct': PCA is applied using sklearn.
-        - mixture (str): Mixture model to use for mahalanobis distance estimation.
-            Options: 'uniform', 'gaussian'.
-        - weight_params (WeightConfig | "original" | None): Provides parameters for
+                'uncentered': PCA is applied using sklearn but to the uncentered features.
+                'correct': PCA is applied using sklearn.
+            mixture (str): Mixture model to use for mahalanobis distance estimation.
+                Options: 'uniform', 'gaussian'.
+            weight_params (WeightConfig | "original" | None): Provides parameters for
             weighted feature computation.
-            - None: Do not use weights.
-            - "original": Use parameters from the original implementation.
-            - WeightConfig object: Use custom parameters.
-        - seed (int | None): Random seed for mixture model initialization. default = 0.
+                None: Do not use weights.
+                "original": Use parameters from the original implementation.
+                WeightConfig object: Use custom parameters.
+            seed (int | None): Random seed for mixture model initialization. default = 0.
         """
         super().__init__(**kwargs)
         self.block_size = block_size
@@ -101,10 +101,10 @@ class Splicebuster(BaseMethod):
         according to the input 'mixture'.
 
         Args:
-            - mixture (str): String indicating the mixture model to use.
-            Options: 'uniform', 'gaussian'.
+            mixture (str): String indicating the mixture model to use.
+                Options: 'uniform', 'gaussian'.
         Returns:
-            - Function: Function to compute the mahalanobis distance.
+            Function: Function to compute the mahalanobis distance.
         """
         if mixture == "gaussian":
             return gaussian_mixture_mahalanobis
@@ -126,10 +126,10 @@ class Splicebuster(BaseMethod):
         encode the result as base 3 integers for fast coocurrance counting.
 
         Args:
-            - image (np.ndarray): Image to process.
+            image (np.ndarray): Image to process.
 
         Returns:
-            - Tuple[NDArray, NDArray, NDArray, NDArray]: Tuple with the encoded
+            Tuple[NDArray, NDArray, NDArray, NDArray]: Tuple with the encoded
             residuals.
         """
         qh_res = quantize(third_order_residual(image), self.T, self.q)
@@ -154,19 +154,19 @@ class Splicebuster(BaseMethod):
         Efficiently compute histograms for stride x stride blocks.
 
         Args:
-            - qhh (np.ndarray): Encoded horizontal residuals.
-            - qhv (np.ndarray): Encoded horizontal-vertical residuals.
-            - qvh (np.ndarray): Encoded vertical-horizontal residuals.
-            - qvv (np.ndarray): Encoded vertical residuals.
-            - mask (np.ndarray | None): Mask to apply to the histograms. If None,
-                no mask is applied.
+                qhh (np.ndarray): Encoded horizontal residuals.
+                qhv (np.ndarray): Encoded horizontal-vertical residuals.
+                qvh (np.ndarray): Encoded vertical-horizontal residuals.
+                qvv (np.ndarray): Encoded vertical residuals.
+                mask (np.ndarray | None): Mask to apply to the histograms. If None,
+                    no mask is applied.
 
         Returns:
-            - Tuple[NDArray, NDArray, int, Tuple[NDArray, NDArray]]:
-                - NDArray: Features.
-                - NDArray: Weights.
-                - int: Feature dimension.
-                - Tuple[NDArray, NDArray]: Coordinates.
+            Tuple[NDArray, NDArray, int, Tuple[NDArray, NDArray]]:
+                NDArray: Features.
+                NDArray: Weights.
+                int: Feature dimension.
+                Tuple[NDArray, NDArray]: Coordinates.
         """
         H, W = qhh.shape
         x_range = np.arange(0, H - self.stride + 1, self.stride)
@@ -229,10 +229,10 @@ class Splicebuster(BaseMethod):
         coocurrance computation and center coordinate on window.
 
         Args:
-            - coords (Tuple[NDArray, NDArray]): Coordinates to correct.
+            coords (Tuple[NDArray, NDArray]): Coordinates to correct.
 
         Returns:
-            - Tuple[NDArray, NDArray]: Corrected coordinates.
+            Tuple[NDArray, NDArray]: Corrected coordinates.
         """
         x_coords, y_coords = coords
         # window filtering
@@ -258,13 +258,13 @@ class Splicebuster(BaseMethod):
         Computes features, weights and coordinates for an image.
 
         Args:
-            - image (np.ndarray): Image to process.
+            image (np.ndarray): Image to process.
 
         Returns:
-            - Tuple[NDArray, NDArray, Tuple[NDArray, NDArray]]:
-                - NDArray: Features.
-                - NDArray: Weights.
-                - Tuple[NDArray, NDArray]: Coordinates.
+            Tuple[NDArray, NDArray, Tuple[NDArray, NDArray]]:
+                NDArray: Features.
+                NDArray: Weights.
+                Tuple[NDArray, NDArray]: Coordinates.
         """
         qhh, qhv, qvh, qvv = self.filter_and_encode(image)
 
@@ -324,11 +324,11 @@ class Splicebuster(BaseMethod):
         to calculate it varies according to attribute 'pca'.
 
         Args:
-            - flat_features (np.ndarray): Flattened features.
-            - valid_features (np.ndarray): Valid features.
+            flat_features (np.ndarray): Flattened features.
+            valid_features (np.ndarray): Valid features.
 
         Returns:
-            - Tuple[NDArray, NDArray]: Tuple with the reduced flat and valid features.
+            Tuple[NDArray, NDArray]: Tuple with the reduced flat and valid features.
         """
         if self.pca == "original":
             t = feat_reduce_matrix(self.pca_dim, valid_features)
@@ -382,8 +382,9 @@ class Splicebuster(BaseMethod):
         return heatmap
 
     def benchmark(self, image: NDArray) -> BenchmarkOutput:  # type: ignore[override]
-        """
-        Wrapper for the predict method to use in benchmark.
+        """Benchmarks the Splicebuster method using the provided image and size.
+        Args: image (Tensor): Input image tensor.
+        BenchmarkOutput: Contains the heatmap and placeholders for mask and detection.
         """
         heatmap = self.predict(image=image)
 
@@ -408,7 +409,9 @@ class Splicebuster(BaseMethod):
         if config is None:
             config = {}
 
-        if "weights" in config:
-            config["weights"] = SaturationMaskConfig(**config["weights"])
+        if "saturation_mask_config" in config:
+            config["saturation_mask_config"] = SaturationMaskConfig(
+                **config["saturation_mask_config"]
+            )
 
         return cls(**config)

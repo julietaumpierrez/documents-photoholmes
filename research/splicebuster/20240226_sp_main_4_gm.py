@@ -6,7 +6,7 @@ from fileinput import filename
 import numpy as np
 from sympy import plot
 
-from photoholmes.methods.method_factory import MethodFactory
+from photoholmes.methods.factory import MethodFactory
 from photoholmes.preprocessing.image import ZeroOneRange
 from photoholmes.utils.generic import load_yaml
 from photoholmes.utils.image import plot_multiple, read_image
@@ -104,7 +104,7 @@ if RERUN_METHOD:
     method, preprocess = MethodFactory.load(METHOD_NAME, config)
 
     im_preprocessed = preprocess(image=im)
-    out = method.predict(**im_preprocessed)
+    out = method.benchmark(**im_preprocessed)
     heatmap = out["heatmap"]
 
 # Load and compare

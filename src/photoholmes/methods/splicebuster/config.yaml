@@ -6,7 +6,7 @@ pca_dim: 25
 mixture: uniform
 pca: original
 seed: 0
-weights: 
+saturation_mask_config: 
   low_th: 6
   high_th: 252
   erotion_kernel_size: 3

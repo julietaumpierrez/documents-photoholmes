@@ -1,4 +1,4 @@
-# derived from https://www.grip.unina.it/download/prog/Splicebuster/
+# code derived from https://www.grip.unina.it/download/prog/Splicebuster/
 from typing import Tuple
 
 import numpy as np
