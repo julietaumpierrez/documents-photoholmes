@@ -1,30 +1,49 @@
+# code derived from https://www.grip.unina.it/download/prog/Splicebuster/
 from typing import Tuple
 
 import numpy as np
-import torch
 from numpy.typing import NDArray
-from torch import Tensor
-
-from photoholmes.postprocessing.resizing import upscale_mask
+from scipy.interpolate import interp1d
 
 
-def postprocessing_splicebuster(
-    heatmap: NDArray, coords: Tuple[NDArray, NDArray], X: int, Y: int
-) -> Tensor:
+def normalize_non_nan(image: NDArray) -> NDArray:
     """
-    Postprocessing for splicebuster.
-
-    Args:
-        heatmap: splicebuster output
-        coords: coordinates of the heatmap used to upscale it
-        X: height of the image
-        Y: length of the image
-    Returns:
-        heatmap:
+    Heatmap normalization ignoring nan values.
     """
+    img_max = np.nanmax(image)
+    img_min = np.nanmin(image)
+    normalized_uint_img = (255 * (image - img_min) / (img_max - img_min)).astype(
+        np.uint8
+    )  # To match original implementation's processing
+    return normalized_uint_img / 255
 
-    heatmap = heatmap / np.max(heatmap)
-    heatmap = upscale_mask(coords, heatmap, (X, Y), method="linear", fill_value=0)
-    heatmap = torch.from_numpy(heatmap).float()
 
-    return heatmap
+def resize_heatmap_and_pad(
+    heatmap: NDArray, coords: Tuple[NDArray, NDArray], shape_out: Tuple[int, int]
+) -> NDArray:
+    """
+    Heatmap resizing and padding with extrapolation, as the original implementation does.
+    """
+    X, Y = shape_out
+    rangex, rangey = coords
+    x_axis = np.arange(Y)
+    y_axis = np.arange(X)
+    y = interp1d(
+        rangey,
+        heatmap,
+        axis=1,
+        kind="nearest",
+        fill_value="extrapolate",
+        assume_sorted=True,
+        bounds_error=False,
+    )
+    y = interp1d(
+        rangex,
+        y(x_axis),
+        axis=0,
+        kind="nearest",
+        fill_value="extrapolate",
+        assume_sorted=True,
+        bounds_error=False,
+    )
+    return y(y_axis).astype(heatmap.dtype)

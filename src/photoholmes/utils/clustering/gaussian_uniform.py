@@ -1,6 +1,6 @@
-# Code derived from https://github.com/grip-unina/noiseprint and CODIGO MARINA
-# FIXME: add license a Marina and Co.
-from typing import Tuple
+# Code derived from https://github.com/grip-unina/noiseprint and
+# code provided from Quentin Bammey, Marina Gardella and Tina Nikoukhah
+from typing import Optional, Tuple
 
 import numpy as np
 import scipy as sp
@@ -17,24 +17,27 @@ class GaussianUniformEM:
         tol: float = 1e-5,
         max_iter: int = 100,
         n_init: int = 30,
+        seed: Optional[int] = None,
     ) -> None:
         """
         Gaussian Uniform Expectation Maximization algorithm.
         Params:
-        - p_outlier_init: initial probability of being falsified
-        - outlier_nlogl:  log-likelihood of being falsified
-        - tol: tolerance used in a single run of the expectation step
-        - max_iter: maximum number of iterations in a single run of the expectation step
-        - n_init: number of iterations of EM to run
+            p_outlier_init (float): Initial probability of being falsified
+            outlier_nlogl (int):  Log-likelihood of being falsified
+            tol (float): Tolerance used in a single run of the expectation step
+            max_iter (int): Maximum number of iterations in a single run of the expectation step
+            n_init (int): Number of iterations of EM to run
+            seed (Optional[int]): Random seed for parameter initialization
         """
         self.p_outlier_init = p_outlier_init
         self.outlier_nlogl = outlier_nlogl
         self.pi: float = 1 - p_outlier_init
         self.max_iter = max_iter
         self.tol = tol
-        assert n_init > 1, "n_init must be at least 1"
+        assert n_init > 1, "n_init must be greater than 1"
         self.n_init = n_init
 
+        self.random_state = np.random.RandomState(seed)
         self.covariance_matrix: NDArray
         self.mean: NDArray
 
@@ -46,7 +49,7 @@ class GaussianUniformEM:
         save = self.mean, self.covariance_matrix, self.pi
         for i in range(self.n_init - 1):
             loss = self._fit_once(X)
-            if loss < best_loss:
+            if loss > best_loss:
                 best_loss = loss
                 save = self.mean, self.covariance_matrix, self.pi
         self.mean, self.covariance_matrix, self.pi = save
@@ -58,7 +61,9 @@ class GaussianUniformEM:
         difference in losses is smaller than tol.
         """
         n_samples, n_features = X.shape
-        init_index = np.random.randint(0, n_samples - 1)
+        init_index = self.random_state.random_integers(
+            low=0, high=(n_samples - 1), size=(1,)
+        ).squeeze()
         self.mean = X[init_index]
         variance = np.var(X, axis=0)
         variance += np.spacing(variance.max())
@@ -66,13 +71,14 @@ class GaussianUniformEM:
         self.pi = 1 - self.p_outlier_init
         loss_old = np.inf
         loss = 0.0
+        gammas, loss, _ = self._e_step(X)
         for i in range(self.max_iter):
+            self._m_step(X, gammas)
             gammas, loss, _ = self._e_step(X)
             loss_diff = loss - loss_old
             if 0 <= loss_diff < self.tol * np.abs(loss):
                 break
             loss_old = loss
-            self._m_step(X, gammas)
         return loss
 
     def _m_step(self, X: NDArray, gammas: NDArray) -> None:
@@ -94,7 +100,7 @@ class GaussianUniformEM:
         try:
             L = np.linalg.cholesky(self.covariance_matrix)
         except np.linalg.LinAlgError:  # covariance_matrix is not positive definite
-            for i in range(5):  # try regularizing it several times
+            for i in range(max_attempts):
                 w, v = sp.linalg.eigh(self.covariance_matrix)
                 w = np.maximum(w, np.spacing(w.max()))
                 self.covariance_matrix = v @ np.diag(w) @ v.T
@@ -117,14 +123,16 @@ class GaussianUniformEM:
         Xc = X - self.mean
         # Mahalanobis distance is now the L2 norm of L⁻¹ @ Xc.T
         # along the components axis
-        mahalanobis = sp.linalg.norm(sp.linalg.solve(L, Xc.T), axis=0, ord=2)
-        nlogl = 0.5 * (
-            np.square(mahalanobis) + n_features * np.log(2 * np.pi)
-        ) + np.sum(np.log(D))
+        Xc_m = np.linalg.solve(L, Xc.T)
+        mahalanobis = np.sum(Xc_m**2, axis=0)
+        nlogl = 0.5 * (mahalanobis + n_features * np.log(2 * np.pi)) + np.sum(np.log(D))
 
         return nlogl, mahalanobis
 
-    def _e_step(self, X: NDArray) -> Tuple[NDArray, float, NDArray]:
+    def _e_step(
+        self,
+        X: NDArray,
+    ) -> Tuple[NDArray, float, NDArray]:
         """
         Run the expectation step.
         """
@@ -141,8 +149,6 @@ class GaussianUniformEM:
         dem = np.sum(gammas, axis=1, keepdims=True)
         gammas /= dem
         loss = np.mean(np.log(dem) + max_log_likelihood)
-        # equivalent to a softmax but we also compute the loss
-        # gammas = sp.special.softmax(log_gammas, axis=1)
         return gammas[:, 0], loss, mahal
 
     def predict(self, X: NDArray) -> Tuple[NDArray, NDArray]:
