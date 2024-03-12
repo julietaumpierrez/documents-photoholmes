@@ -160,7 +160,8 @@ class Noisesniffer(BaseMethod):
         Args:
             image (Tensor): Input image tensor.
         Returns:
-            BenchmarkOutput: Contains the mask and detection and placeholder for heatmap.
+            BenchmarkOutput: Contains the mask and detection and placeholder for
+                heatmap.
         """
         mask, _ = self.predict(image)
 
