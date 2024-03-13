@@ -33,6 +33,17 @@ class AutospliceDataset(BaseDataset):
     def _get_paths(
         self, dataset_path: str, only_load_tampered: bool
     ) -> Tuple[List[str], List[str] | List[str | None]]:
+        """
+        Get the paths of the images and masks in the dataset.
+
+        Args:
+            dataset_path (str): Path to the dataset.
+            only_load_tampered (bool): Whether to load only the tampered images.
+
+        Returns:
+            Tuple[List[str], List[str] | List[str | None]]: Paths of the images and
+                masks.
+        """
         image_paths = glob.glob(
             os.path.join(dataset_path, self.FORGED_DIR, f"*{self.IMAGE_EXTENSION}")
         )
@@ -53,6 +64,15 @@ class AutospliceDataset(BaseDataset):
         return image_paths, mask_paths
 
     def _get_mask_path(self, image_path: str) -> str:
+        """
+        Get the path of the mask for the given image path.
+
+        Args:
+            image_path (str): Path to the image.
+
+        Returns:
+            str: Path to the mask.
+        """
         image_filename = image_path.split("/")[-1]
         image_name_list = image_filename.split(".")[0].split("_")[0]
         mask_name = image_name_list + "_mask"
@@ -60,6 +80,15 @@ class AutospliceDataset(BaseDataset):
         return os.path.join(self.MASK_DIR, mask_filename)
 
     def _binarize_mask(self, mask_image: Tensor) -> Tensor:
+        """
+        Binarize the mask.
+
+        Args:
+            mask_image (Tensor): Mask image.
+
+        Returns:
+            Tensor: Binarized mask image.
+        """
         return mask_image[0, :, :] > 0
 
 
