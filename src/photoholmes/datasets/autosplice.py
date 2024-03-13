@@ -9,6 +9,8 @@ from .base import BaseDataset
 
 class AutospliceDataset(BaseDataset):
     """
+    Base class for the AutoSplice dataset.
+
     Directory structure:
     img_dir (AutoSplice)
     ├── Authentic

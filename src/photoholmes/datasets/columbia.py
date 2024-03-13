@@ -9,6 +9,8 @@ from .base import BaseDataset
 
 class ColumbiaDataset(BaseDataset):
     """
+    Class for the Columbia Uncompressed Image Splicing Detection dataset.
+
     Directory structure:
     img_dir (Columbia Uncompressed Image Splicing Detection)
     ├── 4cam_auth
@@ -20,12 +22,12 @@ class ColumbiaDataset(BaseDataset):
     └── README.txt
     """
 
-    TAMP_DIR = "4cam_splc"
-    AUTH_DIR = "4cam_auth"
-    MASKS_DIR = "4cam_splc/edgemask"
-    IMAGE_EXTENSION = ".tif"
-    MASK_EXTENSION = ".jpg"
-    TAMPERED_COLOR_INDEX = 1  # Green
+    TAMP_DIR: str = "4cam_splc"
+    AUTH_DIR: str = "4cam_auth"
+    MASKS_DIR: str = "4cam_splc/edgemask"
+    IMAGE_EXTENSION: str = ".tif"
+    MASK_EXTENSION: str = ".jpg"
+    TAMPERED_COLOR_INDEX: int = 1  # Green
 
     def _get_paths(
         self, dataset_path: str, tampered_only: bool
