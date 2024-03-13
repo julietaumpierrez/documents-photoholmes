@@ -96,3 +96,28 @@ for image_data, mask, image_name in dataset:
     break
 
 # %%
+from photoholmes.datasets.columbia import ColumbiaDataset
+from photoholmes.datasets.osn import ColumbiaOSNDataset
+
+# %%
+dataset = ColumbiaDataset(
+    "/Users/sote/Desktop/data/Datasets/Columbia/",
+    preprocessing_pipeline=dq_preprocessing,
+    item_data=["image"],
+)
+# %%
+for image_data, mask, image_name in dataset:
+    print(image_data, mask, image_name)
+    break
+# %%
+dataset = ColumbiaOSNDataset(
+    "/Users/sote/Desktop/data/Datasets/osn/",
+    preprocessing_pipeline=dq_preprocessing,
+    item_data=["image"],
+)
+
+# %%
+for image_data, mask, image_name in dataset:
+    print(image_data, mask, image_name)
+    break
+# %%

@@ -28,19 +28,30 @@ class ColumbiaDataset(BaseDataset):
     TAMPERED_COLOR_INDEX = 1  # Green
 
     def _get_paths(
-        self, img_dir: str, tampered_only: bool
+        self, dataset_path: str, tampered_only: bool
     ) -> Tuple[List[str], List[str] | List[str | None]]:
+        """
+        Get the paths of the images and masks in the dataset.
+
+        Args:
+            dataset_path (str): Path to the dataset.
+            only_load_tampered (bool): Whether to load only the tampered images.
+
+        Returns:
+            Tuple[List[str], List[str] | List[str | None]]: Paths of the images and
+                masks.
+        """
         image_paths = glob.glob(
-            os.path.join(img_dir, self.TAMP_DIR, f"*{self.IMAGE_EXTENSION}")
+            os.path.join(dataset_path, self.TAMP_DIR, f"*{self.IMAGE_EXTENSION}")
         )
         mask_paths: List[Optional[str]] = [
-            os.path.join(self.img_dir, self._get_mask_path(image_path))
+            os.path.join(self.dataset_path, self._get_mask_path(image_path))
             for image_path in image_paths
         ]
 
         if not tampered_only:
             pris_paths = glob.glob(
-                os.path.join(img_dir, self.AUTH_DIR, f"*{self.IMAGE_EXTENSION}")
+                os.path.join(dataset_path, self.AUTH_DIR, f"*{self.IMAGE_EXTENSION}")
             )
 
             pris_msk_paths = [None] * len(pris_paths)
@@ -50,6 +61,15 @@ class ColumbiaDataset(BaseDataset):
         return image_paths, mask_paths
 
     def _get_mask_path(self, image_path: str) -> str:
+        """
+        Get the path of the mask for the given image path.
+
+        Args:
+            image_path (str): Path to the image.
+
+        Returns:
+            str: Path to the mask.
+        """
         image_filename = image_path.split("/")[-1]
         image_name_list = ".".join(image_filename.split(".")[:-1]).split("_")
         mask_name = "_".join(image_name_list + ["edgemask"])
@@ -57,30 +77,13 @@ class ColumbiaDataset(BaseDataset):
         return os.path.join(self.MASKS_DIR, mask_filename)
 
     def _binarize_mask(self, mask_image: Tensor) -> Tensor:
+        """
+        Binarize the mask.
+
+        Args:
+            mask_image (Tensor): Mask image.
+
+        Returns:
+            Tensor: Binarized mask image.
+        """
         return mask_image[self.TAMPERED_COLOR_INDEX, :, :] > 0
-
-
-class ColumbiaOSNDataset(ColumbiaDataset):
-    """
-    Directory structure:
-    img_dir (Columbia Uncompressed Image Splicing Detection)
-    ├── 4cam_auth
-    │   ├── [images in TIF]
-    ├── Columbia_Facebook
-    │   ├── [images in JPG]
-    |   └── Columbia_GT
-    |       └── [masks in png]
-    └── README.txt
-    """
-
-    TAMP_DIR = "Columbia_Facebook"
-    IMAGE_EXTENSION = ".jpg"
-    MASKS_DIR = "Columbia_Facebook/Columbia_GT"
-    MASK_EXTENSION = ".png"
-
-    def _get_mask_path(self, image_path: str) -> str:
-        image_filename = image_path.split("/")[-1]
-        image_name_list = ".".join(image_filename.split(".")[:-1]).split("_")
-        mask_name = "_".join(image_name_list + ["gt"])
-        mask_filename = mask_name + self.MASK_EXTENSION
-        return os.path.join(self.MASKS_DIR, mask_filename)
