@@ -3,7 +3,6 @@ import os
 from abc import ABC, abstractmethod
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
-import numpy as np
 import torch
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -110,9 +109,9 @@ class BaseDataset(ABC, Dataset):
         if self.load_jpeg_data:
             dct, qtables = read_jpeg_data(image_path, suppress_not_jpeg_warning=True)
             if "dct_coefficients" in self.item_data:
-                x["dct_coefficients"] = torch.tensor(dct)
+                x["dct_coefficients"] = dct
             if "qtables" in self.item_data:
-                x["qtables"] = torch.tensor(np.array(qtables))
+                x["qtables"] = qtables
 
         if self.mask_paths[idx] is None:
             mask = torch.zeros(image.shape[-2:], dtype=torch.bool)
