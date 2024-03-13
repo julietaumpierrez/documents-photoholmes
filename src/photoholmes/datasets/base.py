@@ -108,7 +108,7 @@ class BaseDataset(ABC, Dataset):
             image = read_image(image_path)
             x["image"] = image
         if self.load_jpeg_data:
-            dct, qtables = read_jpeg_data(image_path, suppress_not_jpeg_warning=False)
+            dct, qtables = read_jpeg_data(image_path, suppress_not_jpeg_warning=True)
             if "dct_coefficients" in self.item_data:
                 x["dct_coefficients"] = torch.tensor(dct)
             if "qtables" in self.item_data:
