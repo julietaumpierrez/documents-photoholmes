@@ -32,9 +32,9 @@ class CasiaBaseDataset(BaseDataset):
 
     IMAGES_TAMPERED_DIR: str
     MASK_TAMPERED_DIR: str
-    AUTH_DIR = "Au"
-    IMAGE_EXTENSION = ".jpg"
-    MASK_EXTENSION = ".png"
+    AUTH_DIR: str = "Au"
+    IMAGE_EXTENSION: str = ".jpg"
+    MASK_EXTENSION: str = ".png"
 
     def _get_paths(
         self, dataset_path: str, tampered_only: bool
