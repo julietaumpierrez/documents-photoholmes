@@ -128,7 +128,7 @@ def read_jpeg_data(
 
     return torch.tensor(
         _DCT_from_jpeg(jpeg, num_channels=num_dct_channels)
-    ), torch.tensor(_qtables_from_jpeg(jpeg, all=all_quant_tables))
+    ), torch.tensor(np.array(_qtables_from_jpeg(jpeg, all=all_quant_tables)))
 
 
 def _qtables_from_jpeg(
