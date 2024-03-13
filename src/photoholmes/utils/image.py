@@ -1,4 +1,3 @@
-import imghdr
 import logging
 from tempfile import NamedTemporaryFile
 from typing import List, Optional, Tuple
@@ -113,7 +112,8 @@ def read_jpeg_data(
         dct: DCT coefficient matrix for each channel
         qtables: Quantization matrix for each channel
     """
-    if imghdr.what(image_path) == "jpeg":
+
+    if image_path.endswith(".jpg") or image_path.endswith(".jpeg"):
         jpeg = jpegio.read(image_path)
     else:
         if not suppress_not_jpeg_warning:
