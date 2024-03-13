@@ -8,9 +8,9 @@ This module contains custom metrics that are not available in [torch-metrics](ht
 
 ## Metrics
 
-### TPR
-The True Positive Rate, or sensitivity, is defined as the ratio of true positives to the sum of true positives and false negatives.
-$$TPR = \frac{TP}{TP + FN}$$
+### FPR
+The False Positive Rate, is defined as the ratio of false positives to the sum of false positives and true negatives.
+$$TPR = \frac{FP}{FP + TN}$$
 ### meanAUROC
 Calculates de auroc for each image and then averages those values over the full dataset.
 ### Weighted metrics
