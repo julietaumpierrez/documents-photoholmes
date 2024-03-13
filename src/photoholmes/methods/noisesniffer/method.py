@@ -83,8 +83,8 @@ class Noisesniffer(BaseMethod):
             b (int): Number of blocks per bin.
 
         Returns:
-            valid_blocks_indeices (List): List of valid blocks in the current channel.
-            subset (List): List of selected blocks.
+            List: List of valid blocks in the current channel.
+            List: List of selected blocks.
         """
         V = []
         S = []
@@ -123,11 +123,11 @@ class Noisesniffer(BaseMethod):
         Run Noisesniffer on an image.
 
         Args:
-            - image (NDArray): Input image.
+            image (NDArray): Input image.
 
         Returns:
-            - mask (NDArray): Mask of detected forgeries.
-            - img_painted (NDArray): Image with lowest standard deviation blocks painted
+            NDArray: Mask of detected forgeries.
+            NDarray: Image with lowest standard deviation blocks painted
                 red.
         """
         image = image.astype(float)
@@ -160,7 +160,8 @@ class Noisesniffer(BaseMethod):
         Args:
             image (Tensor): Input image tensor.
         Returns:
-            BenchmarkOutput: Contains the mask and detection and placeholder for heatmap.
+            BenchmarkOutput: Contains the mask and detection and placeholder for
+                heatmap.
         """
         mask, _ = self.predict(image)
 

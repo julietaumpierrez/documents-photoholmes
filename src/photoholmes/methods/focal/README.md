@@ -45,9 +45,8 @@ image_data = {"image": image}
 input = focal_preprocessing(**image_data)
 
 # Declare the method and use the .to_device if you want to run it on cuda instead of cpu
-net_list = ["ViT", "HRNet"]
-path_to_weights = ["path_to_vit_weights","path_to_hrnet_weights"]
-method = Focal(net_list = net_list,
+path_to_weights = {"ViT":"path_to_vit_weights","HRNet":"path_to_hrnet_weights"}
+method = Focal(
     weights = path_to_weights,
 )
 method.to_device("cpu")
