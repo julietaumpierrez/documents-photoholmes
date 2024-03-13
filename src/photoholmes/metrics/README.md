@@ -16,12 +16,13 @@ The metrics are divided into two categories:
 - `Precision`: [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/precision.html)
 - `ROC`: Receiver Operating Characteristic curve. [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/roc.html)
 - `F1 score`: [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/f1_score.html)
+- `TPR`: True Positive Rate or recall. [Docs](https://lightning.ai/docs/torchmetrics/stable/classification/recall.html)
 
 For more information about the available metrics in torch-metrics please refer to the [documentation](https://lightning.ai/docs/torchmetrics/stable/).
 
 
 ### Custom metrics:
-- `TPR`: True Positive Rate or sensitivity.
+- `FPR`: False Positive Rate.
 - `meanAUROC`: Mean Area Under the Receiver Operating Characteristic curve.
 - `IoU_weighted_v1`: Weighted Intersection over Union v1.
 - `IoU_weighted_v2`: Weighted Intersection over Union v2.
