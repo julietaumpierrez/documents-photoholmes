@@ -5,7 +5,7 @@ Both papers introduce the same architechture, differing only in the trainig data
 
 The code contained in this library was derived from [the original implementation](https://github.com/mjkwon2021/CAT-Net), making only minor changes to fit the PhotoHolmes library structure. 
 
-This is a deep learning based method, the weights can be found [here](htthttps://drive.google.com/drive/folders/14uNqj46505MQc3swBQgbaiPVAWtNChbz) under the name [CAT_full_v1.pth](https://drive.google.com/file/d/1NXLDCn0ABG7eWEXltGZ4SyIsREhOUhRM/view?usp=share_link) and [CAT_full_v2.pth](https://drive.google.com/file/d/1tyOKVdx6UMys2OcNpUj9r6scxNIpcoLE/view?usp=share_link) We last checked this information March 9th 2024, please refer to the authors of the original paper if the weights can not be found.
+This is a deep learning based method, the weights can be found [here](https://drive.google.com/drive/folders/14uNqj46505MQc3swBQgbaiPVAWtNChbz) under the name [CAT_full_v1.pth](https://drive.google.com/file/d/1NXLDCn0ABG7eWEXltGZ4SyIsREhOUhRM/view?usp=share_link) and [CAT_full_v2.pth](https://drive.google.com/file/d/1tyOKVdx6UMys2OcNpUj9r6scxNIpcoLE/view?usp=share_link) We last checked this information March 9th 2024, please refer to the authors of the original paper if the weights can not be found.
 
 ## Description
 

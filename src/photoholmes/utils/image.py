@@ -1,7 +1,7 @@
 import imghdr
 import logging
 from tempfile import NamedTemporaryFile
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import cv2 as cv
 import jpegio
@@ -142,13 +142,13 @@ def read_jpeg_data(
     ), torch.tensor(_qtables_from_jpeg(jpeg, all=all_quant_tables))
 
 
-def _qtables_from_jpeg(
-    jpeg: jpegio.DecompressedJpeg, all: bool = False
-) -> List[NDArray]:
+def _qtables_from_jpeg(jpeg: jpegio.DecompressedJpeg, all: bool = False) -> NDArray:
     if all:
-        return [jpeg.quant_tables[i].copy() for i in range(len(jpeg.quant_tables))]
+        return np.array(
+            [jpeg.quant_tables[i].copy() for i in range(len(jpeg.quant_tables))]
+        )
     else:
-        return [jpeg.quant_tables[0].copy()]
+        return np.array(jpeg.quant_tables[0].copy())
 
 
 def _DCT_from_jpeg(

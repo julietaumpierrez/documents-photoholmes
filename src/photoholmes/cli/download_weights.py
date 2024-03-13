@@ -86,6 +86,7 @@ def download_catnet_weights(weights_folder: Path):
 
 
 def download_trufor_weights(weights_folder: Path):
+    import shutil
     import zipfile
 
     os.makedirs(weights_folder, exist_ok=True)
@@ -99,8 +100,12 @@ def download_trufor_weights(weights_folder: Path):
     logger.info("Unzipping weights...")
     with zipfile.ZipFile(weights_folder / "weights.zip", "r") as zip_ref:
         zip_ref.extractall(weights_folder)
+    shutil.move(
+        weights_folder / "weights/trufor.pth.tar", weights_folder / "trufor.pth.tar"
+    )
 
     os.remove(weights_folder / "weights.zip")
+    os.rmdir(weights_folder / "weights")
 
 
 def download_focal_weights(weights_folder: Path):
