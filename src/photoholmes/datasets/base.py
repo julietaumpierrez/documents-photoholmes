@@ -152,6 +152,6 @@ class BaseDataset(ABC, Dataset):
             ]
         ):
             logger.warning(
-                "Not all images are in JPEG format. When needed, an approximation will"
+                "Not all images are in JPEG format. When needed, an approximation will "
                 "be loaded by compressing the image in quality 100."
             )
