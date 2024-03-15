@@ -2,10 +2,9 @@ from enum import Enum, unique
 
 
 @unique
-class DatasetName(Enum):
+class DatasetRegistry(Enum):
     COLUMBIA = "columbia"
     COLUMBIA_OSN = "columbia_osn"
-    OSN = "osn"
     COVERAGE = "coverage"
     REALISTIC_TAMPERING = "realistic_tampering"
     REALISTIC_TAMPERING_WEBP = "realistic_tampering_webp"
@@ -30,3 +29,9 @@ class DatasetName(Enum):
     TRACE_JPEG_QUALITY_ENDO = "trace_jpeg_quality_endo"
     TRACE_HYBRID_EXO = "trace_hybrid_exo"
     TRACE_HYBRID_ENDO = "trace_hybrid_endo"
+
+    @classmethod
+    def get_all_datasets(cls):
+        dataset_names = list(DatasetRegistry)
+        datasets = [dataset.value for dataset in dataset_names]
+        return datasets
