@@ -7,7 +7,7 @@ from torch import Tensor
 from .base import BaseDataset
 
 
-class AutospliceDataset(BaseDataset):
+class BaseAutospliceDataset(BaseDataset):
     """
     Base class for the AutoSplice dataset.
 
@@ -94,7 +94,7 @@ class AutospliceDataset(BaseDataset):
         return mask_image[0, :, :] > 0
 
 
-class Autosplice100Dataset(AutospliceDataset):
+class Autosplice100Dataset(BaseAutospliceDataset):
     """
     Directory structure:
     img_dir (AutoSplice)
@@ -114,7 +114,7 @@ class Autosplice100Dataset(AutospliceDataset):
     FORGED_DIR = "Forged_JPEG100"
 
 
-class Autosplice90Dataset(AutospliceDataset):
+class Autosplice90Dataset(BaseAutospliceDataset):
     """
     Directory structure:
     img_dir (AutoSplice)
@@ -134,7 +134,7 @@ class Autosplice90Dataset(AutospliceDataset):
     FORGED_DIR = "Forged_JPEG90"
 
 
-class Autosplice75Dataset(AutospliceDataset):
+class Autosplice75Dataset(BaseAutospliceDataset):
     """
     Directory structure:
     img_dir (AutoSplice)

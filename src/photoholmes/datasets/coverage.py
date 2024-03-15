@@ -43,7 +43,7 @@ class CoverageDataset(BaseDataset):
 
         Args:
             dataset_path (str): Path to the dataset.
-            only_load_tampered (bool): Whether to load only the tampered images.
+            tampered_only (bool): Whether to load only the tampered images.
 
         Returns:
             Tuple[List[str], List[str] | List[str | None]]: Paths of the images and
