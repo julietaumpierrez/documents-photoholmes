@@ -6,7 +6,7 @@ import typer
 from pydantic import BaseModel
 from tqdm import tqdm
 
-from photoholmes.datasets.registry import DatasetName
+from photoholmes.datasets.registry import DatasetRegistry
 from photoholmes.methods.registry import MethodRegistry
 from photoholmes.metrics.registry import MetricRegistry
 from photoholmes.utils.generic import load_yaml
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def run_benchmark(
     method_name: MethodRegistry,
     method_config: str | dict,
-    dataset_name: DatasetName,
+    dataset_name: DatasetRegistry,
     dataset_path: str,
     metrics: List[str],
     tampered_only: bool = False,
@@ -70,7 +70,7 @@ def main(
     method_config: str = typer.Option(
         None, help="Path to the configuration file for the method."
     ),
-    dataset_name: DatasetName = typer.Option(..., help="Name of the dataset."),
+    dataset_name: DatasetRegistry = typer.Option(..., help="Name of the dataset."),
     dataset_path: str = typer.Option(..., help="Path to the dataset."),
     metrics: str = typer.Option(
         ..., "--metrics", help="Space-separated list of metrics to use."
@@ -100,7 +100,7 @@ def main(
 
 
 class DatasetSpec(BaseModel):
-    name: DatasetName
+    name: DatasetRegistry
     path: str
     tampered_only: bool
 
