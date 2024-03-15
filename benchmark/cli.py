@@ -29,7 +29,7 @@ def run_benchmark(
     device: str = "cpu",
 ):
     from photoholmes.benchmark import Benchmark
-    from photoholmes.datasets.dataset_factory import DatasetFactory
+    from photoholmes.datasets.factory import DatasetFactory
     from photoholmes.methods.factory import MethodFactory
     from photoholmes.metrics.factory import MetricFactory
 
@@ -42,9 +42,9 @@ def run_benchmark(
     # Load dataset
     dataset = DatasetFactory.load(
         dataset_name=dataset_name,
-        dataset_dir=dataset_path,
+        dataset_path=dataset_path,
         tampered_only=tampered_only,
-        transform=preprocessing,
+        preprocessing_pipeline=preprocessing,
     )
 
     metrics_objects = MetricFactory.load(metrics)
