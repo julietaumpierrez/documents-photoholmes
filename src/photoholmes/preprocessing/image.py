@@ -153,7 +153,7 @@ class ToNumpy(BasePreprocessing):
             elif isinstance(v, Tensor):
                 kwargs[k] = v.cpu().numpy()
             else:
-                kwargs[k] = np.array(v)
+                kwargs[k] = v
 
         if t_image is None:
             return {**kwargs}
