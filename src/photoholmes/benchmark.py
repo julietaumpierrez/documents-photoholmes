@@ -296,8 +296,9 @@ class Benchmark:
 
         Args:
             output_path (Path): Path to the output folder.
-            image_name (str): Name of the processed image.
-            output (BenchmarkOutput): Predicted outputs from the method.
+            metrics (MetricCollection): MetricCollection to use for evaluation.
+            report_id (str): Report id (timestamp and dataset type) to name the report file.
+            total_images (int): Amount of images evaluated.
 
         """
         metrics_path = output_path / "metrics" / report_id
