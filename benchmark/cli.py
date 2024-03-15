@@ -125,7 +125,7 @@ def run_from_config(
     bench_config = BenchmarkConfig(**load_yaml(config_path))
 
     from photoholmes.benchmark import Benchmark
-    from photoholmes.datasets.dataset_factory import DatasetFactory
+    from photoholmes.datasets.factory import DatasetFactory
     from photoholmes.methods.factory import MethodFactory
     from photoholmes.metrics.factory import MetricFactory
 
@@ -141,9 +141,9 @@ def run_from_config(
     for d in tqdm(bench_config.datasets, desc="Setting up datasets"):
         dataset = DatasetFactory.load(
             dataset_name=d.name,
-            dataset_dir=d.path,
+            dataset_path=d.path,
             tampered_only=d.tampered_only,
-            transform=preprocessing,
+            preprocessing_pipeline=preprocessing,
         )
         if len(dataset) == 0:
             logger.warning(f"Dataset {d.name} is empty.")

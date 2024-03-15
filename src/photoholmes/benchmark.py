@@ -99,6 +99,7 @@ class Benchmark:
             self.device = torch.device("cpu")
         else:
             self.device = torch.device(device)
+        print(self.device)
 
         # TODO: set an attribute "output_keys" in the method class and use that
         # to determine whether to save the mask and heatmap or not
@@ -171,7 +172,11 @@ class Benchmark:
                 if output["detection"].ndim == 2:
                     output["detection"] = output["detection"].squeeze(0)
 
-                detection_gt = torch.tensor(int(torch.any(mask))).unsqueeze(0)
+                detection_gt = (
+                    torch.tensor(torch.any(mask))
+                    .unsqueeze(0)
+                    .to(self.device, dtype=torch.int32)
+                )
 
                 detection_metrics.update(output["detection"], detection_gt)
                 self._detection = True
