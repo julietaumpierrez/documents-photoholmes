@@ -137,10 +137,18 @@ class Benchmark:
         )
         self._print_setup_message(method, dataset, metrics, output_path)
 
-        metrics_on_device = metrics.to(self.device, dtype=torch.float32)
-        heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
-        mask_metrics = metrics_on_device.clone(prefix="mask")
-        detection_metrics = metrics_on_device.clone(prefix="detection")
+        # metrics_on_device = metrics.to(self.device, dtype=torch.float32)
+        # heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
+        # mask_metrics = metrics_on_device.clone(prefix="mask")
+        # detection_metrics = metrics_on_device.clone(prefix="detection")
+
+        heatmap_metrics = metrics.clone(prefix="heatmap").to(
+            self.device, dtype=torch.float32
+        )
+        mask_metrics = metrics.clone(prefix="mask").to(self.device, dtype=torch.float32)
+        detection_metrics = metrics.clone(prefix="detection").to(
+            self.device, dtype=torch.float32
+        )
 
         image_count = 0
         for data, mask, image_name in tqdm(dataset, desc="Processing Images"):
