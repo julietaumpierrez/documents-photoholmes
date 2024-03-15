@@ -98,6 +98,7 @@ class Benchmark:
             self.device = torch.device("cpu")
         else:
             self.device = torch.device(device)
+        print(self.device)
 
         self._mask = False
         self._heatmap = False
