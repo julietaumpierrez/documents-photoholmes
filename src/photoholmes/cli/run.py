@@ -40,7 +40,7 @@ def plot_results(
     plt.show()
 
 
-@run_app.command("adaptive_cfa_net")
+@run_app.command("adaptive_cfa_net", help="Run the Adaptive CFA Net method.")
 def run_adaptive_cfa_net(
     image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
     output_folder: Annotated[
@@ -111,7 +111,7 @@ def run_adaptive_cfa_net(
         plot_results("Output of Adaptive CFA Net method", plots)
 
 
-@run_app.command("catnet")
+@run_app.command("catnet", help="Run the CatNet method.")
 def run_catnet(
     image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
     output_folder: Annotated[
@@ -231,7 +231,7 @@ def run_dq(
     return
 
 
-@run_app.command("exif_as_language")
+@run_app.command("exif_as_language", help="Run the Exif As Language method.")
 def run_exif_as_language(
     image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
     output_folder: Annotated[
@@ -324,7 +324,7 @@ def run_exif_as_language(
     return
 
 
-@run_app.command("focal")
+@run_app.command("focal", help="Run the Focal method.")
 def run_focal(
     image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
     output_folder: Annotated[
@@ -408,7 +408,7 @@ def run_focal(
     return
 
 
-@run_app.command("noisesniffer")
+@run_app.command("noisesniffer", help="Run the Noisesniffer method.")
 def run_noisesniffer(
     image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
     output_folder: Annotated[
@@ -455,7 +455,7 @@ def run_noisesniffer(
         plot_results("Output of Noisesniffer method", plots)
 
 
-@run_app.command("psccnet")
+@run_app.command("psccnet", help="Run the PSCCNet method.")
 def run_psccnet(
     image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
     output_folder: Annotated[
@@ -554,7 +554,7 @@ def run_psccnet(
         plot_results("Output of PSCCNet method", plots)
 
 
-@run_app.command("splicebuster")
+@run_app.command("splicebuster", help="Run the Splicebuster method.")
 def run_splicebuster(
     image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
     output_folder: Annotated[
@@ -601,7 +601,7 @@ def run_splicebuster(
         plot_results("Output of Splicebuster method", plots)
 
 
-@run_app.command("trufor")
+@run_app.command("trufor", help="Run the TruFor method.")
 def run_trufor(
     image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
     output_folder: Annotated[

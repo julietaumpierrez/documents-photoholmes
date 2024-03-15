@@ -12,7 +12,7 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 app = typer.Typer()
-app.add_typer(run_app, name="run")
+app.add_typer(run_app, name="run", help="Run a method on an image.")
 
 
 @app.command(name="adapt_weights", help="Adapt weights for a photoholmes method")
@@ -94,11 +94,6 @@ def run_download_weights(
             "No weights available for this method. Check the method README "
             "for more information."
         )
-
-
-@app.command(name="health", help="test the cli is working.")
-def test():
-    print("CLI is working!")
 
 
 def cli():
