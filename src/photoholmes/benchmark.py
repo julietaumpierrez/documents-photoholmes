@@ -173,7 +173,7 @@ class Benchmark:
                     output["detection"] = output["detection"].squeeze(0)
 
                 detection_gt = (
-                    torch.tensor(torch.any(mask))
+                    torch.tensor(int(torch.any(mask)))
                     .unsqueeze(0)
                     .to(self.device, dtype=torch.int32)
                 )
