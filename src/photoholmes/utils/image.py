@@ -1,4 +1,3 @@
-import imghdr
 import logging
 from tempfile import NamedTemporaryFile
 from typing import Optional, Tuple
@@ -124,7 +123,8 @@ def read_jpeg_data(
         dct: DCT coefficient matrix for each channel
         qtables: Quantization matrix for each channel
     """
-    if imghdr.what(image_path) == "jpeg":
+
+    if image_path.endswith(".jpg") or image_path.endswith(".jpeg"):
         jpeg = jpegio.read(image_path)
     else:
         if not suppress_not_jpeg_warning:
@@ -139,7 +139,7 @@ def read_jpeg_data(
 
     return torch.tensor(
         _DCT_from_jpeg(jpeg, num_channels=num_dct_channels)
-    ), torch.tensor(_qtables_from_jpeg(jpeg, all=all_quant_tables))
+    ), torch.tensor(np.array(_qtables_from_jpeg(jpeg, all=all_quant_tables)))
 
 
 def _qtables_from_jpeg(jpeg: jpegio.DecompressedJpeg, all: bool = False) -> NDArray:

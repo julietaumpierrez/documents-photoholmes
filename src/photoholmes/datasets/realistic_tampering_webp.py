@@ -4,6 +4,7 @@ from .realistic_tampering import RealisticTamperingDataset
 class RealisticTamperingWebPDataset(RealisticTamperingDataset):
     """
     Realistic Tampering Dataset saved in WebP format.
+
     Directory structure:
     img_dir (realistic-tampering-dataset)
     ├── Canon_60D

@@ -78,7 +78,23 @@ output = method.predict(**input)
 plt.imshow(output.to("cpu").numpy())
 overlay_rgb = overlay(image_path + "paul_cvpr.jpeg", output.to("cpu").numpy())
 plt.imshow(overlay_rgb)
-plt.imsave(image_path + "paul_cvpr_adaptive_cfa.png", overlay_rgb)
+plt.imsave(image_path + "paul_cvpr_adaptive_cfa_pretrained.png", overlay_rgb)
+# %%
+# AdaptiveCFA with jpeg weights
+image = read_image(image_path + "paul_cvpr.jpeg")
+image_data = {"image": image}
+input = adaptive_cfa_net_preprocessing(**image_data)
+arch_config = "pretrained"
+path_to_weights = weights_path + "adapted_to_j95_database.pt"
+method = AdaptiveCFANet(
+    arch_config=arch_config,
+    weights=path_to_weights,
+)
+output = method.predict(**input)
+plt.imshow(output.to("cpu").numpy())
+overlay_rgb = overlay(image_path + "paul_cvpr.jpeg", output.to("cpu").numpy())
+plt.imshow(overlay_rgb)
+plt.imsave(image_path + "paul_cvpr_adaptive_cfa_jpeg.png", overlay_rgb)
 # %%
 # CatNet
 image = read_image(image_path + "paul_cvpr.jpeg")
@@ -186,16 +202,29 @@ overlay_rgb = overlay(image_path + "paul_cvpr.jpeg", output[0].to("cpu").numpy()
 plt.imshow(overlay_rgb)
 plt.imsave(image_path + "paul_cvpr_psccnet.png", overlay_rgb)
 # %%
-# Splicebuster
+# Splicebuster gu
 image = read_image(image_path + "paul_cvpr.jpeg")
 image_data = {"image": image}
 input = splicebuster_preprocessing(**image_data)
-method = Splicebuster()
+method = Splicebuster(mixture="uniform")
 output = method.predict(**input)
 plt.imshow(output)
 overlay_rgb = overlay(image_path + "paul_cvpr.jpeg", output)
 plt.imshow(overlay_rgb)
-plt.imsave(image_path + "paul_cvpr_splicebuster.png", overlay_rgb)
+plt.imsave(image_path + "paul_cvpr_splicebuster_gu.png", overlay_rgb)
+
+
+# %%
+# Splicebuster gg
+# image = read_image(image_path + "paul_cvpr.jpeg")
+# image_data = {"image": image}
+# input = splicebuster_preprocessing(**image_data)
+# method = Splicebuster(mixture="gaussian")
+# output = method.predict(**input)
+# plt.imshow(output)
+# overlay_rgb = overlay(image_path + "paul_cvpr.jpeg", output)
+# plt.imshow(overlay_rgb)
+# plt.imsave(image_path + "paul_cvpr_splicebuster_gg.png", overlay_rgb)
 # %%
 # Trufor
 image = read_image(image_path + "paul_cvpr.jpeg")

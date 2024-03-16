@@ -13,6 +13,7 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 app = typer.Typer()
+app.add_typer(run_app, name="run", help="Run a method on an image.")
 
 
 @app.command(name="download_weights", help="Automatic weight download for a method")

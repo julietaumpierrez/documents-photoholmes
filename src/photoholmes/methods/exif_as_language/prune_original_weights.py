@@ -16,9 +16,6 @@ def prune_original_weights(weights: Union[str, Path, Dict[str, Tensor]], out_pat
     Args:
         weights (Union[str, Path, Dict[str, Tensor]]): Path to the original weights.
         out_path (str): Path to save the pruned weights.
-
-    Returns:
-        None
     """
     if isinstance(weights, (str, Path)):
         logger.info(f"Loading weights from {weights}")

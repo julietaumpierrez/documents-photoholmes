@@ -4,7 +4,7 @@ This is the implemenation of the method by Bammey et al. that can be found [here
 
 The code contained in this library was derived from [the original implementation](https://github.com/qbammey/adaptive_cfa_forensics), making only minor changes to fit the PhotoHolmes library structure. 
 
-This is a deep learning based method, the weights can be found [here](https://github.com/qbammey/adaptive_cfa_forensics/tree/master/src/models) under the name [pretrained.pt](https://github.com/qbammey/adaptive_cfa_forensics/blob/master/src/models/pretrained.pt). We last checked this information March 9th 2024, please refer to the authors of the original paper if the weights can not be found.
+This is a deep learning based method, the weights can be found [here](https://github.com/qbammey/adaptive_cfa_forensics/tree/master/src/models) under the name [pretrained.pt](https://github.com/qbammey/adaptive_cfa_forensics/blob/master/src/models/pretrained.pt) for the pretrained weights and [adapted_to_j95_database.pt](https://github.com/qbammey/adaptive_cfa_forensics/blob/master/src/models/adapted_to_j95_database.pt) for weights obtained through training with jpeg images. We last checked this information March 9th 2024, please refer to the authors of the original paper if the weights can not be found.
 
 
 ## Description

@@ -35,12 +35,29 @@ def third_order_residual(x: NDArray, axis: int = 0) -> NDArray:
 
 
 def qround(y: NDArray) -> NDArray:
+    """
+    Quantization rounding as specified in the paper.
+
+    Args:
+        y (NDArray): Input array.
+
+    Returns:
+        NDArray: Quantized array.
+    """
     return np.sign(y) * np.floor(np.abs(y) + 0.5)
 
 
 def quantize(x: NDArray, T: int = 1, q: Union[int, float] = 2) -> NDArray[np.int8]:
     """
     Uniform quantization used in the paper.
+
+    Args:
+        x (NDArray): Input image. Dims (H, W)
+        T (int): Threshold for the quantization.
+        q (Union[int, float]): Quantization factor.
+
+    Returns:
+        NDArray: Quantized image. Dims (H, W)
     """
     q = 3 * float(q) / 256
     if isinstance(x, np.ndarray):
@@ -125,7 +142,7 @@ def get_disk_kernel(radius: int) -> NDArray:
         radius (int): Radius of the disk.
 
     Returns:
-        kernel: Disk kernel of the given radius.
+        NDArray: Disk kernel of the given radius.
     """
     xx, yy = np.meshgrid(np.arange(-radius, radius + 1), np.arange(-radius, radius + 1))
     kernel = (xx**2 + yy**2) <= radius**2
@@ -141,12 +158,13 @@ def get_saturated_region_mask(
     """
     Creates a binary mask of the saturated regions in the image.
 
-    Params:
+    Args:
         img (NDArray): Image to get the mask from.
         low_th (float): Lower threshold for the saturated pixels.
         high_th (float): Upper threshold for the saturated pixels.
         erotion_kernel_size (int): Size of the square kernel for the erotion
             operation.
+
     Returns:
         NDArray: Binary mask of the saturated regions.
     """
@@ -211,8 +229,9 @@ def gaussian_mixture_mahalanobis(
         valid_features (NDArray): Non-saturated (flat) features.
         flat_features (NDArray): All (flat) features.
         valid (NDArray): Mask of the valid pixels.
-    Output:
-        NDarray: Mahalanobis distance labels.
+
+    Returns:
+        NDArray: Mahalanobis distance labels.
     """
     gg_mixt = GaussianMixture(seed=seed)
     mus, covs = gg_mixt.fit(valid_features)
@@ -242,8 +261,9 @@ def gaussian_uniform_mahalanobis(
         valid_features (NDArray): Non-saturated (flat) features.
         flat_features (NDArray): All (flat) features.
         valid (NDArray): Mask of the valid pixels.
-    Output:
-        NDarray: Mahalanobis distance labels.
+
+    Returns:
+        NDArray: Mahalanobis distance labels.
     """
     gu_mixt = GaussianUniformEM(seed=seed)
     mus, covs, _ = gu_mixt.fit(valid_features)

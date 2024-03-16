@@ -15,17 +15,19 @@ T = TypeVar("T", Tensor, NDArray)
 class ZeroOneRange(BasePreprocessing):
     """
     Changes the image range from [0, 255] to [0, 1].
-
-    Args:
-        image: Image to be normalized.
-        **kwargs: Additional keyword arguments to passthrough.
-    Returns:
-        A dictionary with the following key-value pairs:
-            - "image": The normalized image.
-            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
     def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
+        """
+        Args:
+            image (T): Image to be normalized.
+            **kwargs: Additional keyword arguments to passthrough.
+
+        Returns:
+            Dict[str, Any]: A dictionary with the following key-value pairs:
+                - "image": The normalized image.
+                - **kwargs: The additional keyword arguments passed through unchanged.
+        """
         if image.dtype == np.uint8 or image.dtype == torch.uint8:
             image = image / 255
         elif image.max() > 1:
@@ -36,14 +38,6 @@ class ZeroOneRange(BasePreprocessing):
 class Normalize(BasePreprocessing):
     """
     Normalize an image.
-
-    Args:
-        image: Image to be normalized.
-        **kwargs: Additional keyword arguments to passthrough.
-    Returns:
-        A dictionary with the following key-value pairs:
-            - "image": The normalized image.
-            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
     def __init__(
@@ -51,6 +45,11 @@ class Normalize(BasePreprocessing):
         mean: Union[Tuple[float, ...], T],
         std: Union[Tuple[float, ...], T],
     ) -> None:
+        """
+        Args:
+            mean (Union[Tuple[float, ...], T]): Mean value for each channel.
+            std (Union[Tuple[float, ...], T]): Standard deviation for each channel.
+        """
         if isinstance(mean, tuple):
             self.mean = np.array(mean)
         else:
@@ -61,6 +60,16 @@ class Normalize(BasePreprocessing):
             self.std = std
 
     def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
+        """
+        Args:
+            image (T): Image to be normalized.
+            **kwargs: Additional keyword arguments to passthrough.
+
+        Returns:
+            Dict[str, Any]: A dictionary with the following key-value pairs:
+                - "image": The normalized image.
+                - **kwargs: The additional keyword arguments passed through unchanged.
+        """
         if isinstance(image, Tensor):
             mean = torch.as_tensor(self.mean, dtype=torch.float32)
             std = torch.as_tensor(self.std, dtype=torch.float32)
@@ -86,18 +95,19 @@ class Normalize(BasePreprocessing):
 class ToTensor(BasePreprocessing):
     """
     Converts a numpy array to a PyTorch tensor.
-
-    Args:
-        image: Image to be converted to a tensor.
-        **kwargs: Additional keyword arguments to passthrough.
-
-    Returns:
-        A dictionary with the following key-value pairs:
-            - "image": The input image as a PyTorch tensor.
-            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
     def __call__(self, image: NDArray, **kwargs) -> Dict[str, Any]:
+        """
+        Args:
+            image (NDArray): Image to be converted to a tensor.
+            **kwargs: Additional keyword arguments to passthrough.
+
+        Returns:
+            Dict[str, Any]: A dictionary with the following key-value pairs:
+                - "image": The input image as a PyTorch tensor.
+                - **kwargs: The additional keyword arguments passed through unchanged.
+        """
         if isinstance(image, Image):
             t_image = torch.from_numpy(image)
             if t_image.ndim == 3:
@@ -125,20 +135,21 @@ class ToNumpy(BasePreprocessing):
     """
     Converts inputs to numpy arrays. If input is already a numpy array,
     it leaves it as is.
-
-    Args:
-        image: Image to be converted to a tensor.
-        **kwargs: Additional keyword arguments to passthrough.
-
-    Returns:
-        A dictionary with the following key-value pairs:
-            - "image": The input image as a PyTorch tensor.
-            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
     def __call__(
         self, image: Optional[Union[T, Image]] = None, **kwargs
     ) -> Dict[str, Any]:
+        """
+        Args:
+            image(Optional[Union[T, Image]]): Image to be converted to a tensor.
+            **kwargs: Additional keyword arguments to passthrough.
+
+        Returns:
+            Dict[str, Any]: A dictionary with the following key-value pairs:
+                - "image": The input image as a numpy array.
+                - **kwargs: The additional keyword arguments passed through unchanged.
+        """
         t_image = None
         if isinstance(image, Tensor):
             t_image = image.permute(1, 2, 0).cpu().numpy()
@@ -153,7 +164,7 @@ class ToNumpy(BasePreprocessing):
             elif isinstance(v, Tensor):
                 kwargs[k] = v.cpu().numpy()
             else:
-                kwargs[k] = np.array(v)
+                kwargs[k] = v
 
         if t_image is None:
             return {**kwargs}
@@ -164,18 +175,19 @@ class ToNumpy(BasePreprocessing):
 class RGBtoGray(BasePreprocessing):
     """
     Converts an RGB image to grayscale.
-
-    Args:
-        image: Image to be converted to grayscale.
-        **kwargs: Additional keyword arguments to passthrough.
-
-    Returns:
-        A dictionary with the following key-value pairs:
-            - "image": The input image as a grayscale numpy array or PyTorch tensor.
-            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
     def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
+        """
+        Args:
+            image (T): Image to be converted to grayscale.
+            **kwargs: Additional keyword arguments to passthrough.
+
+        Returns:
+            Dict[str, Any]:A dictionary with the following key-value pairs:
+                - "image": The input image as a grayscale numpy array or PyTorch tensor.
+                - **kwargs: The additional keyword arguments passed through unchanged.
+        """
         if isinstance(image, Tensor):
             image = 0.299 * image[0] + 0.587 * image[1] + 0.114 * image[2]
             image = image.unsqueeze(0)
@@ -190,17 +202,19 @@ class RGBtoGray(BasePreprocessing):
 class RoundToUInt(BasePreprocessing):
     """
     Rounds the input float tensor and converts it to an unsigned integer.
-    Args:
-        image: Image to be converted to rounded into uint.
-        **kwargs: Additional keyword arguments to passthrough.
-
-    Returns:
-        A dictionary with the following key-value pairs:
-            - "image": The input image rounded as a PyTorch tensor.
-            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
     def __call__(self, image: Tensor, **kwargs) -> Dict[str, Any]:
+        """
+        Args:
+            image (Tensor): Image to be converted to rounded into uint.
+            **kwargs: Additional keyword arguments to passthrough.
+
+        Returns:
+            Dict[str, Any]: A dictionary with the following key-value pairs:
+                - "image": The input image rounded as a PyTorch tensor.
+                - **kwargs: The additional keyword arguments passed through unchanged.
+        """
         rounded_image = torch.round(image).byte()
         return {"image": rounded_image, **kwargs}
 
@@ -211,6 +225,16 @@ class GrayToRGB(BasePreprocessing):
     """
 
     def __call__(self, image: T, **kwargs):
+        """
+        Args:
+            image (T): Image to be converted to grayscale.
+            **kwargs: Additional keyword arguments to passthrough.
+
+        Returns:
+            Dict[str, Any]: A dictionary with the following key-value pairs:
+                - "image": The input image as a grayscale numpy array or PyTorch tensor.
+                - **kwargs: The additional keyword arguments passed through unchanged.
+        """
         if isinstance(image, Tensor):
             if image.ndim == 2:
                 image = image.unsqueeze(0).repeat(3, 1, 1)
@@ -230,6 +254,16 @@ class GetImageSize(BasePreprocessing):
     """
 
     def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
+        """
+        Args:
+            image (T): Image to be converted to grayscale.
+            **kwargs: Additional keyword arguments to passthrough.
+
+        Returns:
+            Dict[str, Any]: A dictionary with the following key-value pairs:
+                - "image": The input image as a grayscale numpy array or PyTorch tensor.
+                - **kwargs: The additional keyword arguments passed through unchanged.
+        """
         if isinstance(image, Tensor):
             size = tuple(image.shape[1:])
         elif isinstance(image, np.ndarray):
@@ -244,18 +278,19 @@ class GetImageSize(BasePreprocessing):
 class RGBtoYCrCb(BasePreprocessing):
     """
     Converts an RGB image to YCrCb.
-
-    Args:
-        image: Image to be converted to YCrCb.
-        **kwargs: Additional keyword arguments to passthrough.
-
-    Returns:
-        A dictionary with the following key-value pairs:
-            - "image": The input image as a YCrCb PyTorch tensor.
-            - **kwargs: The additional keyword arguments passed through unchanged.
     """
 
     def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
+        """
+        Args:
+            image (T): Image to be converted to YCrCb.
+            **kwargs: Additional keyword arguments to passthrough.
+
+        Returns:
+            Dict[str, Any]: A dictionary with the following key-value pairs:
+                - "image": The input image as a YCrCb PyTorch tensor.
+                - **kwargs: The additional keyword arguments passed through unchanged.
+        """
         np_image = ToNumpy()(image)["image"]
         t_np_image = cv.cvtColor(np_image, cv.COLOR_RGB2YCrCb)
         t_image = ToTensor()(t_np_image)["image"]

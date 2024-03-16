@@ -336,10 +336,13 @@ class TruFor(BaseTorchMethod):
     def benchmark(self, image: Tensor) -> BenchmarkOutput:
         """
         Benchmarks the TruFor method using the provided image.
+
         Args:
             image (Tensor): Input image tensor.
+
         Returns:
-            BenchmarkOutput: Contains the heatmap and detection and placeholder for mask.
+            BenchmarkOutput: Contains the heatmap and detection and placeholder for
+            mask.
         """
         heatmap, conf, det, _ = self.predict(image)
         if self.use_confidence:
