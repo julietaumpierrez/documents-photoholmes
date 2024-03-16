@@ -5,6 +5,7 @@ from typing import Optional
 import numpy as np
 import torch
 from numpy.typing import NDArray
+from torch import Tensor
 
 logger = logging.getLogger(__name__)
 
@@ -17,19 +18,16 @@ class PatchedImage:
         stride: Optional[int] = None,
         num_per_dim: Optional[int] = None,
     ):
-        """Representation of an image that is sliced into patches
-
-        Parameters
-        ----------
-        data: torch.Tensor
-            - [C, H, W]
-        patch_size: int
-        stride: int | None
-            - If None, it's calculated using num_per_dim
-        num_per_dim: int | None
-            - If stride is None, calculates it as as (max(height, widht) - patch_size) / self.stride
-            - if None,
         """
+        Representation of an image that is sliced into patches.
+
+        Attributes:
+            data (torch.Tensor): The image data.
+            patch_size (int): The size of the patches.
+            stride (Optional[int]): The stride of the patches.
+            num_per_dim (Optional[int]): The number of patches per dimension.
+        """
+
         self.data = data.float()
 
         # Initialize image attributes
@@ -52,18 +50,16 @@ class PatchedImage:
         self.max_h_idx = 1 + floor((height - self.patch_size) / self.stride)
         self.max_w_idx = 1 + floor((width - self.patch_size) / self.stride)
 
-    def get_patch(self, h_idx: int, w_idx: int) -> torch.Tensor:
-        """Get a patch from the image
+    def get_patch(self, h_idx: int, w_idx: int) -> Tensor:
+        """
+        Get a patch from the image.
 
-        Parameters
-        ----------
-        h_idx : int
-        w_idx : int
+        Args:
+            h_idx (int): The index of the patch along the height dimension.
+            w_idx (int): The index of the patch along the width dimension.
 
-        Returns
-        -------
-        torch.Tensor
-            [C, patch_size, patch_size]
+        Returns:
+            Tensor: The patch.
         """
         h_coord = h_idx * self.stride
         w_coord = w_idx * self.stride
@@ -72,18 +68,16 @@ class PatchedImage:
             :, h_coord : h_coord + self.patch_size, w_coord : w_coord + self.patch_size
         ]
 
-    def get_patch_map(self, h_idx: int, w_idx: int) -> torch.Tensor:
-        """Get a binary mask for the patch.
+    def get_patch_map(self, h_idx: int, w_idx: int) -> Tensor:
+        """
+        Get a binary mask for the patch.
 
-        Parameters
-        ----------
-        h_idx : int
-        w_idx : int
+        Args:
+            h_idx (int): The index of the patch along the height dimension.
+            w_idx (int): The index of the patch along the width dimension.
 
-        Returns
-        -------
-        torch.ByteTensor
-            [H, W], values of {0, 1}
+        Returns:
+            Tensor: [H, W], values of {0, 1}
         """
         h_coord = h_idx * self.stride
         w_coord = w_idx * self.stride
@@ -97,18 +91,15 @@ class PatchedImage:
 
         return binary_map
 
-    def get_patches(self, idxs: NDArray) -> torch.Tensor:
-        """Get patches from image given its indices
+    def get_patches(self, idxs: NDArray) -> Tensor:
+        """
+        Get patches from image given its indices.
 
-        Parameters
-        ----------
-        idxs : torch.Tensor
-            [n_patches, 2], [n_patches, (h_idx, w_idx)]
+        Args:
+            idxs (NDArray): [n_patches, 2], [n_patches, (h_idx, w_idx)]
 
-        Returns
-        -------
-        torch.Tensor
-            [n_patches, _, patch_size, patch_size]
+        Returns:
+            Tensor: [n_patches, _, patch_size, patch_size]
         """
         n_patches = idxs.shape[0]
         patches = torch.zeros(
@@ -126,7 +117,16 @@ class PatchedImage:
 
         return patches
 
-    def get_patch_maps(self, idxs: NDArray) -> torch.Tensor:
+    def get_patch_maps(self, idxs: NDArray) -> Tensor:
+        """
+        Get binary maps for patches given their indices.
+
+        Args:
+            idxs (NDArray): [n_patches, 2], [n_patches, (h_idx, w_idx)]
+
+        Returns:
+            Tensor: [n_patches, H, W], values of {0, 1}
+        """
         n_patches = idxs.shape[0]
         _, height, width = self.shape
 
@@ -138,18 +138,16 @@ class PatchedImage:
 
         return maps
 
-    def patches_gen(self, batch_size=32):
-        """Generator for all patches in an image, in raster scan order
+    def patches_gen(self, batch_size: int = 32):
+        """
+        Generator for all patches in an image, in raster scan order.
 
-        Parameters
-        ----------
-        batch_size : int, optional
-            Number of patches in each iteration, by default 32
+        Args:
+            batch_size (int, optional): Number of patches in each iteration.
+                Defaults to 32.
 
-        Returns
-        -------
-        torch.Tensor
-            [batch_size, _, patch_size, patch_size]
+        Yields:
+            Tensor: [batch_size, _, patch_size, patch_size]
         """
         count = 0
 
@@ -168,7 +166,17 @@ class PatchedImage:
             yield patches
             count += 1
 
-    def patch_maps_gen(self, batch_size=32):
+    def patch_maps_gen(self, batch_size: int = 32):
+        """
+        Generator for all patch maps in an image, in raster scan order.
+
+        Args:
+            batch_size (int, optional): Number of patches in each iteration.
+                Defaults to 32.
+
+        Yields:
+            Tensor: [batch_size, H, W], values of {0, 1}
+        """
         count = 0
 
         # Initialize indices / coords of all patches, [n_patches, 2]
@@ -185,18 +193,16 @@ class PatchedImage:
             yield patches
             count += 1
 
-    def pred_idxs_gen(self, batch_size=32):
-        """Generator for all prediction map indices.
+    def pred_idxs_gen(self, batch_size: int = 32):
+        """
+        Generator for all prediction map indices.
 
-        Parameters
-        ----------
-        batch_size : int, optional
-            Number of indices in each iteration, by default 32
+        Args:
+            batch_size (int, optional): Number of indices in each iteration.
+                Defaults to 32.
 
-        Returns
-        -------
-        torch.Tensor
-            [batch_size, 4]
+        Yields:
+            Tensor: [batch_size, 4]
         """
         idxs = (
             np.mgrid[
@@ -214,18 +220,16 @@ class PatchedImage:
             yield idxs[count * batch_size : (count + 1) * batch_size]
             count += 1
 
-    def idxs_gen(self, batch_size=32):
-        """Generator for indices of the image_patches.
+    def idxs_gen(self, batch_size: int = 32):
+        """
+        Generator for indices of the image_patches.
 
-        Parameters
-        ----------
-        batch_size : int, optional
-            Number of indices in each iteration, by default 32
+        Args:
+            batch_size (int, optional): Number of indices in each iteration.
+                Defaults to 32.
 
-        Returns
-        -------
-        torch.Tensor
-            [batch_size, 4]
+        Yields:
+            Tensor: [batch_size, 2]
         """
         idxs = (
             np.mgrid[

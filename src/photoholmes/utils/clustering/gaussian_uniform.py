@@ -21,7 +21,8 @@ class GaussianUniformEM:
     ) -> None:
         """
         Gaussian Uniform Expectation Maximization algorithm.
-        Params:
+
+        Attributes:
             p_outlier_init (float): Initial probability of being falsified
             outlier_nlogl (int):  Log-likelihood of being falsified
             tol (float): Tolerance used in a single run of the expectation step
@@ -44,6 +45,12 @@ class GaussianUniformEM:
     def fit(self, X: NDArray) -> Tuple[NDArray, NDArray, float]:
         """
         Fit the model to the data.
+
+        Args:
+            X (NDArray): The data to fit the model to.
+
+        Returns:
+            Tuple[NDArray, NDArray, float]: The mean, covariance matrix, and pi.
         """
         best_loss = self._fit_once(X)
         save = self.mean, self.covariance_matrix, self.pi
@@ -59,6 +66,12 @@ class GaussianUniformEM:
         """
         Run a single iteration of the EM algorithm max_iter times or til the
         difference in losses is smaller than tol.
+
+        Args:
+            X (NDArray): The data to fit the model to.
+
+        Returns:
+            float: The loss.
         """
         n_samples, n_features = X.shape
         init_index = self.random_state.random_integers(
@@ -84,6 +97,10 @@ class GaussianUniformEM:
     def _m_step(self, X: NDArray, gammas: NDArray) -> None:
         """
         Maximization step.
+
+        Args:
+            X (NDArray): The data to fit the model to.
+            gammas (NDArray): The gammas from the E step.
         """
         n_samples, n_features = X.shape
         self.pi = float(np.mean(gammas))
@@ -96,6 +113,13 @@ class GaussianUniformEM:
     def _cholesky(self, max_attempts: int = 5) -> NDArray:
         """
         Compute the Cholesky decomposition of the covariance matrix.
+
+        Args:
+            max_attempts (int): Maximum number of attempts to make the covariance
+                matrix positive definite.
+
+        Returns:
+            NDArray: The Cholesky decomposition of the covariance matrix.
         """
         try:
             L = np.linalg.cholesky(self.covariance_matrix)
@@ -116,6 +140,13 @@ class GaussianUniformEM:
     def _get_nlogl(self, X: NDArray) -> Tuple[float, NDArray]:
         """
         Get log likelihood of pristine class.
+
+        Args:
+            X (NDArray): The data to fit the model to.
+
+        Returns:
+            Tuple[float, NDArray]: The negative log likelihood and the Mahalanobis
+                distance.
         """
         n_samples, n_features = X.shape
         L = self._cholesky()  # covariance_matrix = L@L.T
@@ -135,6 +166,13 @@ class GaussianUniformEM:
     ) -> Tuple[NDArray, float, NDArray]:
         """
         Run the expectation step.
+
+        Args:
+            X (NDArray): The data to fit the model to.
+
+        Returns:
+            Tuple[NDArray, float, NDArray]: The gammas, the loss, and the Mahalanobis
+                distance.
         """
         nlogl, mahal = self._get_nlogl(X)
         log_gammas_inlier = np.log(self.pi) - nlogl
@@ -154,6 +192,12 @@ class GaussianUniformEM:
     def predict(self, X: NDArray) -> Tuple[NDArray, NDArray]:
         """
         Predict the class of the samples.
+
+        Args:
+            X (NDArray): The data to fit the model to.
+
+        Returns:
+            Tuple[NDArray, NDArray]: The gammas and the Mahalanobis distance.
         """
         gammas, _, mahal = self._e_step(X)
         return gammas, mahal
