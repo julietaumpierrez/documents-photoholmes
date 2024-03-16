@@ -261,6 +261,13 @@ class Benchmark:
         metrics: MetricCollection,
         output_path: Path,
     ):
+        """
+        Args:
+            method (BaseMethod): The method to evaluate.
+            dataset (BaseDataset): Dataset to run the evaluation on.
+            metrics (MetricCollection): Collection of metrics to compute.
+            output_path (Path): Path to the output folder.
+        """
         log.info("-" * 80)
         log.info("Running the benchmark")
         log.info("Benchmark configuration:")
