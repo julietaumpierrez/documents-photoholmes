@@ -12,6 +12,7 @@ dependencies = [
     "matplotlib",
     "opencv-python",
     "scikit-learn",
+    "scikit-image",
     "pydantic",
     "tqdm",
     "jpegio",
@@ -20,6 +21,7 @@ dependencies = [
     "mpmath",
     "typer",
     "pillow",
+    "wget",
 
     "torch",
     "torchmetrics",

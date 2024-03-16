@@ -14,7 +14,7 @@ from .utils import load_weights
 
 try:
     from torch_kmeans import KMeans
-except ImportError:
+except ModuleNotFoundError:
     raise ImportError(
         "To use the Focal method, you need to install the `torch_kmeans` package."
     )
