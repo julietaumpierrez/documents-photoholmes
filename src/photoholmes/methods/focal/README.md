@@ -6,8 +6,6 @@ The code contained in this library was derived from [the original implementation
 
 This is a deep learning based method, the weights can be found [here](https://drive.google.com/drive/folders/12ayIO9PU4wvqWqniT3KtH8tCvrZ-M-zd?usp=share_link) under the name [Focal_ViT_weights.pth](https://drive.google.com/file/d/1GQMU8FHwi2K3XkkHhe71bt-RQvuA2VQ4/view?usp=share_link) and [Focal_HRnet_weights.pth](https://drive.google.com/file/d/1O_iyg5Tg_iZ5u_yGcU_MhKVH-c6MIpdR/view?usp=share_link). We last checked this information March 9th 2024, please refer to the authors of the original paper if the weights can not be found.
 
-Please be aware that in order to use the provided weights with PhotoHolmes you should run the PhotoHolmes CLI with the `adapt-weights` command to prune the weights or use the file `prune_original_weights.py`.
-
 By March 9th 2024 this method could not be ran with mps as device because the method uses some torch functions that are not implemented for mps yet. 
 
 

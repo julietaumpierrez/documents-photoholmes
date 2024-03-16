@@ -79,8 +79,9 @@ class Focal(BaseTorchMethod):
 
         Args:
             x (torch.Tensor): Input image of shape (B, C, H, W)
+
         Returns:
-            Tensor (torch.Tensor): Output of the network
+            Tensor: Output of the network
         """
         Fo = self.network_list[0](x)
         Fo = Fo.permute(0, 2, 3, 1)
@@ -140,9 +141,11 @@ class Focal(BaseTorchMethod):
     ) -> BenchmarkOutput:
         """
         Benchmarks the Focal method using the provided image.
-        args:
+
+        Args:
             image (Tensor): Input image tensor.
-        returns:
+
+        Returns:
             BenchmarkOutput: Contains the mask and placeholders for heatmap and
             detection.
         """
