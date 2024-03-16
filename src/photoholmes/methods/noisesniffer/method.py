@@ -157,8 +157,10 @@ class Noisesniffer(BaseMethod):
     def benchmark(self, image: NDArray) -> BenchmarkOutput:  # type: ignore[override]
         """
         Benchmarks the Noisesniffer method using the provided image.
+
         Args:
             image (Tensor): Input image tensor.
+
         Returns:
             BenchmarkOutput: Contains the mask and detection and placeholder for
                 heatmap.

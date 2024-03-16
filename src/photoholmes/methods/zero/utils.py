@@ -34,7 +34,7 @@ def binom_tail(ks: np.ndarray, n: int, p: float) -> NDArray:
         p (float): probability of success of each Bernoulli experiment.
 
     Returns:
-        np.ndarray: array of P(X >= k) for each k in ks.
+        NDArray: array of P(X >= k) for each k in ks.
     """
     cdf = binom.cdf(ks, n, p)
     if (cdf != 1).all():
@@ -53,12 +53,12 @@ def log_bin_tail(ks: NDArray, n: int, p: float) -> NDArray:
     and two fixed parameters n,p. Computes a light or high-precision version as needed.
 
     Args:
-        ks (np.ndarray): array of k values.
+        ks (NDArray): array of k values.
         n (int): total amount of independent Bernoulli experiments.
         p (float): probability of success of each Bernoulli experiment.
 
     Returns:
-        np.ndarray: array of the logarithm of the binomial tail for each k in ks.
+        NDArray: array of the logarithm of the binomial tail for each k in ks.
     """
     cdf = binom.cdf(ks, n, p)
     if (cdf != 1).all():
@@ -81,11 +81,11 @@ def log_nfa(N_tests: int, ks: NDArray, n: int, p: float) -> NDArray:
 
     Args:
         N_tests (int): total amount of tests.
-        ks (np.ndarray): array of k values.
+        ks (NDArray): array of k values.
         n (int): total amount of independent Bernoulli experiments.
         p (float): probability of success of each Bernoulli experiment.
 
     Returns:
-        np.ndarray: array of the logarithm of the NFA for each k in ks.
+        NDArray: array of the logarithm of the NFA for each k in ks.
     """
     return np.log10(N_tests) + log_bin_tail(ks, n, p)

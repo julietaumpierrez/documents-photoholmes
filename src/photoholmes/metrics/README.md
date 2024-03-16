@@ -1,5 +1,16 @@
 # Metrics Module
 
+## Table of Contents
+- [Overview](#overview)
+- [Available Metrics](#available-metrics)
+    - [Torch-metrics](#torch-metrics)
+    - [Custom metrics](#custom-metrics)
+- [Metric Factory](#metric-factory)
+- [Examples of Use](#examples-of-use)
+    - [Using a single metric](#using-a-single-metric)
+    - [Using the factory](#using-the-metricfactory)
+- [Contribute: Adding a new metric](#contribute-adding-a-new-metric)
+
 ## Overview
 This module provides a collection of metrics for evaluating the performance of a method for image forgery detection and localization.
 

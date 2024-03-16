@@ -11,11 +11,11 @@ def to_device_dict(
     Moves all the values in a dictionary to the specified device.
 
     Args:
-        input_dict: Dictionary to be moved to the specified device.
-        device: Device to move the dictionary to.
+        input_dict (Dict[str, Any]): Dictionary to be moved to the specified device.
+        device (Dict[str, Any]): Device to move the dictionary to.
 
     Returns:
-        A dictionary with all the values moved to the specified device.
+        Dict[str,Any]: A dictionary with all the values moved to the specified device.
     """
     output_dict = {}
     for key, value in input_dict.items():

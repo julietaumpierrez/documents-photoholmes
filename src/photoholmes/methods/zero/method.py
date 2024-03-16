@@ -52,7 +52,14 @@ class Zero(BaseMethod):
 
     def benchmark(self, image: NDArray) -> BenchmarkOutput:
         """
-        Wrapper for the predict method for the benchmark
+        Benchmarks the Zero method using the provided image.
+
+        Args:
+            image (Tensor): Input image tensor.
+
+        Returns:
+            BenchmarkOutput: Contains the mask and detection and placeholder for
+            heatmap.
         """
         forgery_mask, _, _ = self.predict(image)
         mask = from_numpy(forgery_mask)
@@ -68,10 +75,10 @@ class Zero(BaseMethod):
         Compute the grid votes per pixel.
 
         Args:
-            luminance (np.ndarray): Input luminance channel.
+            luminance (NDArray): Input luminance channel.
 
         Returns:
-            np.ndarray: Grid votes per pixel.
+            NDArray: Grid votes per pixel.
         """
         Y, X = luminance.shape
         zeros = np.zeros_like(luminance, dtype=np.int32)
@@ -105,7 +112,7 @@ class Zero(BaseMethod):
         Detects the main estimated grid.
 
         Args:
-            votes (np.ndarray): Grid votes per pixel. Each pixel votes 1 of the 64
+            votes (NDArray): Grid votes per pixel. Each pixel votes 1 of the 64
                 possible grids.
 
         Returns:
@@ -143,12 +150,12 @@ class Zero(BaseMethod):
         Detects forgery mask from a grid votes map and a grid index to exclude.
 
         Args:
-            votes (np.ndarray): Grid votes per pixel. Each pixel votes 1 of the 64
+            votes (NDArray): Grid votes per pixel. Each pixel votes 1 of the 64
                 possible grids.
             grid_to_exclude (int): Grid index to exclude.
 
         Returns:
-            np.ndarray: forgery mask.
+            NDArray: forgery mask.
         """
         W = 9
         grid_max = 63

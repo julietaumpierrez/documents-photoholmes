@@ -52,7 +52,7 @@ def valid_blocks_0(img: NDArray, w: int) -> NDArray:
         w (int): Side length of the square blocks.
 
     Returns:
-        mask (NDArray): Binary mask where 1 are valid blocks.
+        NDArray: Binary mask where 1 are valid blocks.
     """
     img_not_saturated = np.ones((img.shape[0], img.shape[1]))
     for ch in range(img.shape[2]):
@@ -328,6 +328,9 @@ def bin_is_valid(b: int, n: float, m: float, stds_sorted_blocks: NDArray) -> boo
             deviation.
         stds_sorted_blocks (NDArray): Array of blocks with the lowest variance in
             low-med frequencies sorted according to their std.
+
+    Returns:
+        bool: True if the bin is valid, False if not.
     """
     M = int(b * n * m)
     if len(np.where(stds_sorted_blocks == 0)[0]) < M:
@@ -586,8 +589,8 @@ def compute_output(
         S (List): List of red blocks.
 
     Returns:
-        binary_mask (NDArray): A binary mask indicating suspected areas of tampering.
-        painted_image (NDArray): The image with the lowest std patches painted red.
+        NDArray: A binary mask indicating suspected areas of tampering.
+        NDArray: The image with the lowest std patches painted red.
     """
     Nx, Ny = img.shape[:2]
     all_blocks = np.zeros((Nx // W + 1, Ny // W + 1))

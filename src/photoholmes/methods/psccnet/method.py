@@ -44,7 +44,6 @@ class PSCCNet(BaseTorchMethod):
 
     To easily download the weights, you can use the script in
     scripts/download_psccnet_weights.py in the photoholmes repository.
-
     """
 
     def __init__(
@@ -145,8 +144,8 @@ class PSCCNet(BaseTorchMethod):
             image (torch.Tensor): the preprocessed input image.
 
         Returns:
-            heatmap (Tensor): The predicted heatmap
-            detection (Tensor): The detection score.
+            Tensor: The predicted heatmap
+            Tensor: The detection score.
         """
         image = image.to(self.device)
         add_batch_dim = image.ndim == 3
@@ -179,8 +178,10 @@ class PSCCNet(BaseTorchMethod):
     ) -> BenchmarkOutput:
         """
         Benchmarks the PSCCNet method using the provided image and size.
+
         Args:
             image (Tensor): Input image tensor.
+
         Returns:
             BenchmarkOutput: Contains the heatmap and  detection and placeholder for
             detection.

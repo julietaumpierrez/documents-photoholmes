@@ -9,6 +9,12 @@ from scipy.interpolate import interp1d
 def normalize_non_nan(image: NDArray) -> NDArray:
     """
     Heatmap normalization ignoring nan values.
+
+    Args:
+        image: input heatmap
+
+    Returns:
+        NDArray: normalized heatmap
     """
     img_max = np.nanmax(image)
     img_min = np.nanmin(image)
@@ -22,7 +28,16 @@ def resize_heatmap_and_pad(
     heatmap: NDArray, coords: Tuple[NDArray, NDArray], shape_out: Tuple[int, int]
 ) -> NDArray:
     """
-    Heatmap resizing and padding with extrapolation, as the original implementation does.
+    Heatmap resizing and padding with extrapolation, as the original implementation
+    does.
+
+    Args:
+        heatmap (NDArray): input heatmap
+        coords (Tuple[NDArray, NDArray]): coordinates of the heatmap
+        shape_out (Tuple[int, int]): output shape
+
+    Returns:
+        NDArray: resized heatmap
     """
     X, Y = shape_out
     rangex, rangey = coords

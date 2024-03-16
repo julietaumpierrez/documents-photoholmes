@@ -45,6 +45,8 @@ logger = logging.getLogger(__name__)
 class CatNet(BaseTorchMethod):
     """
     Implements the CAT-Net method [Kwon, et al. 2021] for image forgery localization.
+    The method is an end-to-end fully convolutional neural network designed to detect
+    compression artifacts in images
 
     """
 
@@ -79,6 +81,7 @@ class CatNet(BaseTorchMethod):
     def load_model(self, arch_config: CatnetArchConfig):
         """
         Initialize the network architecture using the provided configuration.
+
         Args:
             arch_config (CatnetArchConfig): Configuration for the network architecture.
         """
@@ -244,10 +247,12 @@ class CatNet(BaseTorchMethod):
     def forward(self, x, qtable):
         """
         Forward pass through the network.
+
         Args:
             x (Tensor): Input tensor. The first 3 channels are the RGB image, and the
                 remaining channels are the DCT coefficients.
             qtable (Tensor): Quantization table for the DCT coefficients.
+
         Returns:
             Tensor: Output of the network.
         """
@@ -353,6 +358,7 @@ class CatNet(BaseTorchMethod):
     ):
         """
         Initialize the weights of the network.
+
         Args:
             pretrained_rgb (str): Path to the pretrained weights for the RGB stream.
             pretrained_dct (str): Path to the pretrained weights for the DCT stream.
@@ -414,6 +420,7 @@ class CatNet(BaseTorchMethod):
             x: Preprocessed input and dct coefficients. Use catnet_preprocessing.
             qtable: Quantization table
             image_size: Original image size
+
         Returns:
             Tuple[Tensor, Tensor]: Tuple containing the heatmaps for authentic and
                 tampered regions.
@@ -448,10 +455,12 @@ class CatNet(BaseTorchMethod):
     ) -> BenchmarkOutput:
         """
         Benchmarks the CatNet method using the provided image, qtables and size.
+
         Args:
             x (Tensor): Input image.
             qtable (Tensor): Quantization table for the DCT coefficients.
             image_size (Tuple[int, int]): Original image size.
+
         Returns:
             BenchmarkOutput: Contains the heatmap and placeholders for mask and
             detection.
