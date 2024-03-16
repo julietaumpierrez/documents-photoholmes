@@ -42,7 +42,6 @@ class EXIFAsLanguage(BaseMethod):
 
     Run the photoholmes CLI with the `adapt-weights` command to prune the weights
     to be used with this method.
-
     """
 
     def __init__(
