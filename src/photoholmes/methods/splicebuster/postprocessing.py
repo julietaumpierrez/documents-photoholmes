@@ -16,11 +16,15 @@ def normalize_non_nan(image: NDArray) -> NDArray:
     Returns:
         NDArray: normalized heatmap
     """
-    img_max = np.nanmax(image)
-    img_min = np.nanmin(image)
-    normalized_uint_img = (255 * (image - img_min) / (img_max - img_min)).astype(
-        np.uint8
-    )  # To match original implementation's processing
+    if np.isnan(image).all() or np.nanmin(image) == np.nanmax(image):
+        return np.zeros_like(image)
+    else:
+        img_max = np.nanmax(image)
+        img_min = np.nanmin(image)
+        normalized_image = 255 * (image - img_min) / (img_max - img_min)
+        normalized_uint_img = np.nan_to_num(normalized_image, nan=0).astype(
+            np.uint8
+        )  # To match original implementation's processing
     return normalized_uint_img / 255
 
 

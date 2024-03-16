@@ -214,6 +214,31 @@ def feat_reduce_matrix(pca_dim: int, X: NDArray, whitten: bool = True) -> NDArra
     return v
 
 
+def check_image_saturation(func):
+    """Decorator that checks if the input image has no valid_features.
+    In this case, it returns an all NaN map.
+    Args:
+        func: input function of the decorator.
+    Output:
+        wrapper: wrapped function that contemplates the border case."""
+
+    def wrapper(
+        seed: Union[None, int],
+        valid_features: NDArray,
+        flat_features: NDArray,
+        valid: NDArray,
+    ):
+        if valid.sum() > 0:
+            return func(seed, valid_features, flat_features, valid)
+        else:
+            labels = np.empty(valid.shape)
+            labels[:] = np.nan
+            return labels
+
+    return wrapper
+
+
+@check_image_saturation
 def gaussian_mixture_mahalanobis(
     seed: Union[None, int],
     valid_features: NDArray,
@@ -246,6 +271,7 @@ def gaussian_mixture_mahalanobis(
     return labels
 
 
+@check_image_saturation
 def gaussian_uniform_mahalanobis(
     seed: Union[None, int],
     valid_features: NDArray,
