@@ -57,7 +57,7 @@ class DQ(BaseMethod):
         BPPM_norm = torch.from_numpy(BPPM / len(dct_coefficients))
         BPPM_upsampled = simple_upscale_heatmap(BPPM_norm, 8)
         heatmap = resize_heatmap_with_trim_and_pad(BPPM_upsampled, image_size)
-        return heatmap.numpy()
+        return heatmap
 
     def benchmark(
         self, dct_coefficients: NDArray, image_size: Tuple[int, int]
