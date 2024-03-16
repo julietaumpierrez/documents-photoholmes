@@ -6,7 +6,7 @@ import typer
 from pydantic import BaseModel
 from tqdm import tqdm
 
-from photoholmes.datasets.registry import DatasetName
+from photoholmes.datasets.registry import DatasetRegistry
 from photoholmes.methods.registry import MethodRegistry
 from photoholmes.metrics.registry import MetricRegistry
 from photoholmes.utils.generic import load_yaml
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def run_benchmark(
     method_name: MethodRegistry,
     method_config: str | dict,
-    dataset_name: DatasetName,
+    dataset_name: DatasetRegistry,
     dataset_path: str,
     metrics: List[str],
     tampered_only: bool = False,
@@ -29,7 +29,7 @@ def run_benchmark(
     device: str = "cpu",
 ):
     from photoholmes.benchmark import Benchmark
-    from photoholmes.datasets.dataset_factory import DatasetFactory
+    from photoholmes.datasets.factory import DatasetFactory
     from photoholmes.methods.factory import MethodFactory
     from photoholmes.metrics.factory import MetricFactory
 
@@ -42,9 +42,9 @@ def run_benchmark(
     # Load dataset
     dataset = DatasetFactory.load(
         dataset_name=dataset_name,
-        dataset_dir=dataset_path,
+        dataset_path=dataset_path,
         tampered_only=tampered_only,
-        transform=preprocessing,
+        preprocessing_pipeline=preprocessing,
     )
 
     metrics_objects = MetricFactory.load(metrics)
@@ -70,7 +70,7 @@ def main(
     method_config: str = typer.Option(
         None, help="Path to the configuration file for the method."
     ),
-    dataset_name: DatasetName = typer.Option(..., help="Name of the dataset."),
+    dataset_name: DatasetRegistry = typer.Option(..., help="Name of the dataset."),
     dataset_path: str = typer.Option(..., help="Path to the dataset."),
     metrics: str = typer.Option(
         ..., "--metrics", help="Space-separated list of metrics to use."
@@ -100,7 +100,7 @@ def main(
 
 
 class DatasetSpec(BaseModel):
-    name: DatasetName
+    name: DatasetRegistry
     path: str
     tampered_only: bool
 
@@ -125,7 +125,7 @@ def run_from_config(
     bench_config = BenchmarkConfig(**load_yaml(config_path))
 
     from photoholmes.benchmark import Benchmark
-    from photoholmes.datasets.dataset_factory import DatasetFactory
+    from photoholmes.datasets.factory import DatasetFactory
     from photoholmes.methods.factory import MethodFactory
     from photoholmes.metrics.factory import MetricFactory
 
@@ -141,9 +141,9 @@ def run_from_config(
     for d in tqdm(bench_config.datasets, desc="Setting up datasets"):
         dataset = DatasetFactory.load(
             dataset_name=d.name,
-            dataset_dir=d.path,
+            dataset_path=d.path,
             tampered_only=d.tampered_only,
-            transform=preprocessing,
+            preprocessing_pipeline=preprocessing,
         )
         if len(dataset) == 0:
             logger.warning(f"Dataset {d.name} is empty.")
