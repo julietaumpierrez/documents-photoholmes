@@ -24,7 +24,19 @@ def get_binary_volume(x: Tensor, T: int = 20) -> Tensor:
 
 
 class CatnetPreprocessing(BasePreprocessing):
+    """
+    Preprocessing transformation class for CatNet, intended to prepare the images
+    and create the DCT volumes needed as input for the net.
+    """
+
     def __init__(self, n_dct_channels: int = 1, T: int = 20):
+        """
+        Initialization of Catnet preprocessing class.
+
+        Args:
+            n_dct_channels (int): Number of DCT channels to use. Defaults to 1.
+            T (int): Number of quantization levels. Defaults to 20.
+        """
         self.n_dct_channels = n_dct_channels
         self.T = T
 
@@ -35,6 +47,28 @@ class CatnetPreprocessing(BasePreprocessing):
         qtables: Tensor,
         **kwargs,
     ) -> Dict[str, Union[Tensor, Tuple[int, int]]]:
+        """
+        Preprocesses the input image and DCT coefficients to prepare them for the net.
+        Creates the DCT volumes needed as input for the net.
+
+        Args:
+            image (Tensor): The input image tensor with shape (C, Y, X), where
+                C is the number of channels, Y is the height, and X is the width.
+            dct_coefficients (Tensor): The DCT coefficients tensor with shape (C, Y, X),
+                where C is the number of channels, Y is the height, and X is the width.
+            qtables (Tensor): The quantization tables tensor with shape (C, 64), where
+                C is the number of channels.
+             **kwargs: Additional keyword arguments that might
+                be passed to the preprocessing function and need to be preserved in the
+                output.
+
+        Returns:
+            Dict[str, Union[Tensor, Tuple[int, int]]]: A dictionary containing the
+                preprocessed image tensor with the corresponding DCT volume under the
+                key 'x', the quantization tables tensor under the key 'qtable', and the
+                image size as a tuple under the key 'image_size', along with any other
+                keyword arguments passed into the method.
+        """
         h, w = image.shape[-2:]
 
         crop_size = ((h // 8) * 8, (w // 8) * 8)
@@ -51,9 +85,9 @@ class CatnetPreprocessing(BasePreprocessing):
             )
             for i in range(self.n_dct_channels):
                 temp = torch.full((max_h, max_w), 0.0)  # pad with 0
-                temp[
-                    : dct_coefficients[i].shape[0], : dct_coefficients[i].shape[1]
-                ] = dct_coefficients[i][:, :]
+                temp[: dct_coefficients[i].shape[0], : dct_coefficients[i].shape[1]] = (
+                    dct_coefficients[i][:, :]
+                )
                 dct_coefficients[i] = temp
 
         s_r = (randint(0, max(h - crop_size[0], 0)) // 8) * 8
