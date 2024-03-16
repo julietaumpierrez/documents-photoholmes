@@ -51,7 +51,6 @@ class Benchmark:
             Run the benchmark using the specified method, dataset, and metrics.
     """
 
-    # Add documentation to class and methods
     def __init__(
         self,
         save_method_outputs: bool = True,
@@ -100,8 +99,6 @@ class Benchmark:
         else:
             self.device = torch.device(device)
 
-        # TODO: set an attribute "output_keys" in the method class and use that
-        # to determine whether to save the mask and heatmap or not
         self._mask = False
         self._heatmap = False
         self._detection = False
@@ -137,16 +134,16 @@ class Benchmark:
         )
         self._print_setup_message(method, dataset, metrics, output_path)
 
-        metrics_on_device = metrics.to(self.device, dtype=torch.float32)
-        heatmap_metrics = metrics_on_device.clone(prefix="heatmap")
-        mask_metrics = metrics_on_device.clone(prefix="mask")
-        detection_metrics = metrics_on_device.clone(prefix="detection")
+        heatmap_metrics = metrics.clone(prefix="heatmap").to(
+            self.device, dtype=torch.float32
+        )
+        mask_metrics = metrics.clone(prefix="mask").to(self.device, dtype=torch.float32)
+        detection_metrics = metrics.clone(prefix="detection").to(
+            self.device, dtype=torch.float32
+        )
 
         image_count = 0
-        for data, mask, image_name in tqdm(dataset, desc="Processing Images"):
-            # NOTE podemos hacer que el dataset devuelva mascara Non si no
-            # hay mascara asociada a una imagen. Podemos agregar también
-            # chequeo de que coincidan en tamaño a nivel benchmar y no dataset.
+        for data, mask, image_name in tqdm(dataset, desc="Processing Images"):  # type: ignore
             output = None
             if self.use_existing_output:
                 output = self._load_existing_output(output_path, image_name)
@@ -163,7 +160,11 @@ class Benchmark:
                 if output["detection"].ndim == 2:
                     output["detection"] = output["detection"].squeeze(0)
 
-                detection_gt = torch.tensor(int(torch.any(mask))).unsqueeze(0)
+                detection_gt = (
+                    torch.tensor(int(torch.any(mask)))
+                    .unsqueeze(0)
+                    .to(self.device, dtype=torch.int32)
+                )
 
                 detection_metrics.update(output["detection"], detection_gt)
                 self._detection = True
@@ -185,6 +186,8 @@ class Benchmark:
             image_count += 1
 
         log.info("-" * 80)
+        log.info("-" * 80)
+
         if self.save_metrics_flag:
             tampered = (
                 "tampered_only" if dataset.tampered_only else "tampered_and_pristine"
@@ -226,6 +229,8 @@ class Benchmark:
                 log.info("     - No detection metrics to save")
         else:
             log.info("     - Not saving metrics")
+
+        log.info("-" * 80)
         log.info("-" * 80)
         log.info("Benchmark finished")
         log.info("-" * 80)
@@ -248,8 +253,20 @@ class Benchmark:
         metrics: MetricCollection,
         output_path: Path,
     ):
+        """
+        Print the benchmark setup message.
+
+        Args:
+            method (BaseMethod): The method to evaluate.
+            dataset (BaseDataset): Dataset to run the evaluation on.
+            metrics (MetricCollection): Collection of metrics to compute.
+            output_path (Path): Path to the output folder.
+        """
+        log.info("-" * 80)
         log.info("-" * 80)
         log.info("Running the benchmark")
+        log.info("-" * 80)
+        log.info("-" * 80)
         log.info("Benchmark configuration:")
         log.info(f"    Method: {method.__class__.__name__}")
         log.info(f"    Dataset: {dataset.__class__.__name__}")
@@ -263,20 +280,20 @@ class Benchmark:
         log.info(f"    Load existing outputs: {self.use_existing_output}")
         log.info(f"    Verbosity: {logging._levelToName[verbose_dict[self.verbose]]}")
         log.info("-" * 80)
+        log.info("-" * 80)
 
-    def _dict_to_device(self, data):
+    def _dict_to_device(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Move dict items to the benchmark's device.
 
         Args:
-            data (dict)
+            data (Dict[str, Any]): Data to move to the benchmark's device.
 
         Returns:
-            dict: data with the tensor entries moved to the benchmark's device.
+            Dict[str, Any]: Data moved to the benchmark's device.
         """
         return {
             key: (
-                # FIXME why are we converting to float32?
                 value.to(self.device, dtype=torch.float32)
                 if isinstance(value, torch.Tensor)
                 else value
@@ -296,8 +313,9 @@ class Benchmark:
 
         Args:
             output_path (Path): Path to the output folder.
-            image_name (str): Name of the processed image.
-            output (BenchmarkOutput): Predicted outputs from the method.
+            metrics (MetricCollection): Collection of metrics to compute.
+            report_id (str): ID for the report.
+            total_images (int): Total number of images processed.
 
         """
         metrics_path = output_path / "metrics" / report_id
@@ -335,6 +353,14 @@ class Benchmark:
     def _save_predicted_output(
         self, output_path: Path, image_name: str, output: BenchmarkOutput
     ):
+        """
+        Save predicted outputs for an image.
+
+        Args:
+            output_path (Path): Path to the output folder.
+            image_name (str): Name of the processed image.
+            output (BenchmarkOutput): Output to save.
+        """
         image_save_path = output_path / "outputs" / image_name
         os.makedirs(image_save_path, exist_ok=True)
 
