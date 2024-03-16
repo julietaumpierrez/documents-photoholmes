@@ -36,16 +36,17 @@ class DirFullDil(nn.Module):
     convolutions on the input image to extract features in different orientations
     and scales. Additionally, it applies dilation to capture broader contextual
     information without losing resolution.
-
-    Attributes:
-        channels_in (int): Number of input channels.
-        n_dir (int): Number of directional convolution filters.
-        n_full (int): Number of full convolution filters.
-        n_dir_dil (int): Number of directional dilated convolution filters.
-        n_full_dil (int): Number of full dilated convolution filters.
     """
 
     def __init__(self, channels_in, *n_convolutions):
+        """
+        Args:
+            channels_in (int): Number of input channels.
+            n_convolutions (Tuple[int, int, int, int]): n_dir (int): Number of
+            directional convolution filters, n_full (int): Number of full convolution
+            filters, n_dir_dil (int): Number of directional dilated convolution filters,
+            n_full_dil (int): Number of full dilated convolution filters.
+        """
         super(DirFullDil, self).__init__()
         n_dir, n_full, n_dir_dil, n_full_dil = n_convolutions
         self.h1 = nn.Conv2d(channels_in, n_dir, (1, 3))
@@ -80,16 +81,17 @@ class SkipDoubleDirFullDil(nn.Module):
     its features with the output of the first block before passing through the
     second convolutional block. This approach is meant to help the network
     preserve information from the input through the layers.
-
-    Attributes:
-        channels_in (int): Number of input channels.
-        convolutions_1 (DirFullDirConfig): Configuration for the first DirFullDil
-            module.
-        convolutions_2 (DirFullDirConfig): Configuration for the second DirFullDil
-            module.
     """
 
     def __init__(self, channels_in, convolutions_1, convolutions_2):
+        """
+        Args:
+            channels_in (int): Number of input channels.
+            convolutions_1 (DirFullDirConfig): Configuration for the first DirFullDil
+                module.
+            convolutions_2 (DirFullDirConfig): Configuration for the second DirFullDil
+                module.
+        """
         super(SkipDoubleDirFullDil, self).__init__()
         self.conv1 = DirFullDil(channels_in, *convolutions_1)
         self.conv2 = DirFullDil(channels_in + self.conv1.channels_out, *convolutions_2)
@@ -110,8 +112,6 @@ class SeparateAndPermutate(nn.Module):
     their position in the original image grid and permutating them in four possible
     ways. This operation aims to prepare the data for pixel-wise analysis in
     subsequent layers by highlighting different spatial relationships.
-
-    No attributes.
     """
 
     def forward(self, x):
@@ -139,14 +139,6 @@ class Pixelwise(nn.Module):
     """
     Applies a sequence of convolutions to the input feature map for pixel-wise
     feature extraction.
-
-    Attributes:
-        channels_in (int): Number of input channels.
-        conv1_out_channels (int): Number of output channels for the first convolution.
-        conv2_out_channels (int): Number of output channels for the second convolution.
-        conv3_out_channels (int): Number of output channels for the third convolution.
-        conv4_out_channels (int): Number of output channels for the fourth convolution.
-        kernel_size (int): Size of the convolutional kernels.
     """
 
     def __init__(
@@ -158,6 +150,19 @@ class Pixelwise(nn.Module):
         conv4_out_channels: int = 30,
         kernel_size: int = 1,
     ):
+        """
+        Args:
+            channels_in (int): Number of input channels. Default is 103.
+            conv1_out_channels (int): Number of output channels for the first convolution.
+                Default is 30.
+            conv2_out_channels (int): Number of output channels for the second convolution.
+                Default is 15.
+            conv3_out_channels (int): Number of output channels for the third convolution.
+                Default is 15.
+            conv4_out_channels (int): Number of output channels for the fourth convolution.
+                Default is 30.
+            kernel_size (int): Size of the convolutional kernels. Default is 1.
+        """
         super(Pixelwise, self).__init__()
         self.conv1 = nn.Conv2d(channels_in, conv1_out_channels, kernel_size)
         self.conv2 = nn.Conv2d(conv1_out_channels, conv2_out_channels, kernel_size)
@@ -185,13 +190,6 @@ class AdaptiveCFANet(BaseTorchMethod):
     separates grid pixels for detailed analysis, and uses block-wise convolutions
     to analyze larger image regions. It outputs a heatmap indicating the likelihood
     of forgery in different image areas.
-
-    Attributes:
-        arch_config (Union[AdaptiveCFANetArchConfig, Literal['pretrained']]):
-            Configuration for the network architecture. Can be a predefined
-            architecture or 'pretrained' for default settings.
-        weights (Optional[Union[str, Path, dict]]): Weights to load into the model.
-            Can be a file path, dictionary, or None for random initialization.
     """
 
     def __init__(
@@ -202,6 +200,15 @@ class AdaptiveCFANet(BaseTorchMethod):
         weights: Optional[Union[str, Path, dict]] = None,
         **kwargs,
     ):
+        """
+        Args:
+            arch_config (Union[AdaptiveCFANetArchConfig, Literal['pretrained']]):
+                Configuration for the network architecture. Can be a predefined
+                architecture or 'pretrained' for default settings.
+            weights (Optional[Union[str, Path, dict]]): Weights to load into the model.
+                Can be a file path, dictionary, or None for random initialization.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(**kwargs)
 
         if arch_config == "pretrained":
@@ -301,9 +308,11 @@ class AdaptiveCFANet(BaseTorchMethod):
     def forward(self, x, block_size=32):
         """
         Forward pass through the network.
+
         Args:
             x (Tensor): Input image tensor.
             block_size (int): Size of the image blocks. Default is 32.
+
         Returns:
             Tensor: Output tensor.
         """
@@ -318,11 +327,13 @@ class AdaptiveCFANet(BaseTorchMethod):
     def predict(self, image: Tensor, image_size: Tuple[int, int]) -> Tensor:
         """
         Runs method for the input image.
+
         Args:
             image (Tensor): Input image tensor.
             image_size (Tuple[int, int]): Original image size.
+
         Returns:
-            Heatmap (Tensor): Predicted heatmap.
+            Tensor: Predicted heatmap.
         """
         image = image.to(self.device)
         if image.ndim == 3:
@@ -351,9 +362,11 @@ class AdaptiveCFANet(BaseTorchMethod):
     def benchmark(self, image: Tensor, image_size: Tuple[int, int]) -> BenchmarkOutput:
         """
         Benchmarks the Adaptive CFA Net method using the provided image and size.
+
         Args:
             image (Tensor): Input image tensor.
             image_size (Tuple[int, int]): Original image size.
+
         Returns:
             BenchmarkOutput: Contains the heatmap and placeholders for mask and
             detection.

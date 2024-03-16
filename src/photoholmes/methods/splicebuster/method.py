@@ -28,13 +28,12 @@ warnings.filterwarnings("error", category=LinAlgWarning)
 
 
 class Splicebuster(BaseMethod):
-    """Implementation of the Splicebuster method [Cozzolino et al., 2015].
+    """
+    Implementation of the Splicebuster method [Cozzolino et al., 2015].
 
     This method is based on detecting splicing from features extracted from the image's
     residuals.
-
-    The original implementation is available at:
-    https://www.grip.unina.it/download/prog/Splicebuster/"""
+    """
 
     def __init__(
         self,
@@ -103,6 +102,7 @@ class Splicebuster(BaseMethod):
         Args:
             mixture (str): String indicating the mixture model to use.
                 Options: 'uniform', 'gaussian'.
+
         Returns:
             Function: Function to compute the mahalanobis distance.
         """
@@ -352,8 +352,9 @@ class Splicebuster(BaseMethod):
 
         Args:
             image (NDArray): Grayscale image with dynamic range 0 and 1.
+
         Returns:
-            heatmap: Splicebuster output
+            NDArray: Splicebuster output
         """
         if image.ndim == 3:
             image = image[:, :, 0]
@@ -382,9 +383,14 @@ class Splicebuster(BaseMethod):
         return heatmap
 
     def benchmark(self, image: NDArray) -> BenchmarkOutput:  # type: ignore[override]
-        """Benchmarks the Splicebuster method using the provided image and size.
-        Args: image (NDArray): Input image tensor.
-        BenchmarkOutput: Contains the heatmap and placeholders for mask and detection.
+        """
+        Benchmarks the Splicebuster method using the provided image and size.
+
+        Args:
+            image (NDArray): Input image tensor.
+
+        BenchmarkOutput:
+            Contains the heatmap and placeholders for mask and detection.
         """
         heatmap = self.predict(image=image)
 

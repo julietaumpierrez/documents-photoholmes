@@ -117,10 +117,10 @@ class MethodFactory:
             case MethodRegistry.SPLICEBUSTER:
                 from photoholmes.methods.splicebuster import (
                     Splicebuster,
-                    splicebuster_preprocess,
+                    splicebuster_preprocessing,
                 )
 
-                return Splicebuster.from_config(config), splicebuster_preprocess
+                return Splicebuster.from_config(config), splicebuster_preprocessing
             case MethodRegistry.TRUFOR:
                 from photoholmes.methods.trufor import TruFor, trufor_preprocessing
 

@@ -23,7 +23,7 @@ metrics:
   - f1
 save_output: True
 save_metrics: True
-output_path: output/
+output_folder: output/
 device: cpu
 use_existing_output: True
 verbose: 1

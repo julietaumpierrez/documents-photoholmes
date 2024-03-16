@@ -1,5 +1,18 @@
 # Methods Module
 
+## Table of Contents
+- [Overview](#overview)
+- [Available Methods](#available-methods)
+- [Structure](#structure)
+- [Method Factory](#method-factory)
+- [Examples of Use](#examples-of-use)
+    - [Importing directly](#importing-the-method-directly)
+    - [Using the method Factory](#using-the-methodfactory)
+- [Benchmarked results](#benchamarked-results)
+    - [Localization performance](#localization-performance)
+    - [Detection performance](#detection-performance)
+- [Contribute: Adding a new method](#contribute-adding-a-new-method)
+
 ## Overview
 This module provides a collection of methods that can be used by themselves to make predictions on suspicious images and that can be used with the benchmark module to check their performance with the available datasets.
 
@@ -8,16 +21,16 @@ This module provides a collection of methods that can be used by themselves to m
 
 In the first version of the PhotoHolmes library 10 methods are available:
 
-- Adaptive CFA Net: An Adaptive Neural Network for Unsupervised Mosaic Consistency Analysis in Image Forensics. 
-- CAT-Net: Compression Artifact Tracing Network for Detection and Localization of Image Splicing.
-- DQ: Fast, Automatic, and Fine-Grained Tampered JPEG Image Detection via DCT Coefficient Analysis.
-- EXIF as Language: Learning Cross-Modal Associations Between Images and Camera Metadata.
-- FOCAL: Rethinking Image Forgery Detection via Contrastive Learning and Unsupervised Clustering.
-- Noisesniffer: Image forgery detection based on noise inspection: analysis and refinement of the Noisesniffer method.
-- PSCC-Net: Progressive Spatio-Channel Correlation Network for Image Manipulation Detection and Localization.
-- Splicebuster: a new blind image splicing detector.
-- TruFor: Leveraging all-round clues for trustworthy image forgery detection and localization.
-- ZERO: A Local JPEG Grid Origin Detector Based on the Number of DCT Zeros and its Applications in Image Forensics.
+- __Adaptive CFA Net__: An Adaptive Neural Network for Unsupervised Mosaic Consistency Analysis in Image Forensics. 
+- __CAT-Net__: Compression Artifact Tracing Network for Detection and Localization of Image Splicing.
+- __DQ__: Fast, Automatic, and Fine-Grained Tampered JPEG Image Detection via DCT Coefficient Analysis.
+- __EXIF as Language__: Learning Cross-Modal Associations Between Images and Camera Metadata.
+- __FOCAL__: Rethinking Image Forgery Detection via Contrastive Learning and Unsupervised Clustering.
+- __Noisesniffer__: Image forgery detection based on noise inspection: analysis and refinement of the Noisesniffer method.
+- __PSCC-Net__: Progressive Spatio-Channel Correlation Network for Image Manipulation Detection and Localization.
+- __Splicebuster__: a new blind image splicing detector.
+- __TruFor__: Leveraging all-round clues for trustworthy image forgery detection and localization.
+- __ZERO__: A Local JPEG Grid Origin Detector Based on the Number of DCT Zeros and its Applications in Image Forensics.
 
 For more information regarding the nature of each method please refer to their corresponding README.
 

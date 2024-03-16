@@ -25,8 +25,9 @@ class PreProcessingPipeline:
         Initializes a new preprocessing pipeline.
 
         Args:
-            transforms: A list of preprocessing transforms to apply to the input, in the other of interest.
-            inputs (List[str]): the inputs that the pipeline will receive. Must be restricted to "image", "dct_coefficients" and "qtables".
+            transforms (List[BasePreprocessing]): A list of preprocessing transforms to
+                apply to the input.
+            inputs (List[str]): the inputs that the pipeline will receive.
             outputs_keys (List[str]): the keys of the outputs that the pipeline will
                 return. These must coincide with the keyword arguments of the predict and benchmark methods.
         """
@@ -42,7 +43,8 @@ class PreProcessingPipeline:
             **kwargs: Keyword arguments representing the input to the pipeline.
 
         Returns:
-            A dictionary with the output of the last transform in the pipeline.
+            Dict[str, Any]: A dictionary with the output of the last transform in the
+                            pipeline.
         """
         self._check_inputs(kwargs)
 

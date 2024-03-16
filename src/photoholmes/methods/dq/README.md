@@ -1,6 +1,6 @@
 # DQ: Fast, Automatic, and Fine-Grained Tampered JPEG Image Detection via DCT Coefficient Analysis
 
-This is the implementation of the method by Lin et al that can be found [here](http://mmlab.ie.cuhk.edu.hk/archive/2009/pr09_fast_automatic.pdf).
+This is the implementation of the method by Lin et al. that can be found [here](http://mmlab.ie.cuhk.edu.hk/archive/2009/pr09_fast_automatic.pdf).
 
 ## Description
 
@@ -40,7 +40,6 @@ output = method.predict(**input)
 ```
 ## Citation
 
-
 ```tex
 @ARTICLE{FastJPEGDetection2009,
   author={Zhouchen Lin, Junfeng He, Xiaoou Tang, Chi-Keung Tang},
@@ -50,7 +49,3 @@ output = method.predict(**input)
   doi={10.1016/j.patcog.2009.03.019}
 }
 ```
-
-## Implementation
-
-The implementation for this method is provided in the DQ class, which inherits from the BaseMethod class. The method utilizes DCT coefficients to predict tampered regions in JPEG images. The core functionality revolves around the detection of the double quantization effect in the DCT coefficients.
