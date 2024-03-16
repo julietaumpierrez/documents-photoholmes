@@ -14,10 +14,10 @@ def to_tensor_dict(input_dict: Dict[str, Any]) -> Dict[str, Any]:
     Converts all the values in a dictionary to tensors.
 
     Args:
-        input_dict: Dictionary to be converted to tensors.
+        input_dict (Dict[str, Any]): Dictionary to be converted to tensors.
 
     Returns:
-        A dictionary with all the values converted to tensors.
+        Dict[str, Any]: A dictionary with all the values converted to tensors.
     """
     output_dict = {}
     for key, value in input_dict.items():
@@ -39,10 +39,10 @@ def to_numpy_dict(input_dict: Dict[str, Any]) -> Dict[str, Any]:
     Converts all the values in a dictionary to numpy arrays.
 
     Args:
-        input_dict: Dictionary to be converted to numpy arrays.
+        input_dict (Dict[str, Any]): Dictionary to be converted to numpy arrays.
 
     Returns:
-        A dictionary with all the values converted to numpy arrays.
+        Dict[str, Any]: A dictionary with all the values converted to numpy arrays.
     """
     output_dict = {}
     for key, value in input_dict.items():
@@ -64,17 +64,17 @@ def zero_one_range(
     Rescales the input value to the range [0, 1].
 
     Args:
-        value: Value to be rescaled.
-        min_value: Minimum value of the input tensor.
+        value (float): Value to be rescaled.
+        min_value (float): Minimum value of the input tensor.
             If None, the minimum value of the tensor is used.
             Default: None
-        max_value: Maximum value of the input tensor.
+        max_value (float): Maximum value of the input tensor.
             If None, the maximum value of the tensor is used.
             Default: None
 
 
     Returns:
-        The rescaled value.
+        float: The rescaled value.
     """
     if min_value is None:
         min_value = value.min()

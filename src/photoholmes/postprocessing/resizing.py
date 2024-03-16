@@ -16,15 +16,18 @@ def upscale_mask(
     ] = "linear",
     fill_value: Union[int, float] = 0,
 ) -> NDArray:
-    """Upscale a mask to a target size.
-    Params:
+    """
+    Upscale a mask to a target size.
+
+    Args:
         coords: coordinates of the mask values
         mask: mask to upscale
         target_size: target size
         method: interpolation method
         fill_value: value to fill outside the mask
+
     Returns:
-        upscaled mask
+        NDArray: upscaled mask
     """
     X, Y = target_size
     interpolator = RegularGridInterpolator(
@@ -45,18 +48,18 @@ def simple_upscale_heatmap(
     """
     Upscales a heatmap by a specified scale factor.
 
-    Parameters:
-    - heatmap (Tensor): A Tensor representing the heatmap to be upscaled.
-                         Expected shape: [batch_size, height, width] or [height, width].
-    - scale_factor (Union[int, Tuple[int, int]]): An integer or a tuple of two integers
-                                                  representing the scale factor for
-                                                  height and width. If an integer is
-                                                  provided, the same scaling is applied
-                                                  to both dimensions.
+    Args:
+        heatmap (Tensor): A Tensor representing the heatmap to be upscaled.
+                            Expected shape: [batch_size, height, width] or [height, width].
+        scale_factor (Union[int, Tuple[int, int]]): An integer or a tuple of two integers
+                                                    representing the scale factor for
+                                                    height and width. If an integer is
+                                                    provided, the same scaling is applied
+                                                    to both dimensions.
 
     Returns:
-    - Tensor: A Tensor representing the upscaled heatmap. The spatial dimensions
-              of the heatmap are scaled by the specified factor(s).
+        Tensor: A Tensor representing the upscaled heatmap. The spatial dimensions
+                    of the heatmap are scaled by the specified factor(s).
 
     Note:
     - This function uses bilinear interpolation for upscaling.
@@ -101,18 +104,18 @@ def resize_heatmap_with_trim_and_pad(
     """
     Resizes a heatmap to a specified size by trimming or padding with zeros.
 
-    Parameters:
-    - heatmap (Tensor): A Tensor representing the heatmap to be resized.
-                         Expected shape: [batch_size, height, width].
-    - target_size (Tuple[int, int]): A tuple representing the target size
-                                     (height, width) to which the heatmap
-                                     will be resized.
+    Args:
+        heatmap (Tensor): A Tensor representing the heatmap to be resized.
+                            Expected shape: [batch_size, height, width].
+        target_size (Tuple[int, int]): A tuple representing the target size
+                                        (height, width) to which the heatmap
+                                        will be resized.
 
     Returns:
-    - Tensor: A Tensor representing the resized heatmap. The heatmap is trimmed
-              if the target size is smaller than the original size, or padded
-              with zeros if the target size is larger. The batch size of the
-              input is maintained.
+        Tensor: A Tensor representing the resized heatmap. The heatmap is trimmed
+                    if the target size is smaller than the original size, or padded
+                    with zeros if the target size is larger. The batch size of the
+                    input is maintained.
 
     Note:
     - The function does not change the channel dimension if present. It operates
