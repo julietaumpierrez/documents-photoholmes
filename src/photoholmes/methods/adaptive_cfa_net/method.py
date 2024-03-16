@@ -322,7 +322,7 @@ class AdaptiveCFANet(BaseTorchMethod):
             image (Tensor): Input image tensor.
             image_size (Tuple[int, int]): Original image size.
         Returns:
-            Heatmap (Tensor): Predicted heatmap.
+            Tensor: Predicted heatmap.
         """
         image = image.to(self.device)
         if image.ndim == 3:
