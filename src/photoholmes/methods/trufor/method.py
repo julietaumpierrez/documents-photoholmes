@@ -341,7 +341,8 @@ class TruFor(BaseTorchMethod):
             image (Tensor): Input image tensor.
 
         Returns:
-            BenchmarkOutput: Contains the heatmap and detection and placeholder for mask.
+            BenchmarkOutput: Contains the heatmap and detection and placeholder for
+            mask.
         """
         heatmap, conf, det, _ = self.predict(image)
         if self.use_confidence:
