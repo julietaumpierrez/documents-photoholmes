@@ -1,5 +1,6 @@
 # Code derived from https://github.com/grip-unina/noiseprint and
 # code provided from Quentin Bammey, Marina Gardella and Tina Nikoukhah
+import warnings
 from typing import Optional, Tuple
 
 import numpy as np
@@ -55,7 +56,12 @@ class GaussianUniformEM:
         best_loss = self._fit_once(X)
         save = self.mean, self.covariance_matrix, self.pi
         for i in range(self.n_init - 1):
-            loss = self._fit_once(X)
+            try:
+                warnings.filterwarnings("error", category=RuntimeWarning)
+                loss = self._fit_once(X)
+                warnings.filterwarnings("ignore", category=RuntimeWarning)
+            except RuntimeWarning:
+                continue
             if loss > best_loss:
                 best_loss = loss
                 save = self.mean, self.covariance_matrix, self.pi
