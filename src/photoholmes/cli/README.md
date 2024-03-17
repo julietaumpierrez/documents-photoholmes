@@ -1,9 +1,9 @@
-# Photoholme's CLI
+# Photoholmes' CLI
 
 ## Overview
 
 This module defines a command line interface with functionality to simplify setting up 
-and runnning implemented methods. Once installed, you can see the cli options by running
+and runnning implemented methods. Once the library is installed, you can see the cli options by running
 ```bash
 photoholmes --help
 ```
@@ -20,7 +20,7 @@ to make those adjustments to the original weights.
 ## Run
 
 Most of the time, proposed method code only include code for evalution and or training, 
-but not a script for single image inference. In an effort to make this methods more
+but not a script for single image inference. In an effort to make these methods more
 accesible we have included the `run` command in the cli that runs inference on a single
 image. The CLI is built using the Typer package, allowing for quick and simple 
 extensibilty.
@@ -48,7 +48,7 @@ Commands:
   zero              Run the Zero method.
 ```
 
-Under commands you will find the available methods for inference. Each method is it's 
+Under _Commands_ you will find the available methods for inference. Each method is it's 
 own command so that they can have different arguments and options, but every command has
 at least the following:
 * **Arguments:**
@@ -62,11 +62,16 @@ at least the following:
     * device: for methods that use neural networks, specify the device you want to run
               on.
 
+To see the different arguments each method has, you can simply run
+```
+photoholmes run [METHOD NAME] --help
+```
+
 ### Running a classic method
 As an example, try running dq on an image with overlay and
 saving outputs:
 ```
-photoholmes run dq path/to/image --output-folder output/ --overlay
+photoholmes run dq [PATH_TO_IMAGE] --output-folder output/ --overlay
 ```
 A plot like the following should appear
 
@@ -117,23 +122,23 @@ command will create a folder `{weights_folder}/method` inside.
 
 Try downloading the exif-as-language weights using:
 ```
-photholmes download_weights exif_as_language
+photholmes download_weights focal
 ```
 This will create a folder `weights/` if it doesn't exist yet, inside it you will 
-find the `exif_as_language` folder with the weights inside. If you want to download the
+find the `focal` folder with the weights inside. If you want to download the
 weights to a custom folder, simply add the weights folder option:
 ```
-photoholmes download_weights exif_as_language --weights-folder custom_weights
+photoholmes download_weights focal --weights-folder custom_weights
 ``` 
 
 ## Adapt weights
 
 For some methods, the photoholmes team decided to remove or rename some layers when 
 adding the methods to the library, so we provide the scripts to make those changes to
-the original weights. We include this in case a new version a re-train of the model is
+the original weights. We include this in case a new version or a re-train of the model is
 published, making adapting and runnig the method with the new weights a breeze.
 
-Currently, we only include an adaptation for the exif as language weights, were we remove
+Currently, we only include an adaptation for the _exif as a language_ weights, were we remove
 some of the leftover clip layers. Check the command out by running:
 ```
 photoholmes adapt_weights --help
