@@ -10,6 +10,7 @@ class PreProcessingPipeline:
     """
     A pipeline of preprocessing transforms. In this library, the standard way of defining
     the preprocessing of a method is by creating an instance of this class with the corresponding
+    sequence of transforms.
     """
 
     inputs: List[Literal["image", "dct_coefficients", "qtables"]]

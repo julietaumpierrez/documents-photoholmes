@@ -37,7 +37,8 @@ class ZeroOneRange(BasePreprocessing):
 
 class Normalize(BasePreprocessing):
     """
-    Normalize an image.
+    Normalize an image. When called with an image with the mean and std of the class
+    instance, it returns an image with mean 0 and std of 1.
     """
 
     def __init__(
@@ -174,7 +175,7 @@ class ToNumpy(BasePreprocessing):
 
 class RGBtoGray(BasePreprocessing):
     """
-    Converts an RGB image to grayscale.
+    Converts an RGB image to grayscale, following the ITU-R BT.601 stardard.
     """
 
     def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
@@ -221,7 +222,7 @@ class RoundToUInt(BasePreprocessing):
 
 class GrayToRGB(BasePreprocessing):
     """
-    Converts an grayscale image to RGB
+    Converts an grayscale image to RGB, done by repeating the image along the three channels.
     """
 
     def __call__(self, image: T, **kwargs):
@@ -250,7 +251,7 @@ class GrayToRGB(BasePreprocessing):
 
 class GetImageSize(BasePreprocessing):
     """
-    Get the size of the image
+    Get the size of the image.
     """
 
     def __call__(self, image: T, **kwargs) -> Dict[str, Any]:
@@ -262,6 +263,7 @@ class GetImageSize(BasePreprocessing):
         Returns:
             Dict[str, Any]: A dictionary with the following key-value pairs:
                 - "image": The input image as a grayscale numpy array or PyTorch tensor.
+                - "image_size": The size of the input image.
                 - **kwargs: The additional keyword arguments passed through unchanged.
         """
         if isinstance(image, Tensor):
