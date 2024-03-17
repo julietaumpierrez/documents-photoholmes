@@ -22,7 +22,7 @@ class GaussianUniformEM:
         """
         Gaussian Uniform Expectation Maximization algorithm.
 
-        Attributes:
+        Args:
             p_outlier_init (float): Initial probability of being falsified
             outlier_nlogl (int):  Log-likelihood of being falsified
             tol (float): Tolerance used in a single run of the expectation step

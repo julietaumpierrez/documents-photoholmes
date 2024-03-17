@@ -12,7 +12,7 @@ class GaussianMixture:
         """
         Gaussian Mixture model.
 
-        Attributes:
+        Args:
             n_components (int): The number of components in the mixture.
             seed (Union[int, None]): Random seed for parameter initialization.
         """
