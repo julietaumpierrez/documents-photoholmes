@@ -24,9 +24,9 @@ class BenchmarkOutput(TypedDict):
     Structure of the output expected from the benchmark method.
 
     Expected keys:
-        - heatmap: a provability map predicted by the method.
+        - heatmap: a probability map predicted by the method.
         - mask: a binary mask predicted by the method.
-        - detection: score between 0 and 1 where 1 indicates a forged image.
+        - detection: score between 0 and 1, where 1 indicates a forged image.
 
     Extra keys:
         - extra_outputs: any extra outputs that the method might have
@@ -40,7 +40,11 @@ class BenchmarkOutput(TypedDict):
 
 
 class BaseMethod(ABC):
-    """Abstract class as a base for the methods"""
+    """
+    Abstract class as a base for the methods.
+    Every method should inherit from this class (or BaseTorchMethod) and implement the
+    'predict', 'benchmark' and '__init__' methods to enable their utility within the library.
+    """
 
     device: torch.device
 
@@ -49,15 +53,15 @@ class BaseMethod(ABC):
 
     def predict(self, *args, **kwargs) -> Any:
         """
-        Runs method on an image.
+        Runs method on an image's data, and returns the output of the original implementation.
         """
         raise NotImplementedError("Method `predict` not implemented")
 
     @abstractmethod
     def benchmark(self, *args, **kwargs) -> BenchmarkOutput:
         """
-        Runs method on an image and returns the output in the benchmark
-        format.
+        Runs method on an image's data and returns the output in the benchmark
+        format (BenchMarkOutput).
         """
         return {"heatmap": None, "mask": None, "detection": None}
 
@@ -89,11 +93,18 @@ class BaseMethod(ABC):
 
 
 class BaseTorchMethod(BaseMethod, Module):
+    """
+    Abstract class as a base for methods that are end-to-end Torch modules.
+    The child classes must implement the 'predict', 'benchmark' and '__init__' methods
+    to enable their utility within the library.
+    """
+
     def __init__(self, *args, **kwargs) -> None:
         Module.__init__(self, *args, **kwargs)
         BaseMethod.__init__(self)
 
     def load_weights(self, weights: Union[str, Path, dict]):
+        """Load weights from a dictionary or a file when given its path."""
         if isinstance(weights, (str, Path)):
             weights_ = torch.load(weights, map_location=self.device)
         else:
@@ -107,5 +118,6 @@ class BaseTorchMethod(BaseMethod, Module):
         )  # FIXME: asign limits torch version to >=2.1
 
     def to_device(self, device: Union[str, torch.device]):
+        """Send the model to the device."""
         self.to(device)
         self.device = torch.device(device)

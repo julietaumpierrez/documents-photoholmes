@@ -9,9 +9,9 @@ preprocessing sequences for the methods.
 
 ## Handling images
 
-Within the photoholmes framework exists methods that handle images as tensors and
-other that handle images as numpy arrays. To make life easier when implementing and 
-debugging, we use the following convention of dimension for each type:
+Within the photoholmes framework exist methods that handle images as tensors and
+other that handle images as numpy arrays. To simplify the process of implementing and 
+debugging methods, we use the following convention of dimension for each type:
 - **Numpy array:** [H, W, C]
 - **Torch Tensor:** [C, H, W]
 
@@ -139,7 +139,7 @@ class AdaptiveCFANetPreprocessing(BasePreprocessing):
 
 If you want to add a new transform, please follow the following steps:
 1. Create a new file or modify and existing in the `photoholmes/preprocessing/` directory.
-2. Create a new class that subclasses `PreProcessingTransform`.
+2. Create a new class that subclasses `BasePreprocessing`.
 3. Implement the `__call__` method, which should take the input image and any other
    necessary arguments, and return a dictionary containing the preprocessed image and
    any other necessary arguments.

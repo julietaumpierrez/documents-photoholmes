@@ -16,7 +16,7 @@
 This module provides a collection of datasets that can be used to test the performance of the methods in the methods module.
 The different datasets are selected to cover a wide range of image manipulation techniques and to provide a good benchmark for the methods.
 
-The datasets cover a wide range of forgery types as well as image formats, which we deemed important to benchmark the diverse array of included methods. Besides the original datasets, some of them have their social media versions which are also included in the library. In addition, we included a WebP version of the Korus dataset since, up to our knowledge, no forgery detection dataset features this increasingly popular format.
+The datasets cover a wide range of forgery types as well as image formats, which we deemed important to benchmark the diverse array of included methods. For some datasets, there is also a version traversed through social media which is included in the library. In addition, we included a WebP version of the Korus dataset since, up to our knowledge, no forgery detection dataset features this increasingly popular format.
 
 ## Available Datasets
 
@@ -48,7 +48,7 @@ The datasets are described in more detail in the [Datasets Description](#dataset
 The datasets are structured in the following way:
 
 ## BaseDataset
-The `BaseDataset` class takes care of loading the images data and the masks from the dataset.
+The `BaseDataset` class takes care of loading the images data and the masks from the dataset. It does so by delegating to the child classes the implementation of _\_get\_paths_ that obtains the list of the image and masks paths according to a specific dataset.
 
 Functionalities:
 - It also takes care of preprocessing the images data if a preprocessing pipeline is provided.
@@ -58,22 +58,23 @@ Functionalities:
     - Q Tables: The Q tables of the image.
 - You can choose to load tampered only images or tampered and pristine images.
 - The name of the image is also retrieved from the path of the image. This is useful for the evaluation of the methods and saving the results.
-- Mask binarization
+- Mask binarization (often overriden).
 
 ## Custom Datasets
 The datasets are structured in the following way:
 - dataset.py file: Contains the class that inherits from the BaseDataset class. This class has at least two methods and declares two attributes:
-    - _get_paths: that returns the paths to the images in the dataset.
+    - _get_paths: that returns the paths to the images and masks in the dataset.
     - _get_mask_path: that returns the path to the mask given an image path.
     - IMAGE_EXTENSION: the extension of the images in the dataset.
     - MASK_EXTENSION: the extension of the masks in the dataset.
 
-The two methods are used to get the paths to the images and the masks in the dataset. As different datasets have different structures, these methods are implemented in each dataset class. The two attributes are used to show warning messages when jpeg data is requested from a dataset that does not have jpeg images or masks.
-You can also override the `binarize_mask` method if you want to binarize the mask in a different way than the default one.
+The two methods are used to get the paths to the images and the masks in the dataset. As different datasets have different directory structures, these methods are implemented in each dataset class. Pristine images must yield 'None' as a mask path, which is interpreted by the Benchmark as an all-zero mask with the shape of the image. In the case of the two attributes, they are used to show warning messages when jpeg data is requested from a dataset that does not have jpeg images or masks.
+
+It is also common to override the `binarize_mask`, as different datasets have different ways to represent masks as RGB images or represent tampering in multiple levels. The PhotoHolmes library expects masks as boolean tensors of one channel, regarding any degree of tampering as _True_.
 
 ## Dataset Factory
 
-The `DatasetFactory` class provides a way of loading the datasets. It has a method called `load` that takes the name of the dataset, the path to the dataset, an optional preprocessing pipeline, an optional flag to load only tampered images, and a parameter indicating which image data to load. It returns an instance of the dataset and the corresponding preprocessing pipeline.
+The `DatasetFactory` class provides a simple way of loading the datasets. It has a method called `load` that takes the name of the dataset, the path to the dataset, an optional preprocessing pipeline, an optional flag to load only tampered images, and a parameter indicating which image data to load. It returns the dataset instanced with the inputed preprocessing pipeline and parameters.
 
 ## Dataset Registry
 
@@ -285,8 +286,7 @@ In Trace, the forged and pristine regions differ only in the traces left behind 
 
 # Contribute: Adding a new dataset
 1. Create a new file for the dataset in the datasets folder.
-2. Create and fill all of the corresponding files described in the Structure section.
-3. Add the dataset to the registry and to the factory.
-4. Fill out the README and don't forget to include the characteristics of the dataset.
-5. Make a pull request to the repository with the new dataset following the instructions of the [CONTRIBUTING.md](../CONTRIBUTING.md) file.
+2. Add the dataset to the registry and to the factory.
+3. Fill out the README and don't forget to include the characteristics of the dataset.
+4. Make a pull request to the repository with the new dataset following the instructions of the [CONTRIBUTING.md](../CONTRIBUTING.md) file.
 

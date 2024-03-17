@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 
 class PreProcessingPipeline:
     """
-    A pipeline of preprocessing transforms.
+    A pipeline of preprocessing transforms. In this library, the standard way of defining
+    the preprocessing of a method is by creating an instance of this class with the corresponding
+    sequence of transforms.
     """
 
     inputs: List[Literal["image", "dct_coefficients", "qtables"]]
@@ -28,7 +30,7 @@ class PreProcessingPipeline:
                 apply to the input.
             inputs (List[str]): the inputs that the pipeline will receive.
             outputs_keys (List[str]): the keys of the outputs that the pipeline will
-                return.
+                return. These must coincide with the keyword arguments of the predict and benchmark methods.
         """
         self.transforms = transforms
         self.inputs = inputs
@@ -53,6 +55,10 @@ class PreProcessingPipeline:
         return {k: v for k, v in kwargs.items() if k in self.outputs_keys}
 
     def _check_inputs(self, inputs: Dict[str, Any]) -> None:
+        """
+        Checks the inputs required are included in the ones declared in the pipeline and raises
+         a Warning for any input not used in the pipeline.
+        """
         for input_ in self.inputs:
             if input_ not in inputs:
                 raise ValueError(f"Missing input {input_} in inputs")

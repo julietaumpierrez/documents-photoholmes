@@ -30,7 +30,8 @@ class BaseDataset(ABC, Dataset):
     Base class for datasets.
 
     Subclasses must override the IMAGE_EXTENSION and MASK_EXTENSION attributes.
-    The _get_paths and _get_mask_path methods must be implemented as well.
+    The _get_paths and _get_mask_path methods must be implemented as well, and in some
+    cases binarize_mask must alos be overriden.
     """
 
     IMAGE_EXTENSION: Union[str, List[str]]
@@ -96,13 +97,27 @@ class BaseDataset(ABC, Dataset):
     def _get_paths(
         self, dataset_path, tampered_only
     ) -> Tuple[List[str], List[str] | List[str | None]]:
-        """Abstract method that returns image and mask paths. Should make use of
-        the dataset_path and tampered_only arguments."""
+        """
+        Abstract method that returns an ordered list of image and mask paths, mapped
+        in the correct order.
+        The correct implementation in a child class must follow:
+         - Make use of the dataset_path and tampered_only arguments.
+         - In the case of pristine images, the corresponding mask path must be set to 'None'.
+         - Mask paths must be obtained by a correspondance of the image path,
+         using the _get_mask_path method.
+
+        Args:
+            dataset_path (str): Path to the dataset.
+            tampered_only (bool): Whether to load only the tampered images.
+
+        Returns:
+            Tuple[List[str], List[str] | List[str | None]]: Tuple with lists of image and mask paths (or None in pristine images).
+        """
         pass
 
     @abstractmethod
     def _get_mask_path(self, image_path: str) -> str:
-        """Abstract method that returns the mask path for a given image path."""
+        """Abstract method that returns the corresponding mask path for a given image path."""
         pass
 
     def __len__(self) -> int:
