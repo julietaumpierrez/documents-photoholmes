@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import Union
+from typing import Callable, Union
 
 import numpy as np
 import skimage.morphology as ski
@@ -130,7 +130,9 @@ def mahalanobis_distance(X: NDArray, mu: NDArray, cov: NDArray) -> NDArray:
     """
     inv_cov = np.linalg.inv(cov)
     X_centered = X - mu
-    mahal_dist = np.sqrt(X_centered.T @ inv_cov @ X_centered)
+    mahal_dist = np.empty(X.shape[0], dtype=np.float16)
+    for i in range(mahal_dist.shape[0]):
+        mahal_dist[i] = np.sqrt(X_centered[i] @ inv_cov @ X_centered[i].T)
     return mahal_dist
 
 
@@ -214,13 +216,17 @@ def feat_reduce_matrix(pca_dim: int, X: NDArray, whitten: bool = True) -> NDArra
     return v
 
 
-def check_image_saturation(func):
-    """Decorator that checks if the input image has no valid_features.
+def check_image_saturation(func: Callable) -> Callable:
+    """
+    Decorator that checks if the input image has no valid_features.
     In this case, it returns an all NaN map.
+
     Args:
-        func: input function of the decorator.
-    Output:
-        wrapper: wrapped function that contemplates the border case."""
+        func (Callable): Input function of the decorator.
+
+    Returns:
+        Callable: Wrapped function that contemplates the border case.
+    """
 
     def wrapper(
         seed: Union[None, int],
@@ -292,7 +298,7 @@ def gaussian_uniform_mahalanobis(
         NDArray: Mahalanobis distance labels.
     """
     gu_mixt = GaussianUniformEM(seed=seed)
-    mus, covs, _ = gu_mixt.fit(valid_features)
+    _ = gu_mixt.fit(valid_features)
     _, labels = gu_mixt.predict(flat_features)
     labels[~valid.flatten()] = np.nan
     return labels

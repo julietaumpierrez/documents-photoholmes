@@ -1,6 +1,6 @@
 import logging
 from tempfile import NamedTemporaryFile
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import cv2 as cv
 import jpegio

@@ -38,6 +38,7 @@ class GaussianUniformEM:
         self.tol = tol
         assert n_init > 1, "n_init must be greater than 1"
         self.n_init = n_init
+        self.best_loss: float = -np.inf
 
         self.random_state = np.random.RandomState(seed)
         self.covariance_matrix: NDArray
@@ -53,20 +54,26 @@ class GaussianUniformEM:
         Returns:
             Tuple[NDArray, NDArray, float]: The mean, covariance matrix, and pi.
         """
-        best_loss = self._fit_once(X)
-        save = self.mean, self.covariance_matrix, self.pi
-        for i in range(self.n_init - 1):
+        self.mean = np.zeros(X.shape[1])
+        self.covariance_matrix = np.eye(X.shape[1])
+
+        for _ in range(self.n_init):
+            # The following lines are necessary to avoid a overflow when the
+            # maximization step is performed and the algorithm fails to converge.
+            # In case this happens, the run is discarded and the algorithm tries
+            # again.
             try:
                 warnings.filterwarnings("error", category=RuntimeWarning)
                 loss = self._fit_once(X)
                 warnings.filterwarnings("ignore", category=RuntimeWarning)
             except RuntimeWarning:
-                continue
-            if loss > best_loss:
-                best_loss = loss
+                loss = -np.inf
+
+            if loss > self.best_loss:
+                self.best_loss = loss
                 save = self.mean, self.covariance_matrix, self.pi
         self.mean, self.covariance_matrix, self.pi = save
-        return save
+        return self.mean, self.covariance_matrix, self.pi
 
     def _fit_once(self, X: NDArray) -> float:
         """
@@ -154,7 +161,7 @@ class GaussianUniformEM:
             Tuple[float, NDArray]: The negative log likelihood and the Mahalanobis
                 distance.
         """
-        n_samples, n_features = X.shape
+        _, n_features = X.shape
         L = self._cholesky()  # covariance_matrix = L@L.T
         D = np.diag(L)
         Xc = X - self.mean
@@ -205,5 +212,7 @@ class GaussianUniformEM:
         Returns:
             Tuple[NDArray, NDArray]: The gammas and the Mahalanobis distance.
         """
+        if self.best_loss == -np.inf:
+            return np.zeros(X.shape[0]), np.zeros(X.shape[0])
         gammas, _, mahal = self._e_step(X)
         return gammas, mahal
