@@ -75,6 +75,9 @@ photoholmes run zero --output-folder output/folder/path image/path
 
 The CLI includes more useful commands, such as `download_weights` to easily download the weights of the implemented methods. Read the [CLI documentation](src/photoholmes/cli/README.md) for a better description on what it can do and how to use it.
 
-## Licence
+## License
 
+PhotoHolmes integrates a variety of methods, some with different associated licences than others. All of these are available at their respective `src/photoholmes/methods/<METHOD>` folder. When the user utilizes code of a specific method, it automatically accepts its respective License.
+
+This being said, the base [License](LICENSE) of this project is Apache 2.0 License, but can change into a more restrictive License according to the methods used by the user. For instance, using the method TruFor or its code in any way implies the user accepts its respective License, which among other things, limits the use of this software to non-profit purposes, which is more restrictive than the base License aforementioned.
 
