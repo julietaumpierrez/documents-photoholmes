@@ -39,7 +39,7 @@ benchmark = Benchmark(output_folder="output/folder/path")
 random_method_results = benchmark.run(method=method, dataset=dataset, metrics=metrics)
 ```
 
-Naturally, `method`, `dataset` and `metrics` must be instances of PhotoHolmes' `Method`, `Dataset` and `MetricCollection` respectively, which can be quickly instanced from classes implemented in PhotoHolmes by using the corresponding factory, as shown in the following example.
+For the benchmark to run, `method`, `dataset` and `metrics` must be instances of PhotoHolmes' `Method`, `Dataset` and `MetricCollection` respectively. We provide ready implementations for common datasets and methods, which you can access from the factory, as shown in the following example.
 
 ```python
 from photoholmes.methods.factory import MethodFactory, MethodRegistry
