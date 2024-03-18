@@ -33,13 +33,13 @@ The following table provides an overview of the datasets and their characteristi
 
 | Dataset | Types of Forgery | Nb. of Images (🔵 forged + 🟠 pristine) | Format | Social Media Version | WebP Version |
 |---------|------------------|----------------------------------------|--------|----------------------|--------------|
-| Columbia | Splicing | 363 (🔵180 + 🟠183) | TIF | ✅ | ❌ |
-| Coverage | Copy-move | 200 (🔵100 + 🟠100) | TIF | ❌ | ❌ |
-| DSO-1 | Splicing | 200 (🔵100 + 🟠100) | PNG | ✅ | ❌ |
-| Korus | Splicing, copy-move, object removal | 440 (🔵220 + 🟠220) | TIF | ❌ | ✅ |
-| Casia 1.0 | Splicing, copy-move | 1023 (🔵923 + 🟠100) | JPEG | ✅ | ❌ |
-| AutoSplice | Generative inpainting | 5894 (🔵3621 + 🟠2273) | JPEG | ❌ | ❌ |
-| Trace | Alterations to acquisition pipeline | 24000 (🔵24000 + 🟠0) | PNG | ❌ | ❌ |
+| [Columbia](https://www.ee.columbia.edu/ln/dvmm/downloads/authsplcuncmp/dlform.html) | Splicing | 363 (🔵180 + 🟠183) | TIF | ✅ | ❌ |
+| [Coverage](https://github.com/wenbihan/coverage) | Copy-move | 200 (🔵100 + 🟠100) | TIF | ❌ | ❌ |
+| [DSO-1](https://recodbr.wordpress.com/code-n-data/#dso1_dsi1) | Splicing | 200 (🔵100 + 🟠100) | PNG | ✅ | ❌ |
+| [Korus](https://pkorus.pl/downloads/dataset-realistic-tampering) | Splicing, copy-move, object removal | 440 (🔵220 + 🟠220) | TIF | ❌ | ✅ |
+| [Casia 1.0](https://github.com/namtpham/casia1groundtruth/tree/master) | Splicing, copy-move | 1023 (🔵923 + 🟠100) | JPEG | ✅ | ❌ |
+| [AutoSplice](https://github.com/shanface33/AutoSplice_Dataset?tab=readme-ov-file) | Generative inpainting | 5894 (🔵3621 + 🟠2273) | JPEG | ❌ | ❌ |
+| [Trace](https://github.com/qbammey/trace) | Alterations to acquisition pipeline | 24000 (🔵24000 + 🟠0) | PNG | ❌ | ❌ |
 
 The datasets are described in more detail in the [Datasets Description](#datasets-description) section.
 
