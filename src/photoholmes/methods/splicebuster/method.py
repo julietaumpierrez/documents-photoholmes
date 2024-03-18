@@ -450,6 +450,9 @@ class Splicebuster(BaseMethod):
         flat_features = features.reshape(-1, features.shape[-1])
         valid_features = flat_features[valid.flatten()]
 
+        if len(valid_features) <= 1:
+            return np.zeros((X, Y))
+
         if self.pca_dim > 0:
             flat_features, valid_features = self._reduce_dimensions(
                 flat_features, valid_features
