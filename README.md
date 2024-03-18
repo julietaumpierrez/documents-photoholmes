@@ -6,6 +6,8 @@
 
 PhotoHolmes is an open-source _python_ library designed to easily run and benchmark forgery detection methods on digital images. The library includes an implementation of popular and state-of-the-art methods, datasets and evaluation metrics, all of which easily integrates with their custom methods, datasets and metrics. The user can also evaluate a single image via the command-line-interface (CLI) or a full method in a chosen dataset via de Benchmark class.
 
+**Note:** The current source code and documentation is the submission of PhotoHolmes for the CVPR Workshop on Media Forensics, please read the [CVPR notes](CVPR_NOTES.md).
+
 ## Development setup
 
 The Python requirements are `python >= 3.10`. Create a virtual enviroment, either with conda or with pip. 
@@ -18,6 +20,9 @@ If you only wish to use the library as a user, for bencharking or other uses, ru
 ```
 pip install -e .
 ```
+
+**Note:** `pip install photoholmes` will be later available in PyPI once the library is published.
+
 ### Install: Develop
 
 If you wish to develop on the library run:
@@ -57,6 +62,8 @@ metrics = MetricFactory.load([MetricsRegistry.AUROC, MetricsRegistry.IOU])
 ```
 
 However, if you have a custom methods, datasets or metrics you wish to use for a benchmark, they can be easily integrated into this framework. A good example that shows different ways of implementing objects and integrating custom ones can be found in the [benchmarking a method notebook](notebooks/benchmarking_a_method.ipynb). There is also more detailed documentation and examples for each module in the respective [methods](src/photoholmes/methods/README.md), [datasets](src/photoholmes/datasets/README.md) and [metrics](src/photoholmes/metrics/README.md) READMEs.
+
+**Warning on MPS as a device:** We advise the user to be careful when running a method on `mps` as the `device`. The PhotoHolmes team found it produces different outputs (with respect to `cpu` or `cuda`) in some cases.
 
 ## `run` the Photolmes CLI
 
