@@ -1,5 +1,6 @@
 import logging
 import os
+from math import ceil
 from pathlib import Path
 from typing import Annotated, Any, Dict, List, Optional
 
@@ -11,7 +12,16 @@ from photoholmes.utils.image import overlay_mask, read_image, read_jpeg_data
 logger = logging.getLogger("cli.run_method")
 
 
-run_app = typer.Typer(name="run")
+run_app = typer.Typer(name="run", help="Run a method on an image.")
+
+
+IMAGE_HELP = "Path to image to analyze."
+OUTPUT_FOLDER_HELP = (
+    "Path to folder to save outputs. If no path is provided outputs aren't saved."
+)
+OVERLAY_HELP = "Include mask overlay on the image when plotting the results."
+SHOW_PLOT_HELP = "Show results as a matplotlib plot."
+DEVICE_HELP = "Select device: 'cuda', 'cpu' or 'mps'"
 
 
 def plot_results(
@@ -19,8 +29,8 @@ def plot_results(
 ):
     plt.clf()
     plt.suptitle(title)
-    row = len(plots) // 3 + 1
-    cols = 3 if len(plots) > 3 else len(plots)
+    row = ceil(len(plots) / 2)
+    cols = 2 if len(plots) > 2 else len(plots)
     for i, plot in enumerate(plots):
         plt.subplot(row, cols, i + 1)
         plt.title(plot["title"])
@@ -42,23 +52,17 @@ def plot_results(
 
 @run_app.command("adaptive_cfa_net", help="Run the Adaptive CFA Net method.")
 def run_adaptive_cfa_net(
-    image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
+    image_path: Annotated[Path, typer.Argument(help=IMAGE_HELP)],
     output_folder: Annotated[
         Optional[Path],
-        typer.Option(
-            help="Path to folder to solve outputs. If not provided, the outputs will not be saved."  # noqa: E501
-        ),
+        typer.Option(help=OUTPUT_FOLDER_HELP),
     ] = None,
     weights_path: Annotated[
         Optional[Path], typer.Option(help="Path to the weights.")
     ] = None,
-    overlay: Annotated[
-        bool, typer.Option(help="Overlay the mask on the image.")
-    ] = False,
-    show_plot: Annotated[bool, typer.Option(help="Show the results.")] = True,
-    device: Annotated[
-        str, typer.Option(help="Select device: 'cuda', 'cpu' or 'mps'")
-    ] = "cpu",
+    overlay: Annotated[bool, typer.Option(help=OVERLAY_HELP)] = False,
+    show_plot: Annotated[bool, typer.Option(help=SHOW_PLOT_HELP)] = True,
+    device: Annotated[str, typer.Option(help=DEVICE_HELP)] = "cpu",
 ):
     from photoholmes.methods.adaptive_cfa_net import (
         AdaptiveCFANet,
@@ -113,23 +117,17 @@ def run_adaptive_cfa_net(
 
 @run_app.command("catnet", help="Run the CatNet method.")
 def run_catnet(
-    image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
+    image_path: Annotated[Path, typer.Argument(help=IMAGE_HELP)],
     output_folder: Annotated[
         Optional[Path],
-        typer.Option(
-            help="Path to folder to solve outputs. If not provided, the outputs will not be saved."  # noqa: E501
-        ),
+        typer.Option(help=OUTPUT_FOLDER_HELP),
     ] = None,
     weights_path: Annotated[
         Optional[Path], typer.Option(help="Path to the weights.")
     ] = None,
-    overlay: Annotated[
-        bool, typer.Option(help="Overlay the mask on the image.")
-    ] = False,
-    show_plot: Annotated[bool, typer.Option(help="Show the results.")] = True,
-    device: Annotated[
-        str, typer.Option(help="Select device: 'cuda', 'cpu' or 'mps'")
-    ] = "cpu",
+    overlay: Annotated[bool, typer.Option(help=OVERLAY_HELP)] = False,
+    show_plot: Annotated[bool, typer.Option(help=SHOW_PLOT_HELP)] = True,
+    device: Annotated[str, typer.Option(help=DEVICE_HELP)] = "cpu",
 ):
     from photoholmes.methods.catnet import CatNet, catnet_preprocessing
 
@@ -184,14 +182,12 @@ def run_catnet(
 
 @run_app.command("dq", help="Run the DQ method.")
 def run_dq(
-    image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
+    image_path: Annotated[Path, typer.Argument(help=IMAGE_HELP)],
     output_folder: Annotated[
-        Optional[Path], typer.Option(help="Path to folder to solve outputs.")
+        Optional[Path], typer.Option(help=OUTPUT_FOLDER_HELP)
     ] = None,
-    overlay: Annotated[
-        bool, typer.Option(help="Add mask overlay to the image.")
-    ] = False,
-    show_plot: Annotated[bool, typer.Option(help="Show results.")] = True,
+    overlay: Annotated[bool, typer.Option(help=OVERLAY_HELP)] = False,
+    show_plot: Annotated[bool, typer.Option(help=SHOW_PLOT_HELP)] = True,
 ):
     from photoholmes.methods.dq import DQ, dq_preprocessing
 
@@ -215,15 +211,13 @@ def run_dq(
     if show_plot:
         plots = [
             {"title": "Original Image", "image": image.permute(1, 2, 0).numpy()},
-            {"title": "Heatmap", "image": heatmap.numpy()},
+            {"title": "Heatmap", "image": heatmap},
         ]
         if overlay:
             plots.append(
                 {
                     "title": "Overlay heatmap",
-                    "image": overlay_mask(
-                        image.permute(1, 2, 0).numpy(), heatmap.numpy()
-                    ),
+                    "image": overlay_mask(image.permute(1, 2, 0).numpy(), heatmap),
                 }
             )
         plot_results("Output of DQ method", plots)
@@ -233,23 +227,17 @@ def run_dq(
 
 @run_app.command("exif_as_language", help="Run the Exif As Language method.")
 def run_exif_as_language(
-    image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
+    image_path: Annotated[Path, typer.Argument(help=IMAGE_HELP)],
     output_folder: Annotated[
         Optional[Path],
-        typer.Option(
-            help="Path to folder to solve outputs. If not provided, the outputs will not be saved."  # noqa: E501
-        ),
+        typer.Option(help=OUTPUT_FOLDER_HELP),
     ] = None,
     weights: Annotated[
         Optional[Path], typer.Option(help="Path to the weights.")
     ] = None,
-    show_plot: Annotated[bool, typer.Option(help="Show the results.")] = True,
-    overlay: Annotated[
-        bool, typer.Option(help="Overlay the mask on the image.")
-    ] = False,
-    device: Annotated[
-        str, typer.Option(help="Select device: 'cuda', 'cpu' or 'mps'")
-    ] = "cpu",
+    show_plot: Annotated[bool, typer.Option(help=SHOW_PLOT_HELP)] = True,
+    overlay: Annotated[bool, typer.Option(help=OVERLAY_HELP)] = False,
+    device: Annotated[str, typer.Option(help=DEVICE_HELP)] = "cpu",
 ):
     from photoholmes.methods.exif_as_language import (
         EXIFAsLanguage,
@@ -326,12 +314,10 @@ def run_exif_as_language(
 
 @run_app.command("focal", help="Run the Focal method.")
 def run_focal(
-    image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
+    image_path: Annotated[Path, typer.Argument(help=IMAGE_HELP)],
     output_folder: Annotated[
         Optional[Path],
-        typer.Option(
-            help="Path to folder to solve outputs. If not provided, the outputs will not be saved."  # noqa: E501
-        ),
+        typer.Option(help=OUTPUT_FOLDER_HELP),
     ] = None,
     vit_weights: Annotated[
         Optional[Path], typer.Option(help="Path to the ViT weights.")
@@ -339,13 +325,9 @@ def run_focal(
     hrnet_weights: Annotated[
         Optional[Path], typer.Option(help="Path to the HRNet weights.")
     ] = None,
-    overlay: Annotated[
-        bool, typer.Option(help="Overlay the mask on the image.")
-    ] = False,
-    show_plot: Annotated[bool, typer.Option(help="Show the results.")] = True,
-    device: Annotated[
-        str, typer.Option(help="Select device: 'cuda', 'cpu' or 'mps'")
-    ] = "cpu",
+    overlay: Annotated[bool, typer.Option(help=OVERLAY_HELP)] = False,
+    show_plot: Annotated[bool, typer.Option(help=SHOW_PLOT_HELP)] = True,
+    device: Annotated[str, typer.Option(help=DEVICE_HELP)] = "cpu",
 ):
     from photoholmes.methods.focal import Focal, focal_preprocessing
 
@@ -410,14 +392,12 @@ def run_focal(
 
 @run_app.command("noisesniffer", help="Run the Noisesniffer method.")
 def run_noisesniffer(
-    image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
+    image_path: Annotated[Path, typer.Argument(help=IMAGE_HELP)],
     output_folder: Annotated[
-        Optional[Path], typer.Option(help="Path to folder to solve outputs.")
+        Optional[Path], typer.Option(help=OUTPUT_FOLDER_HELP)
     ] = None,
-    overlay: Annotated[
-        bool, typer.Option(help="Add mask overlay to the image.")
-    ] = False,
-    show_plot: Annotated[bool, typer.Option(help="Show results.")] = True,
+    overlay: Annotated[bool, typer.Option(help=OVERLAY_HELP)] = False,
+    show_plot: Annotated[bool, typer.Option(help=SHOW_PLOT_HELP)] = True,
 ):
     from photoholmes.methods.noisesniffer import (
         Noisesniffer,
@@ -457,9 +437,9 @@ def run_noisesniffer(
 
 @run_app.command("psccnet", help="Run the PSCCNet method.")
 def run_psccnet(
-    image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
+    image_path: Annotated[Path, typer.Argument(help=IMAGE_HELP)],
     output_folder: Annotated[
-        Optional[Path], typer.Option(help="Path to folder to solve outputs.")
+        Optional[Path], typer.Option(help=OUTPUT_FOLDER_HELP)
     ] = None,
     weights_folder: Annotated[
         Optional[Path],
@@ -467,13 +447,9 @@ def run_psccnet(
             help="Path to the weights folder. Inside the folder, the weights should be named `ClsNet.pth`, `FENet.pth` and `SegNet.pth`."
         ),  # noqa: E501")
     ] = None,
-    overlay: Annotated[
-        bool, typer.Option(help="Add mask overlay to the image.")
-    ] = False,
-    show_plot: Annotated[bool, typer.Option(help="Show results.")] = True,
-    device: Annotated[
-        str, typer.Option(help="Select device: 'cuda', 'cpu' or 'mps'")
-    ] = "cpu",
+    overlay: Annotated[bool, typer.Option(help=OVERLAY_HELP)] = False,
+    show_plot: Annotated[bool, typer.Option(help=SHOW_PLOT_HELP)] = True,
+    device: Annotated[str, typer.Option(help=DEVICE_HELP)] = "cpu",
 ):
     from photoholmes.methods.psccnet import PSCCNet, psccnet_preprocessing
 
@@ -556,14 +532,12 @@ def run_psccnet(
 
 @run_app.command("splicebuster", help="Run the Splicebuster method.")
 def run_splicebuster(
-    image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
+    image_path: Annotated[Path, typer.Argument(help=IMAGE_HELP)],
     output_folder: Annotated[
-        Optional[Path], typer.Option(help="Path to folder to solve outputs.")
+        Optional[Path], typer.Option(help=OUTPUT_FOLDER_HELP)
     ] = None,
-    overlay: Annotated[
-        bool, typer.Option(help="Add mask overlay to the image.")
-    ] = False,
-    show_plot: Annotated[bool, typer.Option(help="Show results.")] = True,
+    overlay: Annotated[bool, typer.Option(help=OVERLAY_HELP)] = False,
+    show_plot: Annotated[bool, typer.Option(help=SHOW_PLOT_HELP)] = True,
 ):
     from photoholmes.methods.splicebuster import (
         Splicebuster,
@@ -603,20 +577,16 @@ def run_splicebuster(
 
 @run_app.command("trufor", help="Run the TruFor method.")
 def run_trufor(
-    image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
+    image_path: Annotated[Path, typer.Argument(help=IMAGE_HELP)],
     output_folder: Annotated[
-        Optional[Path], typer.Option(help="Path to folder to solve outputs.")
+        Optional[Path], typer.Option(help=OUTPUT_FOLDER_HELP)
     ] = None,
     weights_path: Annotated[
         Optional[Path], typer.Option(help="Path to the weights.")
     ] = None,
-    overlay: Annotated[
-        bool, typer.Option(help="Add mask overlay to the image.")
-    ] = False,
-    show_plot: Annotated[bool, typer.Option(help="Show results.")] = True,
-    device: Annotated[
-        str, typer.Option(help="Select device: 'cuda', 'cpu' or 'mps'")
-    ] = "cpu",
+    overlay: Annotated[bool, typer.Option(help=OVERLAY_HELP)] = False,
+    show_plot: Annotated[bool, typer.Option(help=SHOW_PLOT_HELP)] = True,
+    device: Annotated[str, typer.Option(help=DEVICE_HELP)] = "cpu",
 ):
     from photoholmes.methods.trufor import TruFor, trufor_preprocessing
 
@@ -692,14 +662,12 @@ def run_trufor(
 
 @run_app.command("zero", help="Run the Zero method.")
 def run_zero(
-    image_path: Annotated[Path, typer.Argument(help="Path to image to analyze.")],
+    image_path: Annotated[Path, typer.Argument(help=IMAGE_HELP)],
     output_folder: Annotated[
-        Optional[Path], typer.Option(help="Path to folder to solve outputs.")
+        Optional[Path], typer.Option(help=OUTPUT_FOLDER_HELP)
     ] = None,
-    overlay: Annotated[
-        bool, typer.Option(help="Add mask overlay to the image.")
-    ] = False,
-    show_plot: Annotated[bool, typer.Option(help="Show results.")] = True,
+    overlay: Annotated[bool, typer.Option(help=OVERLAY_HELP)] = False,
+    show_plot: Annotated[bool, typer.Option(help=SHOW_PLOT_HELP)] = True,
 ):
     import numpy as np
 
