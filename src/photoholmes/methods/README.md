@@ -150,17 +150,19 @@ With the PhotoHolmes library we reported the perfromance of all mentioned method
 
 The main files are _method.py_, _preprocessing.py_ and a configuration _config.yaml_ file, but you may add any necessary modules such as neural network configurations or a utils.py. It may look something like this:
 
-src/ \
-├── \[other implemented methods\] \
-└── your_method/ \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── \_\_init\_\_.py \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── **config.yaml** \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── **method.py** \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── **preprocessing.py** \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── utils.py \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── models.py \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── [other relevant files] \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── README.md 
+```
+methods/
+├── [other implemented methods]
+└── your_method/
+    ├── __init__.py
+    ├── config.yaml
+    ├── method.py
+    ├── preprocessing.py
+    ├── utils.py
+    ├── models.py
+    ├── [other relevant files]
+    └── README.md
+```
 
 
 ### Fill all of the corresponding files described in the Structure section.

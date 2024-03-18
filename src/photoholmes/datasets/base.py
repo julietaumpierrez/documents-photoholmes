@@ -97,7 +97,8 @@ class BaseDataset(ABC, Dataset):
     def _get_paths(
         self, dataset_path, tampered_only
     ) -> Tuple[List[str], List[str] | List[str | None]]:
-        """Abstract method that returns an ordered list of image and mask paths, mapped
+        """
+        Abstract method that returns an ordered list of image and mask paths, mapped
         in the correct order.
         The correct implementation in a child class must follow:
          - Make use of the dataset_path and tampered_only arguments.
@@ -105,13 +106,12 @@ class BaseDataset(ABC, Dataset):
          - Mask paths must be obtained by a correspondance of the image path,
          using the _get_mask_path method.
 
-        Arguments:
+        Args:
             dataset_path (str): Path to the dataset.
             tampered_only (bool): Whether to load only the tampered images.
-        Outputs:
-            images (List[str]): List of image paths.
-            masks (List[str] | List[str | None]): List of mask paths (or None in pristine images).
 
+        Returns:
+            Tuple[List[str], List[str] | List[str | None]]: Tuple with lists of image and mask paths (or None in pristine images).
         """
         pass
 

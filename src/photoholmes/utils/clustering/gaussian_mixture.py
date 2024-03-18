@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,7 +12,7 @@ class GaussianMixture:
         """
         Gaussian Mixture model.
 
-        Attributes:
+        Args:
             n_components (int): The number of components in the mixture.
             seed (Union[int, None]): Random seed for parameter initialization.
         """
@@ -21,12 +21,12 @@ class GaussianMixture:
             n_components=n_components, random_state=np.random.RandomState(seed)
         )
 
-    def fit(self, features: Union[List[NDArray], NDArray]) -> Tuple[NDArray, NDArray]:
+    def fit(self, features: NDArray) -> Tuple[NDArray, NDArray]:
         """
         Predicts masks from a list of images.
 
         Args:
-            features (Union[List[NDArray], NDArray]): The features to fit the model to.
+            features (NDArray): The features to fit the model to.
 
         Returns:
             Tuple[NDArray, NDArray]: The means and covariances of the model.
@@ -35,4 +35,6 @@ class GaussianMixture:
         self.gm.fit(features)
         mus = self.gm.means_
         covs = self.gm.covariances_
-        return np.array(mus), np.array(covs)
+        mus = np.array(mus)
+        covs = np.array(covs)
+        return mus, covs

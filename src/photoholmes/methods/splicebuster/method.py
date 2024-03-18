@@ -89,7 +89,7 @@ class Splicebuster(BaseMethod):
         else:
             self.weight_params = saturation_mask_config
 
-        self.mahalanobis_estimation = self._init_mahal_estimation(mixture)
+        self.mahalanobis_estimation: Callable = self._init_mahal_estimation(mixture)
         self.seed = seed
 
     def _init_mahal_estimation(
