@@ -26,6 +26,7 @@ dependencies = [
     "torch",
     "torchmetrics",
     "torchvision",
+    "torch_kmeans",
 ]
 
 [project.optional-dependencies]

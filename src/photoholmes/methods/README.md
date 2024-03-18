@@ -38,16 +38,16 @@ For more information regarding the nature of each method please refer to their c
 
 Methods in the PhotoHolmes library consist of at least these parts:
 - method.py file: Contains the method class that inherits from the BaseMethod class by default. In the case of methods which are end-to-end torch modules, these inherit from the BaseTorchMethod class. The child class of the method must define at least the following three methods: 
-    - \_\_init\_\_: that initializates the class. It is important to begin by calling the \_\_init\_\_ of the parent class.
-    - predict: that returns the original output of the method for a given image.
-    - benchmark: that for a given an image, returns a standardized BenchmarkOutput (which is convenient for the Benchmark class). This output consists of a dictionary accepting only the keys of _heatmap_, _mask_, _detection_ and _extra_outputs_, which are expected to contain the corresponding values. 
-- preprocessing.py: Contains the preprocessing pipeline needed for each method.
-- config.yaml: YAML file that contains the example config for each method with default parameters.
+    - `__init__`: that initializates the class. It is important to begin by calling the `__init__` of the parent class.
+    - `predict`: that returns the original output of the method for a given image.
+    - `benchmark`: that for a given an image, returns a standardized BenchmarkOutput (which is convenient for the Benchmark class). This output consists of a dictionary accepting only the keys of `heatmap`, `mask`, `detection` and `extra_outputs`, which are expected to contain the corresponding values. 
+- `preprocessing.py`: Contains the preprocessing pipeline needed for each method.
+- `config.yaml`: YAML file that contains the example config for each method with default parameters.
 
 There are some additional files that may be included in a standard form, such as:
- - config.py: to outline the architecture configuration in deep learning modules. These are commonly implemented in the form of dataclasses.
- - postprocessing.py: for functions that are used in the postprocessing of the mask in order to yield the expected output in the predict method. Note that these are of internal use of the method and should be invoked within the predict method (unlike the standard preprocessing module previously mentioned).
- - utils.py: containing useful functions used in the method's prediction.
+ - `config.py`: to outline the architecture configuration in deep learning modules. These are commonly implemented in the form of dataclasses.
+ - `postprocessing.py`: for functions that are used in the postprocessing of the mask in order to yield the expected output in the predict method. Note that these are of internal use of the method and should be invoked within the predict method (unlike the standard preprocessing module previously mentioned).
+ - `utils.py`: containing useful functions used in the method's prediction.
 
 ## Method Factory
 
@@ -148,7 +148,7 @@ With the PhotoHolmes library we reported the perfromance of all mentioned method
 
 ### Create the method folder and source files. 
 
-The main files are _method.py_, _preprocessing.py_ and a configuration _config.yaml_ file, but you may add any necessary modules such as neural network configurations or a utils.py. It may look something like this:
+The main files are `method.py`, `preprocessing.py` and a configuration `config.yaml` file, but you may add any necessary modules such as neural network configurations or a `utils.py`. It may look something like this:
 
 ```
 methods/
@@ -169,7 +169,7 @@ methods/
 
 #### The method file
 
-You must define your method as a child of the BaseMethod (or BaseTorchMethod if it is an end-to-end network), defining the behaviour of the class' methods _predict_, _benchmark_ and  _\_\_init\_\__. It should look something like this:
+You must define your method as a child of the BaseMethod (or BaseTorchMethod if it is an end-to-end network), defining the behaviour of the class' methods `predict`, `benchmark` and  `__init__`. It should look something like this:
 
 ```python
 from typing import Any, Tuple
@@ -241,8 +241,8 @@ your_method_preprocessing = PreProcessingPipeline(
 
 #### A config file
 
-The _config.yaml_ file serves as a way to centralize customizable parameters of interest in a method. 
- If the yaml file is organized appropiately, it can allow for the use of the _from\_config_ constructor method to create an instance of the method (which is also necessary if you wish to add the method to the factory and [contribute to the library](#readme_method-contribute)). In simple terms, it should suffice if the keys of the yaml file coincide with the input keyword arguments of the method's _\_\_init\_\__.
+The `config.yaml` file serves as a way to centralize customizable parameters of interest in a method. 
+ If the yaml file is organized appropiately, it can allow for the use of the `from_config` constructor method to create an instance of the method (which is also necessary if you wish to add the method to the factory and [contribute to the library](#readme_method-contribute)). In simple terms, it should suffice if the keys of the yaml file coincide with the input keyword arguments of the method's `__init__`.
 
 The file can be organized in the following way:
 
@@ -256,7 +256,7 @@ example_parameter_2: example_value2
 
 ### Add to the MethodRegistry
 
-Edit the file _src.methods.registry.py_.
+Edit the file `src.methods.registry.py`.
 
 ```python
 @unique
@@ -268,7 +268,7 @@ class MethodRegistry(Enum):
 
 ### Add to the MethodFactory
 
-Edit the file _src.methods.factory.py_, inside the _load_ method.
+Edit the file `src.methods.factory.py`, inside the `load` method.
 
 ```python
 match method_name:
@@ -292,4 +292,4 @@ Describe the main functionality of the method, give usage examples and add citat
 
 ### Pull request to the repository
 
-Make a pull request to the repository with the new method following the instructions of the [CONTRIBUTING.md](../CONTRIBUTING.md) file.
+Make a pull request to the repository with the new method following the instructions of the [CONTRIBUTING.md](../../../CONTRIBUTING.md) file.

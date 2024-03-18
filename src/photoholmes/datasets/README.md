@@ -63,10 +63,10 @@ Functionalities:
 ## Custom Datasets
 The datasets are structured in the following way:
 - dataset.py file: Contains the class that inherits from the BaseDataset class. This class has at least two methods and declares two attributes:
-    - _get_paths: that returns the paths to the images and masks in the dataset.
-    - _get_mask_path: that returns the path to the mask given an image path.
-    - IMAGE_EXTENSION: the extension of the images in the dataset.
-    - MASK_EXTENSION: the extension of the masks in the dataset.
+    - `_get_paths`: that returns the paths to the images and masks in the dataset.
+    - `_get_mask_path`: that returns the path to the mask given an image path.
+    - `IMAGE_EXTENSION`: the extension of the images in the dataset.
+    - `MASK_EXTENSION`: the extension of the masks in the dataset.
 
 The two methods are used to get the paths to the images and the masks in the dataset. As different datasets have different directory structures, these methods are implemented in each dataset class. Pristine images must yield 'None' as a mask path, which is interpreted by the Benchmark as an all-zero mask with the shape of the image. In the case of the two attributes, they are used to show warning messages when jpeg data is requested from a dataset that does not have jpeg images or masks.
 
@@ -233,7 +233,7 @@ dataset = DatasetFactory.load(
 data, mask, image_name = dataset[0]
 image = data["image"]
 plot(image)
-```
+```_get_paths
 
 ## Using a PreProcessingPipeline:
 
@@ -288,5 +288,5 @@ In Trace, the forged and pristine regions differ only in the traces left behind 
 1. Create a new file for the dataset in the datasets folder.
 2. Add the dataset to the registry and to the factory.
 3. Fill out the README and don't forget to include the characteristics of the dataset.
-4. Make a pull request to the repository with the new dataset following the instructions of the [CONTRIBUTING.md](../CONTRIBUTING.md) file.
+4. Make a pull request to the repository with the new dataset following the instructions of the [CONTRIBUTING.md](../../../CONTRIBUTING.md) file.
 

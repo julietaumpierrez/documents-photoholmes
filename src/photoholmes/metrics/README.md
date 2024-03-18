@@ -200,7 +200,7 @@ If the metric already exists in [torch-metrics](https://lightning.ai/docs/torchm
     class MetricRegistry(Enum):
         NEW_TORCHMETRIC = "new_torch_metric"
     ```
-2. Add a wrapper for the metric in the torchmetrics_wrapper.py file if necessary. This file contains the wrapper for the metrics from [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/). The wrapper should follow the same pattern as the other metrics in the file. The wrapper should be a class that inherits from the `Metric` class and should have the same signature as the original.
+2. Add a wrapper for the metric in the `torchmetrics_wrapper.py` file if necessary. This file contains the wrapper for the metrics from [torch-metrics](https://lightning.ai/docs/torchmetrics/stable/). The wrapper should follow the same pattern as the other metrics in the file. It is implemented as a class that inherits from the `Metric` class, and has the same signature as the original.
 3. Add the metric to the `__init__.py` file of the metrics module.
 4. Add the metric to the factory by following this template
     ``` python
@@ -223,4 +223,4 @@ If the metric does not exist in [torch-metrics](https://lightning.ai/docs/torchm
         metrics.append(FNM())
     ```
 
-Make a pull request to the repository with the new metric following the instructions of the [CONTRIBUTING.md](../CONTRIBUTING.md) file.
+Make a pull request to the repository with the new metric following the instructions of the [CONTRIBUTING.md](../../../CONTRIBUTING.md) file.
