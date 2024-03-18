@@ -1,4 +1,4 @@
-# PhotoHolmes
+# <img src="Logo.png" alt="Project Logo"> <p style="text-align: center;">A python library for forgery detection in digital images</p>
 
 ## Introduction
 
