@@ -56,6 +56,7 @@ class GaussianUniformEM:
         """
         self.mean = np.zeros(X.shape[1])
         self.covariance_matrix = np.eye(X.shape[1])
+        save = self.mean, self.covariance_matrix, self.pi
 
         for _ in range(self.n_init):
             # The following lines are necessary to avoid a overflow when the
