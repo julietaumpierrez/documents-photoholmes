@@ -122,13 +122,13 @@ command will create a folder `{weights_folder}/method` inside.
 
 Try downloading the exif-as-language weights using:
 ```
-photholmes download_weights focal
+photholmes download_weights exif_as_language
 ```
 This will create a folder `weights/` if it doesn't exist yet, inside it you will 
-find the `focal` folder with the weights inside. If you want to download the
+find the `exif_as_language` folder with the weights inside. If you want to download the
 weights to a custom folder, simply add the weights folder option:
 ```
-photoholmes download_weights focal --weights-folder custom_weights
+photoholmes download_weights exif_as_language --weights-folder custom_weights
 ``` 
 
 ## Adapt weights
