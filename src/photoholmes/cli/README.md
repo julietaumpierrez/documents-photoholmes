@@ -138,7 +138,7 @@ adding the methods to the library, so we provide the scripts to make those chang
 the original weights. We include this in case a new version or a re-train of the model is
 published, making adapting and runnig the method with the new weights a breeze.
 
-Currently, we only include an adaptation for the _exif as a language_ weights, were we remove
+Currently, we only include an adaptation for the _exif as language_ weights, were we remove
 some of the leftover clip layers. Check the command out by running:
 ```
 photoholmes adapt_weights --help

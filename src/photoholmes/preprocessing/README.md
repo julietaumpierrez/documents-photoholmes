@@ -77,7 +77,7 @@ define two extra parameters: _inputs_ and _outputs_keys_.
 
 ### Inputs
 Inputs serves two purposes: to validate the input to the pipeline when called (useful
-for debugging), and for the Datset (see #FIXME add link) to know what info it should
+for debugging), and for the [Dataset](../datasets/README.md) to know what info it should
 load from the image and which isn't necessary. Currently, we limit the inputs to:
 - image
 - dct_coefficients

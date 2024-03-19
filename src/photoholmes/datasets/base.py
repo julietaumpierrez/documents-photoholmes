@@ -166,7 +166,14 @@ class BaseDataset(ABC, Dataset):
         return x, mask, image_name
 
     def _binarize_mask(self, mask_image: Tensor) -> Tensor:
-        """Overridable method to binarize the mask image."""
+        """
+        Overridable method to binarize the mask image. Binarized masks are boolean
+        tensors of one channel, regarding any degree of tampering as True.
+        Arguments:
+            mask_image (Tensor): Original mask image.
+        Outputs:
+            Tensor: Binarized mask image.
+        """
         assert (mask_image <= 1).all()
         return (mask_image == 1).float()
 
