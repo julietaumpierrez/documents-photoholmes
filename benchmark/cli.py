@@ -11,8 +11,6 @@ from photoholmes.methods.registry import MethodRegistry
 from photoholmes.metrics.registry import MetricRegistry
 from photoholmes.utils.generic import load_yaml
 
-# TODO: add a command to list the available methods, datasets and metrics
-# TODO: add documentation for the CLI
 app = typer.Typer()
 logger = logging.getLogger(__name__)
 

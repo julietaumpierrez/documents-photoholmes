@@ -1,4 +1,4 @@
-# TODO add reference to github
+# Code derived from https://github.com/grip-unina/TruFor
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Copyright (c) 2023 Image Processing Research Group of University Federico II of Naples ('GRIP-UNINA').  # noqa
