@@ -1,4 +1,5 @@
 # code derived from https://www.grip.unina.it/download/prog/Splicebuster/
+import logging
 import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, Literal, Optional, Tuple, Union
@@ -12,7 +13,12 @@ from photoholmes.methods.base import BaseMethod, BenchmarkOutput
 from photoholmes.utils.generic import load_yaml
 from photoholmes.utils.pca import PCA
 
-from .config import SaturationMaskConfig
+from .config import (
+    FeaturesConfig,
+    RegularImageFeaturesConfig,
+    SaturationMaskConfig,
+    SmallImageFeaturesConfig,
+)
 from .postprocessing import normalize_non_nan, resize_heatmap_and_pad
 from .utils import (
     encode_matrix,
@@ -24,6 +30,9 @@ from .utils import (
     third_order_residual,
 )
 
+logger = logging.getLogger(__name__)
+YELLOW_COLOR = "\033[93m"
+END_COLOR = "\033[0m"
 warnings.filterwarnings("error", category=LinAlgWarning)
 
 
@@ -37,10 +46,13 @@ class Splicebuster(BaseMethod):
 
     def __init__(
         self,
-        block_size: int = 128,
-        stride: int = 8,
-        q: int = 2,
-        T: int = 1,
+        image_size_threshold: int = 20000,
+        small_image_feature_config: Union[
+            FeaturesConfig, Literal["original"]
+        ] = "original",
+        regular_image_feature_config: Union[
+            FeaturesConfig, Literal["original"]
+        ] = "original",
         saturation_prob: float = 0.85,
         pca_dim: int = 25,
         pca: Literal["original", "uncentered", "correct"] = "original",
@@ -55,15 +67,19 @@ class Splicebuster(BaseMethod):
         Initializes Splicebuster method class.
 
         Args:
-            block_size (int): Size of the blocks used for feature extraction.
-            stride (int): Stride used for feature extraction.
-            q (int): Quantization level.
-            T (int): Truncation level.
-            pca_dim (int): Number of dimensions to keep after PCA. If 0, PCA is not used.
+            image_size_threshold (int): Threshold to determine if an image is small
+                  or regular.
+            small_image_config (FeaturesConfig | "original" | None): Feature
+                  configuration for small images.
+            regular_image_config (FeaturesConfig | "original" | None): Feature
+                  configuration for regular sized images.
+            pca_dim (int): Number of dimensions to keep after PCA. If 0, PCA is not
+                  used.
             pca (str): PCA method to use. Options: 'original', 'uncentered', 'correct'.
                 'original': PCA is applied to the features as in the original
                 implementation.
-                'uncentered': PCA is applied using sklearn but to the uncentered features.
+                'uncentered': PCA is applied using sklearn but to the uncentered
+                  features.
                 'correct': PCA is applied using sklearn.
             mixture (str): Mixture model to use for mahalanobis distance estimation.
                 Options: 'uniform', 'gaussian'.
@@ -72,25 +88,74 @@ class Splicebuster(BaseMethod):
                 None: Do not use weights.
                 "original": Use parameters from the original implementation.
                 WeightConfig object: Use custom parameters.
-            seed (int | None): Random seed for mixture model initialization. default = 0.
+            seed (int | None): Random seed for mixture model initialization.
+                default = 0.
         """
         super().__init__(**kwargs)
-        self.block_size = block_size
-        self.stride = stride
-        self.q = q
-        self.T = T
+
+        logger.warning(
+            f"{YELLOW_COLOR}Splicebuster is under a research only use license. "
+            f"See the LICENSE inside the method folder.{END_COLOR}"
+        )
+
+        self.image_size_threshold = image_size_threshold
+        self.small_image_feature_config = self._init_feature_config(
+            small_image_feature_config, "small"
+        )
+        self.regular_image_feature_config = self._init_feature_config(
+            regular_image_feature_config, "regular"
+        )
         self.saturation_prob = saturation_prob
         self.pca_dim = pca_dim
         self.pca = pca
 
-        self.weight_params: Optional[SaturationMaskConfig]
-        if saturation_mask_config == "original":
-            self.weight_params = SaturationMaskConfig()
-        else:
-            self.weight_params = saturation_mask_config
-
+        self.weight_params = self._init_saturation_mask_config(saturation_mask_config)
         self.mahalanobis_estimation: Callable = self._init_mahal_estimation(mixture)
         self.seed = seed
+
+    def _init_feature_config(
+        self,
+        feature_config: Union[FeaturesConfig, Literal["original"]],
+        image_size: Optional[Literal["small", "regular"]],
+    ) -> FeaturesConfig:
+        """
+        Initializes the feature configuration.
+
+        Args:
+            config (FeaturesConfig | "original" | None): Feature configuration.
+            type (Optional[Literal["small", "regular"]]): Type of image to initialize.
+
+        Returns:
+            init_config (FeaturesConfig): Feature configuration.
+        """
+        if feature_config == "original":
+            if image_size == "small":
+                return SmallImageFeaturesConfig()
+            elif image_size == "regular":
+                return RegularImageFeaturesConfig()
+            else:
+                return FeaturesConfig()
+        else:
+            return feature_config
+
+    def _init_saturation_mask_config(
+        self,
+        saturation_mask_config: Union[SaturationMaskConfig, Literal["original"], None],
+    ) -> Optional[SaturationMaskConfig]:
+        """
+        Initializes the saturation mask configuration.
+
+        Args:
+            saturation_mask_config (SaturationMaskConfig | "original"): Saturation mask
+                configuration.
+
+        Returns:
+            Optional[SaturationMaskConfig]: Saturation mask configuration.
+        """
+        if saturation_mask_config == "original":
+            return SaturationMaskConfig()
+        else:
+            return saturation_mask_config
 
     def _init_mahal_estimation(
         self, mixture: Literal["uniform", "gaussian"]
@@ -118,8 +183,28 @@ class Splicebuster(BaseMethod):
                 )
             )
 
+    def _feature_config_case(self, image_size: Tuple[int, ...]) -> FeaturesConfig:
+        """
+        Gets the corresponding feature config, according to the image size,
+        by looking at the product of the dimensions with respect to the attribute
+        'image_size_threshold'.
+
+        Arguments:
+            image_size (Tuple[int, int]): Image size.
+
+        Output:
+            FeaturesConfig: corresponding feature config.
+        """
+        X, Y = image_size[:2]
+        image_is_regular = X * Y > self.image_size_threshold
+        return (
+            self.regular_image_feature_config
+            if image_is_regular
+            else self.small_image_feature_config
+        )
+
     def filter_and_encode(
-        self, image: NDArray
+        self, image: NDArray, q: int, T: int
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         """
         Apply third order residual filtering, quantization, and
@@ -127,18 +212,20 @@ class Splicebuster(BaseMethod):
 
         Args:
             image (np.ndarray): Image to process.
+            q (int): Quantization parameter.
+            T (int): Threshold for quantization.
 
         Returns:
             Tuple[NDArray, NDArray, NDArray, NDArray]: Tuple with the encoded
             residuals.
         """
-        qh_res = quantize(third_order_residual(image), self.T, self.q)
-        qv_res = quantize(third_order_residual(image, axis=1), self.T, self.q)
+        qh_res = quantize(third_order_residual(image), T, q)
+        qv_res = quantize(third_order_residual(image, axis=1), T, q)
 
-        qhh = encode_matrix(qh_res, T=self.T)
-        qhv = encode_matrix(qh_res, T=self.T, axis=1)
-        qvh = encode_matrix(qv_res, T=self.T)
-        qvv = encode_matrix(qv_res, T=self.T, axis=1)
+        qhh = encode_matrix(qh_res, T=T)
+        qhv = encode_matrix(qh_res, T=T, axis=1)
+        qvh = encode_matrix(qv_res, T=T)
+        qvv = encode_matrix(qv_res, T=T, axis=1)
 
         return qhh, qhv, qvh, qvv
 
@@ -148,6 +235,7 @@ class Splicebuster(BaseMethod):
         qhv: NDArray[np.int64],
         qvh: NDArray[np.int64],
         qvv: NDArray[np.int64],
+        stride: int,
         mask: Optional[NDArray] = None,
     ) -> Tuple[NDArray, NDArray, int, Tuple[NDArray, NDArray]]:
         """
@@ -158,6 +246,7 @@ class Splicebuster(BaseMethod):
                 qhv (np.ndarray): Encoded horizontal-vertical residuals.
                 qvh (np.ndarray): Encoded vertical-horizontal residuals.
                 qvv (np.ndarray): Encoded vertical residuals.
+                stride (int): Stride for the blocks.
                 mask (np.ndarray | None): Mask to apply to the histograms. If None,
                     no mask is applied.
 
@@ -169,8 +258,8 @@ class Splicebuster(BaseMethod):
                 Tuple[NDArray, NDArray]: Coordinates.
         """
         H, W = qhh.shape
-        x_range = np.arange(0, H - self.stride + 1, self.stride)
-        y_range = np.arange(0, W - self.stride + 1, self.stride)
+        x_range = np.arange(0, H - stride + 1, stride)
+        y_range = np.arange(0, W - stride + 1, stride)
 
         if mask is None:
             mask = np.ones((H, W), dtype=np.uint8)
@@ -184,32 +273,32 @@ class Splicebuster(BaseMethod):
 
         for x_i, i in enumerate(x_range):
             for x_j, j in enumerate(y_range):
-                block_weights = mask[i : i + self.stride, j : j + self.stride]
+                block_weights = mask[i : i + stride, j : j + stride]
                 weights[x_i, x_j] = np.sum(block_weights)
 
                 if weights[x_i, x_j] == 0:
                     continue
 
                 Hhh = np.histogram(
-                    qhh[i : i + self.stride, j : j + self.stride],
+                    qhh[i : i + stride, j : j + stride],
                     bins=bins,
                     weights=block_weights,
                     density=True,
                 )[0].astype(float)
                 Hvv = np.histogram(
-                    qvv[i : i + self.stride, j : j + self.stride],
+                    qvv[i : i + stride, j : j + stride],
                     bins=bins,
                     weights=block_weights,
                     density=True,
                 )[0].astype(float)
                 Hhv = np.histogram(
-                    qhv[i : i + self.stride, j : j + self.stride],
+                    qhv[i : i + stride, j : j + stride],
                     bins=bins,
                     weights=block_weights,
                     density=True,
                 )[0].astype(float)
                 Hvh = np.histogram(
-                    qvh[i : i + self.stride, j : j + self.stride],
+                    qvh[i : i + stride, j : j + stride],
                     bins=bins,
                     weights=block_weights,
                     density=True,
@@ -217,12 +306,12 @@ class Splicebuster(BaseMethod):
 
                 features[x_i, x_j] = np.concatenate((Hhv + Hvh, Hhh + Hvv))
 
-        weights /= self.stride**2
+        weights /= stride**2
 
         return features, weights, feat_dim, (np.array(x_range), np.array(y_range))
 
     def correct_coords(
-        self, coords: Tuple[NDArray, NDArray]
+        self, coords: Tuple[NDArray, NDArray], block_size, stride
     ) -> Tuple[NDArray, NDArray]:
         """
         Apply correction to coordinates to account for the window filtering,
@@ -230,6 +319,8 @@ class Splicebuster(BaseMethod):
 
         Args:
             coords (Tuple[NDArray, NDArray]): Coordinates to correct.
+            block_size (int): Size of the block.
+            stride (int): Stride for the blocks.
 
         Returns:
             Tuple[NDArray, NDArray]: Corrected coordinates.
@@ -239,11 +330,11 @@ class Splicebuster(BaseMethod):
         x_coords += 4
         y_coords += 4
         # center coordinate on window
-        x_coords = x_coords + (self.stride - 1) / 2
-        y_coords = y_coords + (self.stride - 1) / 2
+        x_coords = x_coords + (stride - 1) / 2
+        y_coords = y_coords + (stride - 1) / 2
 
         # moving average compensation
-        stride_x_block = self.block_size // self.stride
+        stride_x_block = block_size // stride
         low = int(np.floor((stride_x_block - 1) / 2))
         high = int(np.ceil((stride_x_block - 1) / 2))
         x_coords = (x_coords[low:-high] + x_coords[high:-low]) / 2
@@ -266,7 +357,14 @@ class Splicebuster(BaseMethod):
                 NDArray: Weights.
                 Tuple[NDArray, NDArray]: Coordinates.
         """
-        qhh, qhv, qvh, qvv = self.filter_and_encode(image)
+        feature_config = self._feature_config_case(image.shape)
+        block_size, stride, q, T = (
+            feature_config.block_size,
+            feature_config.stride,
+            feature_config.q,
+            feature_config.T,
+        )
+        qhh, qhv, qvh, qvv = self.filter_and_encode(image, q, T)
 
         if self.weight_params is not None:
             mask = get_saturated_region_mask(
@@ -277,14 +375,14 @@ class Splicebuster(BaseMethod):
 
             mask = mask[4:-4, 4:-4]
             features, weights, feat_dim, coords = self.compute_histograms(
-                qhh, qhv, qvh, qvv, mask
+                qhh, qhv, qvh, qvv, stride, mask
             )
         else:
             features, weights, feat_dim, coords = self.compute_histograms(
-                qhh, qhv, qvh, qvv
+                qhh, qhv, qvh, qvv, stride
             )
 
-        strides_x_block = self.block_size // self.stride
+        strides_x_block = feature_config.block_size // feature_config.stride
         block_features = np.zeros(
             (
                 features.shape[0] - strides_x_block + 1,
@@ -312,7 +410,7 @@ class Splicebuster(BaseMethod):
         if self.pca_dim > 0:
             block_features = np.sqrt(block_features)
 
-        coords = self.correct_coords(coords)
+        coords = self.correct_coords(coords, block_size, stride)
 
         return block_features, block_weights, coords
 
@@ -364,6 +462,9 @@ class Splicebuster(BaseMethod):
         valid = weights >= self.saturation_prob
         flat_features = features.reshape(-1, features.shape[-1])
         valid_features = flat_features[valid.flatten()]
+
+        if len(valid_features) <= 1:
+            return np.zeros((X, Y))
 
         if self.pca_dim > 0:
             flat_features, valid_features = self._reduce_dimensions(
@@ -418,6 +519,14 @@ class Splicebuster(BaseMethod):
         if "saturation_mask_config" in config:
             config["saturation_mask_config"] = SaturationMaskConfig(
                 **config["saturation_mask_config"]
+            )
+        if "regular_image_feature_config" in config:
+            config["regular_image_feature_config"] = FeaturesConfig(
+                **config["regular_image_feature_config"]
+            )
+        if "small_image_feature_config" in config:
+            config["small_image_feature_config"] = FeaturesConfig(
+                **config["small_image_feature_config"]
             )
 
         return cls(**config)

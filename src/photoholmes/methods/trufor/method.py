@@ -23,6 +23,8 @@ from .models.utils.init_func import init_weight
 from .models.utils.layer import weighted_statistics_pooling
 
 logger = logging.getLogger(__name__)
+YELLOW_COLOR = "\033[93m"
+END_COLOR = "\033[0m"
 
 
 # This function is not in the `preprocessing` module as is used in the middle of the
@@ -94,6 +96,12 @@ class TruFor(BaseTorchMethod):
                 output heatmap in the benchmark method.
         """
         super().__init__()
+        logger.warn(
+            f"{YELLOW_COLOR}Trufor has a custom research only licence. "
+            "See the LICENSE inside the method folder or at https://github.com/grip-unina/TruFor/blob/main/test_docker/LICENSE.txt. "  # noqa: E501
+            "By continuing the use, you are agreeing to the conditions on their "
+            f"license.{END_COLOR}"
+        )
 
         if arch_config == "pretrained":
             arch_config = pretrained_arch

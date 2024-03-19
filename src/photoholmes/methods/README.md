@@ -137,12 +137,6 @@ image_data = {"image": image}
 input_data = method_preprocessing(**image_data)
 out = method.predict(**input_data)
 ```
-## Benchamarked results
-
-With the PhotoHolmes library we reported the perfromance of all mentioned methods in different datasets and with different metrics. 
-### Localization Performance
-
-### Detection Performance
 
 ## Create a method in the PhotoHolmes standard
 

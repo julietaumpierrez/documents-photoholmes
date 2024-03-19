@@ -41,6 +41,9 @@ from photoholmes.utils.generic import load_yaml
 
 logger = logging.getLogger(__name__)
 
+YELLOW_COLOR = "\033[93m"
+END_COLOR = "\033[0m"
+
 
 class CatNet(BaseTorchMethod):
     """
@@ -64,6 +67,13 @@ class CatNet(BaseTorchMethod):
             weights (Optional[Union[str, Path, dict]]): Path to the weights file
         """
         super().__init__(**kwargs)
+
+        logger.warning(
+            f"{YELLOW_COLOR} CatNet is under a license that only allows research use. "
+            "You can check the license inside the method folder's or at https://github.com/mjkwon2021/CAT-Net/blob/main/README.md#licence."  # noqa: E501
+            "If you use this method, you are agreeing to the terms of the license."
+        )
+
         if arch_config == "pretrained":
             arch_config = pretrained_arch
 
