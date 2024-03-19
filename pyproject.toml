@@ -23,7 +23,7 @@ dependencies = [
     "pillow",
     "wget",
 
-    "torch",
+    "torch >= 2.1",
     "torchmetrics",
     "torchvision",
     "torch_kmeans",
