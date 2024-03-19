@@ -1,6 +1,6 @@
 # PhotoHolmes - CVPR edition
 
-The current source code and documentation is the submission of PhotoHolmes for the CVPR Workshop on Media Forensics. This implies that some adaptations have been made in order to fulfill the double-blind submission requirements, which we wish to clarify.
+The current source code and documentation is the submission of PhotoHolmes for the CVPR Workshop on Media Forensics. This implies that some adaptations have been made in order to fulfill the double-blind procedure, which we wish to clarify.
 
 1. **Github remote repository:** The code was developed using gitlab and has will have a remote repository in github to recieve contributions when it is published.
 2. **PyPI:** It will also be available in PyPI, for users to easily install using `pip install photoholmes` (the current `pip install -e .` is a workaround for the meantime).

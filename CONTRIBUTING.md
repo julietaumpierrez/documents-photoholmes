@@ -39,4 +39,4 @@ The PhotoHolmes team is grateful for your contribution!
 
 ## License
 
-By contributing to the existing Photoholmes library, you accept that your code will be licensed under the [Apache-2.0 License](). You may write to the PhotoHolmes team if this is inconvenient.
+By contributing to the existing Photoholmes library, you accept that your code will be licensed under the [Apache-2.0 License](LICENSE). You may write to the PhotoHolmes team if this is inconvenient.
