@@ -3,7 +3,6 @@ from typing import List, Tuple
 import numpy as np
 import torch
 from numpy.typing import NDArray
-from torch import Tensor
 
 from photoholmes.methods.base import BaseMethod, BenchmarkOutput
 from photoholmes.methods.dq.utils import ZIGZAG, fft_period, histogram_period
@@ -34,7 +33,9 @@ class DQ(BaseMethod):
         self.number_frecs = number_frecs
         self.alpha = alpha
 
-    def predict(self, dct_coefficients: NDArray, image_size: Tuple[int, int]) -> Tensor:
+    def predict(
+        self, dct_coefficients: NDArray, image_size: Tuple[int, int]
+    ) -> NDArray:
         """
         Predicts the BPPM (Block Posterior Probability Map) heatmap from DCT
         coefficients.
@@ -57,7 +58,7 @@ class DQ(BaseMethod):
         BPPM_norm = torch.from_numpy(BPPM / len(dct_coefficients))
         BPPM_upsampled = simple_upscale_heatmap(BPPM_norm, 8)
         heatmap = resize_heatmap_with_trim_and_pad(BPPM_upsampled, image_size)
-        return heatmap
+        return heatmap.numpy()
 
     def benchmark(
         self, dct_coefficients: NDArray, image_size: Tuple[int, int]
@@ -74,7 +75,7 @@ class DQ(BaseMethod):
                 detection.
         """
         heatmap = self.predict(dct_coefficients, image_size)
-        return {"heatmap": heatmap, "mask": None, "detection": None}
+        return {"heatmap": torch.from_numpy(heatmap), "mask": None, "detection": None}
 
     def _detect_period(self, histogram: NDArray) -> int:
         """
