@@ -80,7 +80,7 @@ def run_adaptive_cfa_net(
         if not weights_path.exists():
             logger.error(
                 "Weights not found. Please provide the correct path, or run "
-                "`photoholmes run download_weights adaptive_cfa_net` to download them."
+                "`photoholmes download_weights adaptive_cfa_net` to download them."
             )
             return
 
@@ -145,7 +145,7 @@ def run_catnet(
         if not weights_path.exists():
             logger.error(
                 "Weights not found. Please provide the correct path, or run "
-                "`photoholmes run download_weights catnet` to download them."
+                "`photoholmes download_weights catnet` to download them."
             )
             return
 
@@ -255,7 +255,7 @@ def run_exif_as_language(
         if not weights.exists():
             logger.error(
                 "Weights not found. Please provide the correct path, or run "
-                "`photoholmes run download_weights exif_as_language` to download them."
+                "`photoholmes download_weights exif_as_language` to download them."
             )
             return
 
@@ -342,7 +342,7 @@ def run_focal(
         if not vit_weights.exists():
             logger.error(
                 "ViT weights not found. Please provide the correct path, or run "
-                "`photoholmes run download_weights focal` to download them."
+                "`photoholmes download_weights focal` to download them."
             )
             return
     if hrnet_weights is None:
@@ -353,7 +353,7 @@ def run_focal(
         if not hrnet_weights.exists():
             logger.error(
                 "HRNet weights not found. Please provide the correct path, or run "
-                "`photoholmes run download_weights focal` to download them."
+                "`photoholmes download_weights focal` to download them."
             )
             return
 
@@ -462,7 +462,7 @@ def run_psccnet(
         if not weights_folder.exists():
             logger.error(
                 "Weights not found. Please provide the correct path, or run "
-                "`photoholmes run download_weights psccnet` to download them."
+                "`photoholmes download_weights psccnet` to download them."
             )
             return
 
@@ -470,21 +470,21 @@ def run_psccnet(
     if not cls_net_path.exists():
         logger.error(
             "FENet.pth not found. Make the sure ClsNet.pth is in the folder, or run "
-            "`photoholmes run download_weights psccnet` to download them."
+            "`photoholmes download_weights psccnet` to download them."
         )
         return
     fe_net_path = weights_folder / "FENet.pth"
     if not fe_net_path.exists():
         logger.error(
             "FENet.pth not found. Make the sure FENet.pth is in the folder, or run "
-            "`photoholmes run download_weights psccnet` to download them."
+            "`photoholmes download_weights psccnet` to download them."
         )
         return
     seg_net_path = weights_folder / "SegNet.pth"
     if not seg_net_path.exists():
         logger.error(
             "SegNet.pth not found. Make the sure SegNet.pth is in the folder, or run "
-            "`photoholmes run download_weights psccnet` to download them."
+            "`photoholmes download_weights psccnet` to download them."
         )
         return
 
@@ -601,7 +601,7 @@ def run_trufor(
         if not weights_path.exists():
             logger.error(
                 "Weights not found. Please provide the correct path, or run "
-                "`photoholmes run download_weights trufor` to download them."
+                "`photoholmes download_weights trufor` to download them."
             )
             return
 
