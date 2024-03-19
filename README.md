@@ -21,7 +21,10 @@ If you only wish to use the library as a user, for bencharking or other uses, ru
 pip install -e .
 ```
 
-**Note:** `pip install photoholmes` will be later available in PyPI once the library is published.
+> **Note:** `pip install photoholmes` will be later available in PyPI once the library is published.
+
+> **Note:** not all method dependencies are included as a requirement. Some particularly big packages, like huggingface's transformers, which are use by only one method are excluded
+> and need to be installed manually if the user wishes to use the method. When the user tries to use a method that is not installed, the library will raise an error poiting out how to solve the issue.
 
 ### Install: Develop
 
@@ -63,7 +66,7 @@ metrics = MetricFactory.load([MetricsRegistry.AUROC, MetricsRegistry.IOU])
 
 However, if you have a custom methods, datasets or metrics you wish to use for a benchmark, they can be easily integrated into this framework. A good example that shows different ways of implementing objects and integrating custom ones can be found in the [benchmarking a method notebook](notebooks/benchmarking_a_method.ipynb). There is also more detailed documentation and examples for each module in the respective [methods](src/photoholmes/methods/README.md), [datasets](src/photoholmes/datasets/README.md) and [metrics](src/photoholmes/metrics/README.md) READMEs.
 
-**Warning on MPS as a device:** We advise the user to be careful when running a method on `mps` as the `device`. The PhotoHolmes team found it produces different outputs (with respect to `cpu` or `cuda`) in some cases.
+> **Warning on MPS as a device:** We advise the user to be careful when running a method on `mps` as the `device`. The PhotoHolmes team found it produces different outputs (with respect to `cpu` or `cuda`) in some cases.
 
 ## `run` the Photolmes CLI
 
