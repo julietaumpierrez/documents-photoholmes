@@ -1,0 +1,56 @@
+FIXME, TODOS and NOTES:
+
+FIXME
+ - methods/base.py: BaseTorchMethod.load_state_dict( ... )  
+ 	116	# FIXME: asign limits torch version to >=2.1
+ - methods/exif_as_language/method.py: EXIFAsLanguage.predict_consistency_maps
+ 	262	# Grab corresponding features
+		    a_feats = patch_features[a_idxs]  # [B, 4096]
+		    b_feats = patch_features[b_idxs]
+
+		    sim = self.patch_similarity(a_feats, b_feats)
+
+		    # FIXME Is it possible to vectorize this?
+		    # Accumulate predictions for overlapping patches 
+ - methods/exif_as_language/method.py: EXIFAsLanguage.predict_consistency_maps.predict_pca_map()
+	312	# Perform prediction
+		for idxs in img.idxs_gen(batch_size=batch_size):
+		    # a to be compared to b
+		    patch_a_idxs = idxs[:, :2]  # [B, 2]
+
+		    # Convert 2D index into its 1D version
+		    a_idxs = np.ravel_multi_index(
+			patch_a_idxs.T.tolist(), [img.max_h_idx, img.max_w_idx]
+		    )  # [B]
+
+		    # Grab corresponding features
+		    a_feats = patch_features[a_idxs]  # [B, 3]
+
+		    # FIXME Is it possible to vectorize this?
+		    # Accumulate predictions for overlapping patches
+		    
+TODO
+		
+ - methods/exif/method/exif_as_language EXIFAsLanguage.predict
+ 	144        # TODO: change resize to our own implementation
+ 	
+ - methods/focal/models/hrnet.py 
+ 	322	# TODO fix typing and evaluate mixing HRNET definition using catnet's and
+		# focal
+		class HRNet(nn.Module):
+
+NOTE
+ - methods/trufor/models/cmx/encoders/dual_segformer.py: Block.__init__
+ 	196 	self.attn = Attention(
+			    dim,
+			    num_heads=num_heads,
+			    qkv_bias=qkv_bias,
+			    qk_scale=qk_scale,
+			    attn_drop=attn_drop,
+			    proj_drop=drop,
+			    sr_ratio=sr_ratio,
+			)
+			# NOTE: drop path for stochastic depth, we shall see if this is better than dropout here
+			self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+			
+			

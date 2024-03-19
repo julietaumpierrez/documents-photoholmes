@@ -1,0 +1,124 @@
+From 7b489dd754a3ade3070bb7306c71245756b30dd3 Mon Sep 17 00:00:00 2001
+From: Rodrigo Paganini <rpaganini@dsensetech.com>
+Date: Mon, 18 Mar 2024 21:14:35 -0300
+Subject: [PATCH] TODO, FIXME and NOTE cleansing
+
+---
+ benchmark/cli.py                                             | 2 ++
+ src/photoholmes/methods/base.py                              | 4 +++-
+ src/photoholmes/methods/exif_as_language/method.py           | 5 +++++
+ src/photoholmes/methods/focal/models/hrnet.py                | 2 ++
+ .../methods/trufor/models/cmx/encoders/dual_segformer.py     | 1 +
+ src/photoholmes/methods/trufor/models/utils/layer.py         | 2 +-
+ src/photoholmes/preprocessing/README.md                      | 2 +-
+ 7 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/benchmark/cli.py b/benchmark/cli.py
+index 4c9036f..3b041fe 100644
+--- a/benchmark/cli.py
++++ b/benchmark/cli.py
+@@ -11,6 +11,8 @@ from photoholmes.methods.registry import MethodRegistry
+ from photoholmes.metrics.registry import MetricRegistry
+ from photoholmes.utils.generic import load_yaml
+ 
++# TODO: add a command to list the available methods, datasets and metrics
++# TODO: add documentation for the CLI
+ app = typer.Typer()
+ logger = logging.getLogger(__name__)
+ 
+diff --git a/src/photoholmes/methods/base.py b/src/photoholmes/methods/base.py
+index c4a43d9..5074476 100644
+--- a/src/photoholmes/methods/base.py
++++ b/src/photoholmes/methods/base.py
+@@ -113,7 +113,9 @@ class BaseTorchMethod(BaseMethod, Module):
+         if "state_dict" in weights_.keys():
+             weights_ = weights_["state_dict"]
+ 
+-        self.load_state_dict(weights_, assign=True)
++        self.load_state_dict(
++            weights_, assign=True
++        )  # FIXME: asign limits torch version to >=2.1
+ 
+     def to_device(self, device: Union[str, torch.device]):
+         """Send the model to the device."""
+diff --git a/src/photoholmes/methods/exif_as_language/method.py b/src/photoholmes/methods/exif_as_language/method.py
+index 4cf0b55..f36cec4 100644
+--- a/src/photoholmes/methods/exif_as_language/method.py
++++ b/src/photoholmes/methods/exif_as_language/method.py
+@@ -141,6 +141,7 @@ class EXIFAsLanguage(BaseMethod):
+ 
+         # Run clustering to get localization map
+         ncuts = normalized_cut(pred_maps)
++        # TODO: change resize to our own implementation
+         out_ms = cv2.resize(ms, (width, height), interpolation=cv2.INTER_LINEAR)
+         out_ncuts = cv2.resize(
+             ncuts.astype(np.float32),
+@@ -264,6 +265,8 @@ class EXIFAsLanguage(BaseMethod):
+ 
+             sim = self.patch_similarity(a_feats, b_feats)
+ 
++            # FIXME Is it possible to vectorize this?
++            # Accumulate predictions for overlapping patches
+             for i in range(len(sim)):
+                 responses[
+                     idxs[i][0] : (idxs[i][0] + spread),
+@@ -321,6 +324,8 @@ class EXIFAsLanguage(BaseMethod):
+             # Grab corresponding features
+             a_feats = patch_features[a_idxs]  # [B, 3]
+ 
++            # FIXME Is it possible to vectorize this?
++            # Accumulate predictions for overlapping patches
+             for i in range(a_feats.shape[0]):
+                 responses[
+                     idxs[i][0] : (idxs[i][0] + spread),
+diff --git a/src/photoholmes/methods/focal/models/hrnet.py b/src/photoholmes/methods/focal/models/hrnet.py
+index 80741c1..e9281cc 100644
+--- a/src/photoholmes/methods/focal/models/hrnet.py
++++ b/src/photoholmes/methods/focal/models/hrnet.py
+@@ -319,6 +319,8 @@ class HighResolutionModule(nn.Module):
+ blocks_dict = {"BASIC": BasicBlock, "BOTTLENECK": Bottleneck}
+ 
+ 
++# TODO fix typing and evaluate mixing HRNET definition using catnet's and
++# focal
+ class HRNet(nn.Module):
+     def __init__(self, extra_name: Literal["w32_extra", "w48_extra"] = "w32_extra"):
+         self.inplanes = 64
+diff --git a/src/photoholmes/methods/trufor/models/cmx/encoders/dual_segformer.py b/src/photoholmes/methods/trufor/models/cmx/encoders/dual_segformer.py
+index 5b08707..ff503bd 100644
+--- a/src/photoholmes/methods/trufor/models/cmx/encoders/dual_segformer.py
++++ b/src/photoholmes/methods/trufor/models/cmx/encoders/dual_segformer.py
+@@ -202,6 +202,7 @@ class Block(nn.Module):
+             proj_drop=drop,
+             sr_ratio=sr_ratio,
+         )
++        # NOTE: drop path for stochastic depth, we shall see if this is better than dropout here
+         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+         self.norm2 = norm_layer(dim)
+         mlp_hidden_dim = int(dim * mlp_ratio)
+diff --git a/src/photoholmes/methods/trufor/models/utils/layer.py b/src/photoholmes/methods/trufor/models/utils/layer.py
+index 8aa305b..8f2b8a8 100644
+--- a/src/photoholmes/methods/trufor/models/utils/layer.py
++++ b/src/photoholmes/methods/trufor/models/utils/layer.py
+@@ -1,4 +1,4 @@
+-# Code derived from https://github.com/grip-unina/TruFor
++# TODO add reference to github
+ 
+ # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ # Copyright (c) 2023 Image Processing Research Group of University Federico II of Naples ('GRIP-UNINA').  # noqa
+diff --git a/src/photoholmes/preprocessing/README.md b/src/photoholmes/preprocessing/README.md
+index 8ce673e..26bc577 100644
+--- a/src/photoholmes/preprocessing/README.md
++++ b/src/photoholmes/preprocessing/README.md
+@@ -77,7 +77,7 @@ define two extra parameters: _inputs_ and _outputs_keys_.
+ 
+ ### Inputs
+ Inputs serves two purposes: to validate the input to the pipeline when called (useful
+-for debugging), and for the [Datset](../datasets/README.md) to know what info it should
++for debugging), and for the Datset (see #FIXME add link) to know what info it should
+ load from the image and which isn't necessary. Currently, we limit the inputs to:
+ - image
+ - dct_coefficients
+-- 
+2.34.1
+
