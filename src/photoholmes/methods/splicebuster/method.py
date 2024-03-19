@@ -1,4 +1,5 @@
 # code derived from https://www.grip.unina.it/download/prog/Splicebuster/
+import logging
 import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, Literal, Optional, Tuple, Union
@@ -29,6 +30,9 @@ from .utils import (
     third_order_residual,
 )
 
+logger = logging.getLogger(__name__)
+YELLOW_COLOR = "\033[93m"
+END_COLOR = "\033[0m"
 warnings.filterwarnings("error", category=LinAlgWarning)
 
 
@@ -63,16 +67,19 @@ class Splicebuster(BaseMethod):
         Initializes Splicebuster method class.
 
         Args:
-            image_size_threshold (int): Threshold to determine if an image is small  or regular.
-            small_image_config (FeaturesConfig | "original" | None): Feature configuration
-                for small images.
-            regular_image_config (FeaturesConfig | "original" | None): Feature configuration
-                for regular sized images.
-            pca_dim (int): Number of dimensions to keep after PCA. If 0, PCA is not used.
+            image_size_threshold (int): Threshold to determine if an image is small
+                  or regular.
+            small_image_config (FeaturesConfig | "original" | None): Feature
+                  configuration for small images.
+            regular_image_config (FeaturesConfig | "original" | None): Feature
+                  configuration for regular sized images.
+            pca_dim (int): Number of dimensions to keep after PCA. If 0, PCA is not
+                  used.
             pca (str): PCA method to use. Options: 'original', 'uncentered', 'correct'.
                 'original': PCA is applied to the features as in the original
                 implementation.
-                'uncentered': PCA is applied using sklearn but to the uncentered features.
+                'uncentered': PCA is applied using sklearn but to the uncentered
+                  features.
                 'correct': PCA is applied using sklearn.
             mixture (str): Mixture model to use for mahalanobis distance estimation.
                 Options: 'uniform', 'gaussian'.
@@ -81,9 +88,15 @@ class Splicebuster(BaseMethod):
                 None: Do not use weights.
                 "original": Use parameters from the original implementation.
                 WeightConfig object: Use custom parameters.
-            seed (int | None): Random seed for mixture model initialization. default = 0.
+            seed (int | None): Random seed for mixture model initialization.
+                default = 0.
         """
         super().__init__(**kwargs)
+
+        logger.warning(
+            f"{YELLOW_COLOR}Splicebuster is under a research only use license. "
+            f"See the LICENSE inside the method folder.{END_COLOR}"
+        )
 
         self.image_size_threshold = image_size_threshold
         self.small_image_feature_config = self._init_feature_config(
