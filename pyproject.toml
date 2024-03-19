@@ -22,6 +22,7 @@ dependencies = [
     "typer",
     "pillow",
     "wget",
+    "ipykernel",
 
     "torch >= 2.1",
     "torchmetrics",
@@ -30,7 +31,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "black", "isort", "pre-commit", "flake8", "mypy", "ipykernel"]
+dev = ["pytest", "black", "isort", "pre-commit", "flake8", "mypy"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
