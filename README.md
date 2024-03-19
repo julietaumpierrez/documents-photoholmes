@@ -1,6 +1,6 @@
  <img src="docs/Logo.png" alt="Project Logo"> 
 
-# <p style="text-align: center;">A python library for forgery detection in digital images</p>
+# <p style="text-align: center; font-size: 36; font-weight: bold">A python library for forgery detection in digital images</p>
 
 ## Introduction
 
