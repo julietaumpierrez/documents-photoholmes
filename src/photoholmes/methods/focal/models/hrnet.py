@@ -319,6 +319,8 @@ class HighResolutionModule(nn.Module):
 blocks_dict = {"BASIC": BasicBlock, "BOTTLENECK": Bottleneck}
 
 
+# TODO fix typing and evaluate mixing HRNET definition using catnet's and
+# focal
 class HRNet(nn.Module):
     def __init__(self, extra_name: Literal["w32_extra", "w48_extra"] = "w32_extra"):
         self.inplanes = 64

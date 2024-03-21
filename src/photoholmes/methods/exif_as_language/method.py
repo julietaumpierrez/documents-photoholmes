@@ -141,6 +141,7 @@ class EXIFAsLanguage(BaseMethod):
 
         # Run clustering to get localization map
         ncuts = normalized_cut(pred_maps)
+        # TODO: change resize to our own implementation
         out_ms = cv2.resize(ms, (width, height), interpolation=cv2.INTER_LINEAR)
         out_ncuts = cv2.resize(
             ncuts.astype(np.float32),
@@ -264,6 +265,8 @@ class EXIFAsLanguage(BaseMethod):
 
             sim = self.patch_similarity(a_feats, b_feats)
 
+            # FIXME Is it possible to vectorize this?
+            # Accumulate predictions for overlapping patches
             for i in range(len(sim)):
                 responses[
                     idxs[i][0] : (idxs[i][0] + spread),
@@ -321,6 +324,8 @@ class EXIFAsLanguage(BaseMethod):
             # Grab corresponding features
             a_feats = patch_features[a_idxs]  # [B, 3]
 
+            # FIXME Is it possible to vectorize this?
+            # Accumulate predictions for overlapping patches
             for i in range(a_feats.shape[0]):
                 responses[
                     idxs[i][0] : (idxs[i][0] + spread),
