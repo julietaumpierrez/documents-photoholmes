@@ -8,7 +8,7 @@ class ColumbiaWebPDataset(ColumbiaDataset):
     Directory structure:
     img_dir (Columbia Uncompressed Image Splicing Detection)
     ├── 4cam_auth
-    │   ├── [images in TIF]
+    │   ├── [images in WEBP]
     └── 4cam_splc
         ├── [images in WEBP]
         └── edgemask
