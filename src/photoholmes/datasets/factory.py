@@ -45,6 +45,15 @@ class DatasetFactory:
                     load=load,
                     tampered_only=True,
                 )
+            case DatasetRegistry.COLUMBIA_WEBP:
+                from photoholmes.datasets.columbia_webp import ColumbiaWebPDataset
+
+                return ColumbiaWebPDataset(
+                    dataset_path=dataset_path,
+                    preprocessing_pipeline=preprocessing_pipeline,
+                    load=load,
+                    tampered_only=True,
+                )
             case DatasetRegistry.COVERAGE:
                 from photoholmes.datasets.coverage import CoverageDataset
 
