@@ -1,3 +1,4 @@
+import glob
 import logging
 import os
 import shutil
@@ -16,6 +17,7 @@ class NeededEvals(Enum):
 
 DATASET_TP_MAPPING = {
     "columbiadataset": NeededEvals.BOTH,
+    "columbiawebpdataset": NeededEvals.BOTH,
     "columbiaosndataset": NeededEvals.TPOnly,
     "casia1copymovedataset": NeededEvals.BOTH,
     "casia1splicingdataset": NeededEvals.BOTH,
@@ -34,8 +36,6 @@ DATASET_TP_MAPPING = {
     "tracejpegqualityexodataset": NeededEvals.TPOnly,
     "tracejpegqualityendodataset": NeededEvals.TPOnly,
     "dso1osndataset": NeededEvals.TPOnly,
-    "casia1copymoveosndataset": NeededEvals.TPOnly,
-    "casia1splicingosndataset": NeededEvals.TPOnly,
     "realistictamperingdataset": NeededEvals.TPandPT,
     "realistictamperingwebpdataset": NeededEvals.TPandPT,
     "autosplice100dataset": NeededEvals.BOTH,
@@ -54,6 +54,7 @@ METHOD_OUTPUT_MAPPINGS = {
     "zero": ["mask", "detection"],
     "trufor": ["heatmap", "detection"],
     "focal": ["heatmap"],
+    "splicebuster": ["heatmap"],
 }
 
 
@@ -99,15 +100,19 @@ def process_output_folder(method: str, output_dir: Path, upload_dir: Path):
         needed_evals = eval_datasets.pop(d)
         for method_output in METHOD_OUTPUT_MAPPINGS[method]:
             reports = [
-                f for f in os.listdir(dataset_dir) if f"{method_output}_report" in f
+                str(f)
+                for f in glob.glob(
+                    f"*/{method_output}_report.json", root_dir=dataset_dir
+                )
             ]
             latest_reports.extend(check_evals(d, reports, needed_evals, method_output))
 
-        os.makedirs(os.path.join(upload_dir, method, d), exist_ok=True)
         for report in latest_reports:
+            report_dir = "/".join(report.split("/")[:-1])
+            os.makedirs(os.path.join(upload_dir, method, d, report_dir), exist_ok=True)
             shutil.copy(
                 os.path.join(dataset_dir, report),
-                os.path.join(upload_dir, method, d, report),
+                os.path.join(upload_dir, method, d, report_dir),
             )
 
     for d in eval_datasets.keys():
