@@ -82,7 +82,8 @@ class Zero(BaseMethod):
         """
         Y, X = luminance.shape
         zeros = np.zeros_like(luminance, dtype=np.int32)
-        votes = np.zeros_like(luminance, dtype=np.int32)
+        votes = np.empty_like(luminance, dtype=np.int32)
+        votes[:] = self.no_vote
 
         for x in range(X - 7):
             for y in range(Y - 7):
@@ -103,6 +104,7 @@ class Zero(BaseMethod):
                     if const_along_x or const_along_y
                     else (x % 8) + (y % 8) * 8
                 )
+
         votes[:7, :] = votes[-7:, :] = votes[:, :7] = votes[:, -7:] = self.no_vote
 
         return votes
@@ -123,6 +125,7 @@ class Zero(BaseMethod):
         max_votes = 0
         most_voted_grid = self.no_vote
         p = 1.0 / 64.0
+
         for x in range(X):
             for y in range(Y):
                 if votes[y, x] >= 0 and votes[y, x] < 64:
@@ -131,7 +134,9 @@ class Zero(BaseMethod):
                     if grid_votes[grid] > max_votes:
                         max_votes = grid_votes[grid]
                         most_voted_grid = grid
+
         N_tests = (64 * X * Y) ** 2
+
         ks = np.floor(grid_votes / 64) - 1
         n = np.ceil(X * Y / 64)
         p = 1 / 64
@@ -164,60 +169,74 @@ class Zero(BaseMethod):
         N_tests = (64 * X * Y) ** 2
 
         used = np.full_like(votes, False)
-        reg_x = np.zeros(votes.shape[0] * votes.shape[1], dtype=int)
-        reg_y = np.zeros(votes.shape[0] * votes.shape[1], dtype=int)
+        reg_x = np.zeros(votes.shape[0] * votes.shape[1], dtype=np.int16)
+        reg_y = np.zeros(votes.shape[0] * votes.shape[1], dtype=np.int16)
         forgery_mask = np.zeros_like(votes)
 
-        min_size = np.ceil(64.0 * np.log10(N_tests) / np.log10(64.0)).astype(int)
+        min_size = np.ceil(64.0 * np.log10(N_tests) / np.log10(64.0)).astype(np.int16)
 
         for x in range(X):
             for y in range(Y):
                 if (
-                    not used[y, x]
-                    and votes[y, x] != grid_to_exclude
-                    and votes[y, x] >= 0
-                    and votes[y, x] <= grid_max
+                    (not used[y, x])
+                    and (votes[y, x] != grid_to_exclude)
+                    and (votes[y, x] >= 0)
+                    and (votes[y, x] <= grid_max)
                 ):
                     grid = votes[y, x]
-                    corner_0 = corner_1 = np.array([x, y])
+                    x0, y0 = x, y
+                    x1, y1 = x, y
                     used[y, x] = True
+
                     reg_x[0] = x
                     reg_y[0] = y
                     reg_size = 1
-                    i = 0
 
+                    i = 0
                     while i < reg_size:
-                        lower_xx = max(reg_x[i] - W, 0)
-                        higher_xx = min(reg_x[i] + W + 1, X)
-                        lower_yy = max(reg_y[i] - W, 0)
-                        higher_yy = min(reg_y[i] + W + 1, Y)
-                        for xx in range(lower_xx, higher_xx):
-                            for yy in range(lower_yy, higher_yy):
+                        low_x = max(reg_x[i] - W, 0)
+                        high_x = min(reg_x[i] + W + 1, X)
+                        low_y = max(reg_y[i] - W, 0)
+                        high_y = min(reg_y[i] + W + 1, Y)
+                        for xx in range(low_x, high_x):
+                            for yy in range(low_y, high_y):
                                 if not used[yy, xx] and votes[yy, xx] == grid:
                                     used[yy, xx] = True
                                     reg_x[reg_size] = xx
                                     reg_y[reg_size] = yy
                                     reg_size += 1
 
-                                    corner_0 = np.min(
-                                        np.vstack([corner_0, np.array([xx, yy])]),
-                                        axis=1,
-                                    )
-                                    corner_1 = np.max(
-                                        np.vstack([corner_0, np.array([xx, yy])]),
-                                        axis=1,
-                                    )
+                                    x0 = min(x0, xx)
+                                    y0 = min(y0, yy)
+                                    x1 = max(x1, xx)
+                                    y1 = max(y1, yy)
+
                         i += 1
+
                     if reg_size >= min_size:
-                        n = int(
-                            (corner_1[0] - corner_0[0] + 1)
-                            * (corner_1[1] - corner_1[1] + 1)
-                            // 64
-                        )
-                        k = int(reg_size // 64)
+                        n = (x1 - x0 + 1) * (y1 - y0 + 1) // 64
+                        k = int(reg_size / 64)
                         lnfa = log_nfa(N_tests, np.array([k]), n, p)[0]
+
                         if lnfa < 0.0:
                             idxs = np.array([reg_x[:reg_size], reg_y[:reg_size]]).T
                             forgery_mask[idxs[:, 1], idxs[:, 0]] = 1
 
-        return forgery_mask.astype(float)
+        mask_auth = np.zeros_like(votes)
+        forgery_mask_reg = np.zeros_like(votes)
+        for x in range(W, X - W):
+            for y in range(W, Y - W):
+                if forgery_mask[y, x] != 0:
+                    for xx in range(x - W, x + W + 1):
+                        for yy in range(y - W, y + W + 1):
+                            mask_auth[yy, xx] = 1
+                            forgery_mask_reg[yy, xx] = 1
+
+        for x in range(W, X - W):
+            for y in range(W, Y - W):
+                if mask_auth[y, x] == 0:
+                    for xx in range(x - W, x + W + 1):
+                        for yy in range(y - W, y + W + 1):
+                            forgery_mask_reg[yy, xx] = 0
+
+        return forgery_mask_reg.astype(float)
