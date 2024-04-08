@@ -82,8 +82,7 @@ class Zero(BaseMethod):
         """
         Y, X = luminance.shape
         zeros = np.zeros_like(luminance, dtype=np.int32)
-        votes = np.empty_like(luminance, dtype=np.int32)
-        votes[:] = self.no_vote
+        votes = np.full_like(luminance, self.no_vote, dtype=np.int32)
 
         for x in range(X - 7):
             for y in range(Y - 7):
@@ -92,6 +91,7 @@ class Zero(BaseMethod):
                 const_along_y = np.all(block[:, :] == block[:, :1])
 
                 dct = dctn(block, type=2, norm="ortho")
+                dct[0, 0] = 1  # Discard DC component
                 z = (np.abs(dct) < 0.5).sum()
 
                 mask_zeros = z == zeros[y : y + 8, x : x + 8]
@@ -122,21 +122,16 @@ class Zero(BaseMethod):
         """
         Y, X = votes.shape
         grid_votes = np.zeros(64)
-        max_votes = 0
         most_voted_grid = self.no_vote
         p = 1.0 / 64.0
 
-        for x in range(X):
-            for y in range(Y):
-                if votes[y, x] >= 0 and votes[y, x] < 64:
-                    grid = votes[y, x]
-                    grid_votes[grid] += 1
-                    if grid_votes[grid] > max_votes:
-                        max_votes = grid_votes[grid]
-                        most_voted_grid = grid
+        valid_votes = np.argwhere((votes >= 0) * (votes < 64))
+        grid_votes, _ = np.histogram(
+            votes[valid_votes[:, 0], valid_votes[:, 1]], bins=np.arange(65)
+        )
+        most_voted_grid = int(np.argmax(grid_votes))
 
         N_tests = (64 * X * Y) ** 2
-
         ks = np.floor(grid_votes / 64) - 1
         n = np.ceil(X * Y / 64)
         p = 1 / 64
