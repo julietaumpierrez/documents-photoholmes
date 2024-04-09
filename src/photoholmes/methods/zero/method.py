@@ -8,7 +8,7 @@ from torch import from_numpy
 
 from photoholmes.methods.base import BaseMethod, BenchmarkOutput
 
-from .utils import log_nfa
+from .utils import closing, log_nfa
 
 
 class Zero(BaseMethod):
@@ -217,21 +217,6 @@ class Zero(BaseMethod):
                             idxs = np.array([reg_x[:reg_size], reg_y[:reg_size]]).T
                             forgery_mask[idxs[:, 1], idxs[:, 0]] = 1
 
-        mask_auth = np.zeros_like(votes)
-        forgery_mask_reg = np.zeros_like(votes)
-        for x in range(W, X - W):
-            for y in range(W, Y - W):
-                if forgery_mask[y, x] != 0:
-                    for xx in range(x - W, x + W + 1):
-                        for yy in range(y - W, y + W + 1):
-                            mask_auth[yy, xx] = 1
-                            forgery_mask_reg[yy, xx] = 1
+        forgery_mask = closing(forgery_mask, W)
 
-        for x in range(W, X - W):
-            for y in range(W, Y - W):
-                if mask_auth[y, x] == 0:
-                    for xx in range(x - W, x + W + 1):
-                        for yy in range(y - W, y + W + 1):
-                            forgery_mask_reg[yy, xx] = 0
-
-        return forgery_mask_reg.astype(float)
+        return forgery_mask
