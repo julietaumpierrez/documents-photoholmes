@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -23,22 +23,27 @@ class Zero(BaseMethod):
     https://github.com/tinankh/ZERO
     """
 
-    def __init__(self, no_vote: int = -1, **kwargs) -> None:
+    NO_VOTE: int = -1
+
+    def __init__(self, missing_grids: bool = True) -> None:
         """
         Args:
-            no_vote (int): Value to be used as no vote. Default is -1.
             kwargs: Additional arguments to be passed to the BaseMethod class.
         """
-        self.no_vote = no_vote
-        super().__init__(**kwargs)
+        super(BaseMethod, self).__init__()
 
-    def predict(self, image: NDArray) -> Tuple[NDArray, NDArray, int]:
+        self.missing_grids = missing_grids
+
+    def predict(
+        self, image: NDArray, image_99: NDArray
+    ) -> Tuple[NDArray, Optional[NDArray]]:
         """
         Run Zero on a image. The image is expected to be in YCbCr format. The
         methods is run over the luminance channel.
 
         Args:
-            image (np.ndarray): Input image.
+            image (np.ndarray): iluminance of input image.
+            image_99 (np.ndarray): iluminance of input image with quality 99.
 
         Returns:
             Tuple[NDArray, NDArray, int]: Forgery mask, votes and main grid.
@@ -46,11 +51,26 @@ class Zero(BaseMethod):
         luminance = image[..., 0]
         votes = self.compute_grid_votes_per_pixel(luminance)
         main_grid = self.detect_global_grids(votes)
-        forgery_mask = self.detect_forgeries(votes, main_grid)
+        forgery_mask = self.detect_forgeries(votes, main_grid, 63)
 
-        return forgery_mask, votes, main_grid
+        if self.missing_grids:
+            if main_grid > -1:
+                votes_jpeg = self.compute_grid_votes_per_pixel(image_99[..., 0])
 
-    def benchmark(self, image: NDArray) -> BenchmarkOutput:
+                # do not count votes from the main grid
+                votes_jpeg[votes == main_grid] = self.NO_VOTE
+
+                mask_missing_regions = self.detect_forgeries(
+                    votes_jpeg, grid_to_exclude=self.NO_VOTE, grid_max=0
+                )
+            else:
+                mask_missing_regions = np.zeros_like(forgery_mask)
+        else:
+            mask_missing_regions = None
+
+        return forgery_mask, mask_missing_regions
+
+    def benchmark(self, image: NDArray, image_99: NDArray) -> BenchmarkOutput:
         """
         Benchmarks the Zero method using the provided image.
 
@@ -61,7 +81,7 @@ class Zero(BaseMethod):
             BenchmarkOutput: Contains the mask and detection and placeholder for
             heatmap.
         """
-        forgery_mask, _, _ = self.predict(image)
+        forgery_mask, _ = self.predict(image, image_99)
         mask = from_numpy(forgery_mask)
         detection = torch_any(mask).float().unsqueeze(0)
         return {
@@ -82,7 +102,7 @@ class Zero(BaseMethod):
         """
         Y, X = luminance.shape
         zeros = np.zeros_like(luminance, dtype=np.int32)
-        votes = np.full_like(luminance, self.no_vote, dtype=np.int32)
+        votes = np.full_like(luminance, self.NO_VOTE, dtype=np.int32)
 
         for x in range(X - 7):
             for y in range(Y - 7):
@@ -97,15 +117,15 @@ class Zero(BaseMethod):
                 mask_zeros = z == zeros[y : y + 8, x : x + 8]
                 mask_greater = z > zeros[y : y + 8, x : x + 8]
 
-                votes[y : y + 8, x : x + 8][mask_zeros] = self.no_vote
+                votes[y : y + 8, x : x + 8][mask_zeros] = self.NO_VOTE
                 zeros[y : y + 8, x : x + 8][mask_greater] = z
                 votes[y : y + 8, x : x + 8][mask_greater] = (
-                    self.no_vote
+                    self.NO_VOTE
                     if const_along_x or const_along_y
                     else (x % 8) + (y % 8) * 8
                 )
 
-        votes[:7, :] = votes[-7:, :] = votes[:, :7] = votes[:, -7:] = self.no_vote
+        votes[:7, :] = votes[-7:, :] = votes[:, :7] = votes[:, -7:] = self.NO_VOTE
 
         return votes
 
@@ -122,7 +142,7 @@ class Zero(BaseMethod):
         """
         Y, X = votes.shape
         grid_votes = np.zeros(64)
-        most_voted_grid = self.no_vote
+        most_voted_grid = self.NO_VOTE
         p = 1.0 / 64.0
 
         valid_votes = np.argwhere((votes >= 0) * (votes < 64))
@@ -143,9 +163,11 @@ class Zero(BaseMethod):
             and lnfa_grids[most_voted_grid] < 0.0
         )
 
-        return most_voted_grid if grid_meaningful else self.no_vote
+        return most_voted_grid if grid_meaningful else self.NO_VOTE
 
-    def detect_forgeries(self, votes: NDArray, grid_to_exclude: int) -> NDArray:
+    def detect_forgeries(
+        self, votes: NDArray, grid_to_exclude: int, grid_max: int
+    ) -> NDArray:
         """
         Detects forgery mask from a grid votes map and a grid index to exclude.
 
@@ -158,7 +180,6 @@ class Zero(BaseMethod):
             NDArray: forgery mask.
         """
         W = 9
-        grid_max = 63
         p = 1.0 / 64.0
         Y, X = votes.shape
         N_tests = (64 * X * Y) ** 2
