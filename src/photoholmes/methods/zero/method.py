@@ -35,11 +35,11 @@ class Zero(BaseMethod):
         self.missing_grids = missing_grids
 
     def predict(
-        self, image: NDArray, image_99: NDArray
+        self, image: NDArray, image_99: Optional[NDArray] = None
     ) -> Tuple[NDArray, Optional[NDArray]]:
         """
-        Run Zero on a image. The image is expected to be in YCbCr format. The
-        methods is run over the luminance channel.
+        Run Zero on a image. The method is run over the iluminance of the image,
+        so it expects a grasycale image.
 
         Args:
             image (np.ndarray): iluminance of input image.
@@ -81,11 +81,14 @@ class Zero(BaseMethod):
             BenchmarkOutput: Contains the mask and detection and placeholder for
             heatmap.
         """
-        forgery_mask, _ = self.predict(image, image_99)
+        forgery_mask, missing_grid = self.predict(image, image_99)
         mask = from_numpy(forgery_mask)
+        heatmap_cheat_for_quick_eval = from_numpy(
+            np.logical_or(forgery_mask, missing_grid)
+        )
         detection = torch_any(mask).float().unsqueeze(0)
         return {
-            "heatmap": None,
+            "heatmap": heatmap_cheat_for_quick_eval,
             "mask": mask,
             "detection": detection,
         }

@@ -666,6 +666,9 @@ def run_zero(
     output_folder: Annotated[
         Optional[Path], typer.Option(help=OUTPUT_FOLDER_HELP)
     ] = None,
+    missing_grids: Annotated[
+        bool, typer.Option(help="Include missing grid mask in plot.")
+    ] = True,
     overlay: Annotated[bool, typer.Option(help=OVERLAY_HELP)] = False,
     show_plot: Annotated[bool, typer.Option(help=SHOW_PLOT_HELP)] = True,
 ):
@@ -676,10 +679,10 @@ def run_zero(
     image = read_image(str(image_path))
     model_input = zero_preprocessing(image=image)
 
-    zero = Zero()
+    zero = Zero(missing_grids=missing_grids)
 
     logger.info("Running Zero method")
-    mask, votes, main_grid = zero.predict(**model_input)
+    mask, missing_grids_mask, votes = zero.predict(**model_input)
 
     if output_folder is not None:
         os.makedirs(output_folder, exist_ok=True)
@@ -693,21 +696,51 @@ def run_zero(
         logger.info(
             f"Votes saved to {output_folder / f'{image_path.stem}_zero_votes.npy'}"
         )
-        np.save(output_folder / f"{image_path.stem}_zero_main_grid.npy", main_grid)
-        logger.info(
-            f"Votes saved to {output_folder / f'{image_path.stem}_zero_main_grid.npy'}"
-        )
+        if missing_grids:
+            plt.imshow(missing_grids_mask)
+            plt.savefig(output_folder / f"{image_path.stem}_zero_missing_grids.png")
+            logger.info(
+                f"Votes saved to {output_folder / f'{image_path.stem}_zero_missing_grids.png'}"
+            )
 
     if show_plot:
         plots = [
             {"title": "Original Image", "image": image.permute(1, 2, 0).numpy()},
             {"title": "Mask", "image": mask},
+            {"title": "Votes", "image": votes},
         ]
+        if missing_grids:
+            plots.extend(
+                [
+                    {"title": "Missing grids", "image": missing_grids_mask},
+                    {
+                        "title": "Mask + Missing grids",
+                        "image": np.logical_or(mask, missing_grids_mask),
+                    },
+                ]
+            )
         if overlay:
             plots.append(
                 {
-                    "title": "Overlay",
+                    "title": "Mask Overlay",
                     "image": overlay_mask(image.permute(1, 2, 0).numpy(), mask),
+                }
+            )
+            plots.append(
+                {
+                    "title": "Missing grids Overlay",
+                    "image": overlay_mask(
+                        image.permute(1, 2, 0).numpy(), missing_grids_mask
+                    ),
+                }
+            )
+            plots.append(
+                {
+                    "title": "Mask + Missing grids Overlay",
+                    "image": overlay_mask(
+                        image.permute(1, 2, 0).numpy(),
+                        np.logical_or(missing_grids_mask, mask).astype(int),
+                    ),
                 }
             )
         plot_results("Output of Zero method", plots)

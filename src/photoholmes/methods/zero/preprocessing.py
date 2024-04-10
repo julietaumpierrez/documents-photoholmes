@@ -24,7 +24,7 @@ class AddImage99(BasePreprocessing):
         img_pil = Image.fromarray(image)
 
         f = BytesIO()
-        img_pil.save(f, "JPEG", quality=99)
+        img_pil.save(f, "JPEG", quality=99, subsampling=0)
         f.seek(0)
         image_99 = Image.open(f)
         image_99 = np.array(image_99)

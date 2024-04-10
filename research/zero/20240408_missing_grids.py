@@ -22,10 +22,20 @@ import cv2
 t0 = time.time()
 f = NamedTemporaryFile(suffix=".jpg")
 cv2.imwrite(f.name, img.numpy().transpose(1, 2, 0), [cv2.IMWRITE_JPEG_QUALITY, 99])
-img_99 = cv2.imread(f.name)
+img_99_cv = cv2.imread(f.name)
 f.close()
 tf = time.time()
 print("Elapsed time:", tf - t0)
+# %%
+t0 = time.time()
+_, img_99_jpeg = cv2.imencode(
+    ".jpg", img.permute(1, 2, 0).numpy(), [cv2.IMWRITE_JPEG_QUALITY, 99]
+)
+img_99_cv2 = cv2.imdecode(img_99_jpeg, 1)
+tf = time.time()
+print("Elapsed time:", tf - t0)
+
+assert (img_99_cv == img_99_cv2).all()
 
 # %%
 from io import BytesIO
@@ -216,3 +226,85 @@ plt.imshow(lum_99_orig, cmap="gray")
 # %%
 m, mm, l, l99 = zero.predict(**inp)
 # %%
+img_magick = read_image("data/21_magick.jpg")
+img_gimp = read_image("data/21_gimp.jpeg")
+img_online = read_image("data/21_online.jpg")
+
+assert (img_magick == img_gimp).all()
+assert (img_magick == img_online).all()
+# %%
+img_cv = read_image("data/21_cv.jpeg")
+assert (img_cv == img_gimp).all()
+# %%
+img_pil = read_image("data/21.jpeg")
+assert (img_pil == img_gimp).all()
+# %%
+import jpegio
+
+img_magick = jpegio.read("data/21_magick.jpg")
+img_gimp = jpegio.read("data/21_gimp.jpeg")
+img_online = jpegio.read("data/21_online.jpg")
+
+assert (img_magick.coef_arrays[0] == img_gimp.coef_arrays[0]).all()
+assert (img_magick.coef_arrays[1] == img_gimp.coef_arrays[1]).all()
+assert (img_magick.coef_arrays[2] == img_gimp.coef_arrays[2]).all()
+assert (img_magick.quant_tables[0] == img_gimp.quant_tables[0]).all()
+assert (img_magick.quant_tables[1] == img_gimp.quant_tables[1]).all()
+
+
+assert (img_magick.coef_arrays[0] == img_online.coef_arrays[0]).all()
+assert (img_magick.coef_arrays[1] == img_online.coef_arrays[1]).all()
+assert (img_magick.coef_arrays[2] == img_online.coef_arrays[2]).all()
+assert (img_magick.quant_tables[0] == img_online.quant_tables[0]).all()
+assert (img_magick.quant_tables[1] == img_online.quant_tables[1]).all()
+# %%
+img_cv = jpegio.read("data/21_cv.jpeg")
+assert (img_magick.coef_arrays[0] == img_cv.coef_arrays[0]).all()
+assert (img_magick.coef_arrays[1] == img_cv.coef_arrays[1]).all()
+assert (img_magick.coef_arrays[2] == img_cv.coef_arrays[2]).all()
+
+# %%
+assert (img_magick.quant_tables[0] == img_cv.quant_tables[0]).all()
+assert (img_magick.quant_tables[1] == img_cv.quant_tables[1]).all()
+
+# %%
+img_pil = jpegio.read("data/21_pil.jpeg")
+
+assert (img_magick.coef_arrays[0] == img_pil.coef_arrays[0]).all()
+assert (img_magick.coef_arrays[1] == img_pil.coef_arrays[1]).all()
+assert (img_magick.coef_arrays[2] == img_pil.coef_arrays[2]).all()
+
+# %%
+assert (img_magick.quant_tables[0] == img_pil.quant_tables[0]).all()
+assert (img_magick.quant_tables[1] == img_pil.quant_tables[1]).all()
+# %%
+
+# %%
+img_pil.coef_arrays[0].shape, img_pil.coef_arrays[1].shape, img_pil.coef_arrays[2].shape
+
+# %%
+376 / 2, 552 / 2
+# %%
+img = Image.open("data/COVERAGE/image/21.tif")
+img.save("data/21_pil_wo_subsampling.jpg", format="JPEG", quality=99, subsampling=0)
+# %%
+img_pil = jpegio.read("data/21_pil_wo_subsampling.jpg")
+
+# %%
+img_pil = read_image("data/21_pil_wo_subsampling.jpg")
+img_magick = read_image("data/21_magick.jpg")
+
+assert (img_pil == img_magick).all()
+
+# %%
+img = read_image("data/COVERAGE/image/28t.tif")
+
+zero = Zero()
+
+inp = zero_preprocessing(image=img)
+out = zero.benchmark(**inp)
+
+# %%
+plt.imshow(out["mask"])
+plt.show()
+plt.imshow(out["heatmap"])
