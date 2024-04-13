@@ -1,14 +1,17 @@
+import logging
 from typing import Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.fftpack import dctn
 from torch import any as torch_any
-from torch import from_numpy
+from torch import from_numpy as torch_from_numpy
 
 from photoholmes.methods.base import BaseMethod, BenchmarkOutput
 
 from .utils import closing, log_nfa
+
+logger = logging.getLogger(__name__)
 
 
 class Zero(BaseMethod):
@@ -25,10 +28,10 @@ class Zero(BaseMethod):
 
     NO_VOTE: int = -1
 
-    def __init__(self, missing_grids: bool = True) -> None:
+    def __init__(self, missing_grids: bool = False) -> None:
         """
         Args:
-            kwargs: Additional arguments to be passed to the BaseMethod class.
+            missing_grids (bool): Whether to detect missing grids or not.
         """
         super(BaseMethod, self).__init__()
 
@@ -36,17 +39,19 @@ class Zero(BaseMethod):
 
     def predict(
         self, image: NDArray, image_99: Optional[NDArray] = None
-    ) -> Tuple[NDArray, Optional[NDArray]]:
+    ) -> Tuple[NDArray, NDArray, Optional[NDArray]]:
         """
         Run Zero on a image. The method is run over the iluminance of the image,
         so it expects a grasycale image.
 
         Args:
             image (np.ndarray): iluminance of input image.
-            image_99 (np.ndarray): iluminance of input image with quality 99.
+            image_99 (np.ndarray): iluminance of input image with jpeg compression quality 99.
+                (see zero/preprocessing.py to see how to generate it.)
 
         Returns:
-            Tuple[NDArray, NDArray, int]: Forgery mask, votes and main grid.
+            Tuple[NDArray, NDArray, int]: Forgery mask, votes and
+                missing_grid if selected, else None..
         """
         luminance = image[..., 0]
         votes = self.compute_grid_votes_per_pixel(luminance)
@@ -54,7 +59,12 @@ class Zero(BaseMethod):
         forgery_mask = self.detect_forgeries(votes, main_grid, 63)
 
         if self.missing_grids:
-            if main_grid > -1:
+            if image_99 is None:
+                logger.warning(
+                    "`missing_grids` is set, but `image_99` is not provided. "
+                    "Skipping missing grids mask calculation."
+                )
+            if main_grid > -1 and image_99 is not None:
                 votes_jpeg = self.compute_grid_votes_per_pixel(image_99[..., 0])
 
                 # do not count votes from the main grid
@@ -68,7 +78,7 @@ class Zero(BaseMethod):
         else:
             mask_missing_regions = None
 
-        return forgery_mask, mask_missing_regions
+        return forgery_mask, votes, mask_missing_regions
 
     def benchmark(self, image: NDArray, image_99: NDArray) -> BenchmarkOutput:
         """
@@ -76,21 +86,30 @@ class Zero(BaseMethod):
 
         Args:
             image (Tensor): Input image tensor.
+            image_99 (Tensor): Input image tensor with JPEG compression quality 99.
 
         Returns:
             BenchmarkOutput: Contains the mask and detection and placeholder for
             heatmap.
         """
-        forgery_mask, missing_grid = self.predict(image, image_99)
-        mask = from_numpy(forgery_mask)
-        heatmap_cheat_for_quick_eval = from_numpy(
-            np.logical_or(forgery_mask, missing_grid)
-        )
+        # TODO fix this to make sense with the method.
+        forgery_mask, _, missing_grid = self.predict(image, image_99)
+        mask = torch_from_numpy(forgery_mask).float()
         detection = torch_any(mask).float().unsqueeze(0)
+        if missing_grid is not None:
+            heatmap_cheat_for_quick_eval = torch_from_numpy(
+                np.logical_or(forgery_mask, missing_grid)
+            ).float()
+            return {
+                "heatmap": heatmap_cheat_for_quick_eval,
+                "mask": mask,
+                "detection": detection,
+            }
+
         return {
-            "heatmap": heatmap_cheat_for_quick_eval,
             "mask": mask,
-            "detection": detection,
+            "detection": torch_any(mask).float().unsqueeze(0),
+            "heatmap": None,
         }
 
     def compute_grid_votes_per_pixel(self, luminance: NDArray) -> NDArray:
@@ -178,6 +197,7 @@ class Zero(BaseMethod):
             votes (NDArray): Grid votes per pixel. Each pixel votes 1 of the 64
                 possible grids.
             grid_to_exclude (int): Grid index to exclude.
+            grid_max (int): Maximum grid index.
 
         Returns:
             NDArray: forgery mask.

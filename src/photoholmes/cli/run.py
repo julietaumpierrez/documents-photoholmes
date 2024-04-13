@@ -616,7 +616,7 @@ def run_trufor(
         plt.imshow(heatmap)
         plt.savefig(output_folder / f"{image_path.stem}_trufor_heatmap.png")
         logger.info(
-            f"Heatmap saved to {output_folder / f'{image_path.stem}_trufor_heatmap.png'}"  # noqa: E501
+            f"Heatmap saved to {output_folder / f'{image_path.stem}_trufor_heatmap.png'}"  # noqa: E502
         )
         if confidence is not None:
             plt.imshow(confidence.numpy())
@@ -631,13 +631,19 @@ def run_trufor(
                 f.write(f"score: {detection.item()}")
 
     if show_plot:
-        cool_heatmap = (heatmap * confidence).numpy()
         plots = [
             {"title": "Original Image", "image": image.permute(1, 2, 0).numpy()},
             {"title": "Heatmap", "image": heatmap.numpy()},
-            {"title": "Confidence", "image": confidence.numpy()},
-            {"title": "Heatmap w/confidence", "image": cool_heatmap},
         ]
+
+        if confidence is not None:
+            cool_heatmap = (heatmap * confidence).numpy()
+            plots.extend(
+                [
+                    {"title": "Confidence", "image": confidence.numpy()},
+                    {"title": "Heatmap w/confidence", "image": cool_heatmap},
+                ]
+            )
         if overlay:
             plots.extend(
                 [
@@ -682,7 +688,7 @@ def run_zero(
     zero = Zero(missing_grids=missing_grids)
 
     logger.info("Running Zero method")
-    mask, missing_grids_mask, votes = zero.predict(**model_input)
+    mask, votes, missing_grids_mask = zero.predict(**model_input)
 
     if output_folder is not None:
         os.makedirs(output_folder, exist_ok=True)
@@ -709,7 +715,7 @@ def run_zero(
             {"title": "Mask", "image": mask},
             {"title": "Votes", "image": votes},
         ]
-        if missing_grids:
+        if missing_grids_mask is not None:
             plots.extend(
                 [
                     {"title": "Missing grids", "image": missing_grids_mask},
@@ -726,21 +732,22 @@ def run_zero(
                     "image": overlay_mask(image.permute(1, 2, 0).numpy(), mask),
                 }
             )
-            plots.append(
-                {
-                    "title": "Missing grids Overlay",
-                    "image": overlay_mask(
-                        image.permute(1, 2, 0).numpy(), missing_grids_mask
-                    ),
-                }
-            )
-            plots.append(
-                {
-                    "title": "Mask + Missing grids Overlay",
-                    "image": overlay_mask(
-                        image.permute(1, 2, 0).numpy(),
-                        np.logical_or(missing_grids_mask, mask).astype(int),
-                    ),
-                }
-            )
+            if missing_grids_mask is not None:
+                plots.append(
+                    {
+                        "title": "Missing grids Overlay",
+                        "image": overlay_mask(
+                            image.permute(1, 2, 0).numpy(), missing_grids_mask
+                        ),
+                    }
+                )
+                plots.append(
+                    {
+                        "title": "Mask + Missing grids Overlay",
+                        "image": overlay_mask(
+                            image.permute(1, 2, 0).numpy(),
+                            np.logical_or(missing_grids_mask, mask).astype(int),
+                        ),
+                    }
+                )
         plot_results("Output of Zero method", plots)
