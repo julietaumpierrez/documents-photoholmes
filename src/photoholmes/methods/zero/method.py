@@ -33,7 +33,7 @@ class Zero(BaseMethod):
         Args:
             missing_grids (bool): Whether to detect missing grids or not.
         """
-        super(BaseMethod, self).__init__()
+        super().__init__()
 
         self.missing_grids = missing_grids
 
