@@ -143,6 +143,7 @@ def run_from_config(
             dataset_name=d.name,
             dataset_path=d.path,
             tampered_only=d.tampered_only,
+            load=preprocessing.inputs,
             preprocessing_pipeline=preprocessing,
         )
         if len(dataset) == 0:
