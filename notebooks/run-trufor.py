@@ -9,7 +9,7 @@ benchmark = Benchmark(
     save_extra_outputs=False,
     save_metrics=True,
     output_folder="supatlantique_benchmark",
-    device="cpu",
+    device="cuda",
     use_existing_output=True,
     verbose=1,
 )
