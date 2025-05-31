@@ -27,7 +27,7 @@ path_to_weights = {
 
 psccnet = PSCCNet(
     arch_config=arch_config,
-    path_to_weights=path_to_weights,
+    weights=path_to_weights,
 )
 dataset = SupatlantiqueDataset(
     dataset_path=PATH,
