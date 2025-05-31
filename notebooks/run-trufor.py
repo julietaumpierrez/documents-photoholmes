@@ -14,6 +14,7 @@ benchmark = Benchmark(
     verbose=1,
 )
 
+from photoholmes.datasets.supatlantique import SupatlantiqueDataset
 from photoholmes.methods.trufor import TruFor, trufor_preprocessing
 
 PATH = "/clusteruy/home/julieta.umpierrez/documents-photoholmes/dataset/supatlantique"
