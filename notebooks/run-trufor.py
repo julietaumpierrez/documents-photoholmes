@@ -1,6 +1,6 @@
 from photoholmes.metrics.factory import MetricFactory
 
-metrics = MetricFactory.load(["precision", "f1", "tpr", "accuracy"])
+metrics = MetricFactory.load(["precision", "f1", "tpr"])
 
 from photoholmes.benchmark import Benchmark
 
