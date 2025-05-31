@@ -42,6 +42,15 @@ class DatasetFactory:
                     load=load,
                     tampered_only=tampered_only,
                 )
+            case DatasetRegistry.SUPATLANTIQUE:
+                from photoholmes.datasets.supatlantique import SupatlantiqueDataset
+
+                return SupatlantiqueDataset(
+                    dataset_path=dataset_path,
+                    preprocessing_pipeline=preprocessing_pipeline,
+                    load=load,
+                    tampered_only=tampered_only,
+                )
             case DatasetRegistry.COLUMBIA_OSN:
                 from photoholmes.datasets.osn import ColumbiaOSNDataset
 

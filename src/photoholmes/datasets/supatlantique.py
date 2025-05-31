@@ -7,26 +7,28 @@ from torch import Tensor
 from .base import BaseDataset
 
 
-class ColumbiaDataset(BaseDataset):
+class SupatlantiqueDataset(BaseDataset):
     """
-    Class for the Columbia Uncompressed Image Splicing Detection dataset.
+    Class for the Supatlantique dataset.
 
     Directory structure:
-    img_dir (Columbia Uncompressed Image Splicing Detection)
-    ├── 4cam_auth
+    img_dir (Supatlantique dataset)
+    ├── binary-masks
+    │   ├── Retouching
+    │   │   ├── [images in TIF]
+    ├── tampered
+    │   ├── Retouching
     │   ├── [images in TIF]
-    ├── 4cam_splc
+    ├── original
     │   ├── [images in TIF]
-    |   └── edgemask
-    |       └── [masks in JPG]
-    └── README.txt
+    └── Description
     """
 
-    TAMP_DIR: str = "4cam_splc"
-    AUTH_DIR: str = "4cam_auth"
-    MASKS_DIR: str = "4cam_splc/edgemask"
+    TAMP_DIR: str = "tampered/Retouching"
+    AUTH_DIR: str = "original"
+    MASKS_DIR: str = "binary-masks/Retouching"
     IMAGE_EXTENSION: str = ".tif"
-    MASK_EXTENSION: str = ".jpg"
+    MASK_EXTENSION: str = ".tif"
     TAMPERED_COLOR_INDEX: int = 1  # Green
 
     def _get_paths(
@@ -43,7 +45,6 @@ class ColumbiaDataset(BaseDataset):
             Tuple[List[str], List[str] | List[str | None]]: Paths of the images and
                 masks.
         """
-        print(f"Dataset path: {dataset_path}")
         image_paths = glob.glob(
             os.path.join(dataset_path, self.TAMP_DIR, f"*{self.IMAGE_EXTENSION}")
         )
@@ -75,8 +76,8 @@ class ColumbiaDataset(BaseDataset):
         """
         image_filename = image_path.split("/")[-1]
         image_name_list = ".".join(image_filename.split(".")[:-1]).split("_")
-        mask_name = "_".join(image_name_list + ["edgemask"])
-        mask_filename = mask_name + self.MASK_EXTENSION
+        mask_name = "_".join(image_name_list)
+        mask_filename = mask_name + "1" + self.MASK_EXTENSION
         return os.path.join(self.MASKS_DIR, mask_filename)
 
     def _binarize_mask(self, mask_image: Tensor) -> Tensor:

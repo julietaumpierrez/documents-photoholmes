@@ -8,7 +8,16 @@ from .mAuroc import mAuroc
 from .MCC_weighted_v1 import MCC_weighted_v1
 from .MCC_weighted_v2 import MCC_weighted_v2
 from .registry import MetricRegistry
-from .torchmetrics_wrappers import AUROC, MCC, ROC, TPR, F1Score, IoU, Precision
+from .torchmetrics_wrappers import (
+    AUROC,
+    MCC,
+    ROC,
+    TPR,
+    Accuracy,
+    F1Score,
+    IoU,
+    Precision,
+)
 
 __all__ = [
     "MetricFactory",
@@ -27,5 +36,6 @@ __all__ = [
     "mAuroc",
     "MCC_weighted_v1",
     "MCC_weighted_v2",
+    "Accuracy",
     "MetricRegistry",
 ]

@@ -137,6 +137,10 @@ class MetricFactory:
                     from photoholmes.metrics import F1Score
 
                     metrics.append(F1Score())
+                case MetricRegistry.ACCURACY:
+                    from photoholmes.metrics import Accuracy
+
+                    metrics.append(Accuracy())
                 case _:
                     raise NotImplementedError(
                         f"Metric '{metric_name}' is not implemented."

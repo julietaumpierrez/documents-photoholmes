@@ -3,6 +3,7 @@ from typing import List, Optional, Union
 from torch import Tensor
 from torchmetrics import Metric
 from torchmetrics.classification import (
+    BinaryAccuracy,
     BinaryAUROC,
     BinaryF1Score,
     BinaryJaccardIndex,
@@ -33,6 +34,11 @@ class MCC(Metric):
 class Precision(Metric):
     def __new__(cls, **kwargs):
         return BinaryPrecision(**kwargs)
+
+
+class Accuracy(Metric):
+    def __new__(cls, **kwargs):
+        return BinaryAccuracy(**kwargs)
 
 
 class TPR(Metric):
